@@ -102,6 +102,23 @@ export const commentField = StateField.define<CommentFieldValue>({
 			}
 		}
 
+		// The emphasis follows the caret out again: a comment stays active only
+		// while the selection is still inside its range. Without this, clicking
+		// a highlighted passage would leave it washed for good, since nothing
+		// else ever clears the flag.
+		if (
+			activeId !== null &&
+			tr.selection &&
+			!tr.effects.some((e) => e.is(setActiveComment))
+		) {
+			const head = tr.newSelection.main.head;
+			const range = ranges.find((r) => r.id === activeId);
+			if (!range || head < range.from || head > range.to) {
+				activeId = null;
+				changed = true;
+			}
+		}
+
 		const decorations = changed
 			? buildDecorations(comments, ranges, activeId, flashId)
 			: value.decorations;

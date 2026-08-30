@@ -15,34 +15,49 @@
 /* ── Editor: highlighted passages (requirement 5) ─────────────────────────── */
 
 .obelisk-highlight {
-	background-color: rgba(var(--obelisk-accent), 0.18);
-	border-bottom: 1px solid rgba(var(--obelisk-accent), 0.65);
+	background-color: transparent;
+	border-bottom: 1px solid rgba(var(--obelisk-accent), 0.45);
 	border-radius: 2px;
 	cursor: pointer;
+	transition: background-color 120ms ease-out;
 }
 
+.obelisk-highlight:hover {
+	background-color: rgba(var(--obelisk-accent), 0.12);
+}
+
+/* Only the comment the reader is actually looking at gets a wash. */
 .obelisk-highlight.is-active {
-	background-color: rgba(var(--obelisk-accent), 0.38);
+	background-color: rgba(var(--obelisk-accent), 0.22);
+	border-bottom-color: rgba(var(--obelisk-accent), 0.7);
 }
 
+/* Resolved threads stay findable but drop out of the reading flow. */
 .obelisk-highlight.is-resolved {
 	background-color: transparent;
-	border-bottom-style: dashed;
-	opacity: 0.6;
+	border-bottom-color: rgba(var(--obelisk-accent), 0.25);
+	border-bottom-style: dotted;
+}
+
+.obelisk-highlight.is-resolved:hover {
+	background-color: rgba(var(--obelisk-accent), 0.08);
 }
 
 .obelisk-highlight.has-suggestion {
-	border-bottom-color: rgba(var(--obelisk-add), 0.75);
+	border-bottom-color: rgba(var(--obelisk-add), 0.5);
 }
 
 .obelisk-highlight.is-applied {
-	background-color: rgba(var(--obelisk-add), 0.14);
+	border-bottom-color: rgba(var(--obelisk-add), 0.4);
 }
 
-/* Overlapping comments nest as nested spans; each layer deepens the wash and
-   adds its own underline, so two stacked comments read as two. */
+.obelisk-highlight.is-applied.is-active {
+	background-color: rgba(var(--obelisk-add), 0.16);
+}
+
+/* Overlapping comments nest as nested spans; the extra underline weight is
+   what distinguishes the layers, so two stacked comments still read as two. */
 .obelisk-highlight .obelisk-highlight {
-	background-color: rgba(var(--obelisk-accent), 0.22);
 	border-bottom-width: 2px;
 	border-radius: 0;
 }
@@ -57,8 +72,8 @@
 }
 
 @keyframes obelisk-flash {
-	0% { background-color: rgba(var(--obelisk-accent), 0.75); }
-	100% { background-color: rgba(var(--obelisk-accent), 0.18); }
+	0% { background-color: rgba(var(--obelisk-accent), 0.45); }
+	100% { background-color: transparent; }
 }
 
 .obelisk-marker {
