@@ -63,6 +63,8 @@ export class CommentModal extends Modal {
 				this.syncSubmit();
 			},
 			onSubmit: () => this.submit(),
+			// The editor eats Esc before the modal's own scope sees it.
+			onEscape: () => this.close(),
 		});
 
 		const actions = this.contentEl.createDiv({

@@ -240,11 +240,15 @@ function openComposer(
 ): void {
 	const existing = card.querySelector<HTMLElement>(".obelisk-composer");
 	if (existing) {
-		existing.querySelector("textarea")?.focus();
+		Composer.focusWithin(existing);
 		return;
 	}
 
 	const wrapper = card.createDiv({ cls: "obelisk-reply-composer" });
+	const cancel = () => {
+		composer.destroy();
+		wrapper.remove();
+	};
 	const submit = () => {
 		const body = composer.value.trim();
 		if (!body) return;
@@ -258,13 +262,15 @@ function openComposer(
 		quote: comment.anchor.quote,
 		placeholder: "Reply… (markdown, suggestions and all)",
 		onSubmit: submit,
+		onEscape: cancel,
 	});
 
 	const row = wrapper.createDiv({ cls: "obelisk-actions" });
 	row.createEl("button", { cls: "mod-cta", text: "Reply" })
 		.addEventListener("click", submit);
-	row.createEl("button", { text: "Cancel" }).addEventListener("click", () =>
-		wrapper.remove(),
+	row.createEl("button", { text: "Cancel" }).addEventListener(
+		"click",
+		cancel,
 	);
 
 	composer.focus();
@@ -294,7 +300,7 @@ function openEditor(
 ): void {
 	const existing = host.querySelector<HTMLElement>(":scope > .obelisk-editor");
 	if (existing) {
-		existing.querySelector("textarea")?.focus();
+		Composer.focusWithin(existing);
 		return;
 	}
 
@@ -303,6 +309,7 @@ function openEditor(
 	bodyEl.hide();
 
 	const close = () => {
+		composer.destroy();
 		wrapper.remove();
 		bodyEl.show();
 	};
@@ -327,6 +334,7 @@ function openEditor(
 		value: target.value,
 		placeholder: "Edit… (markdown, suggestions and all)",
 		onSubmit: submit,
+		onEscape: close,
 	});
 
 	const row = wrapper.createDiv({ cls: "obelisk-actions" });

@@ -18,6 +18,7 @@ stubs reference it by section.
 | 4 | Click a comment → scroll to it | `ObeliskPlugin.scrollToComment` |
 | 5 | Highlight + marker icon in the content view | `src/editor/highlight-extension.ts`, `src/editor/marker.ts` |
 | 6 | Context menu on selection | `src/editor/context-menu.ts` |
+| — | Writing a comment | `src/view/composer.ts`, `src/view/embedded-editor.ts` |
 
 ---
 
@@ -172,10 +173,26 @@ writing, and the plugin's job shrinks to two things it can do well:
   ` ```suggestion ` block typed into a *note* stays an ordinary code block.
 
 Because the body is the only field, one composer serves the dialog and the
-reply box (`view/composer.ts`): a textarea with Write/Preview and a button that
-inserts a suggestion block prefilled with the quoted text, selected, ready to
-be edited in place. "Suggest an edit" is that dialog opened with the button
-already pressed, not a second kind of comment.
+reply box (`view/composer.ts`): a markdown editor with Write/Preview and a
+button that inserts a suggestion block prefilled with the quoted text,
+selected, ready to be edited in place. "Suggest an edit" is that dialog opened
+with the button already pressed, not a second kind of comment.
+
+**The comment box is the editor.** Writing happens in the same embedded editor
+Obsidian uses for Canvas cards and property fields
+(`view/embedded-editor.ts`), so Cmd+B, list continuation, Tab indentation,
+`[[` autocompletion and live preview all behave the way they do in a note —
+rather than in a textarea where a hand-written keymap would be perpetually a
+little wrong. The price is that none of it is public API: the class is only
+reachable by building a throwaway editor and walking two steps up its
+prototype chain, so an Obsidian release could take it away. Every step of that
+dig is guarded and the composer keeps a textarea to fall back to, which costs
+the shortcuts and nothing else — the tabs, the suggestion button and submit
+are written against a small `Field` interface that both backends answer. Two
+consequences fall out of the borrowed editor: Esc arrives as a callback
+(`onEscape`) because the editor takes the key before a modal's own scope sees
+it, and the Preview tab stays even though the editor previews live, because it
+is the only place a `suggestion` block renders as the diff a reader gets.
 
 Editing a body reuses that composer too, in place of the rendered markdown —
 so a proposal can be revised with the same button that inserted it rather than

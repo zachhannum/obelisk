@@ -467,8 +467,44 @@
 	margin-inline-start: auto;
 }
 
-/* The height is set inline as you type — see Composer.autosize — so the box
-   fits what it holds; these bound it at both ends. */
+/* The embedded editor brings its own chrome from the note it is borrowed
+   from; here it has to read as a field, so it gets the border a textarea has
+   and the same bounds — it grows with what it holds, then scrolls. */
+.obelisk-compose-editor .cm-editor {
+	background: var(--background-modifier-form-field);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	max-height: 50vh;
+	min-height: 5em;
+}
+
+.obelisk-compose-editor .cm-editor.cm-focused {
+	border-color: var(--background-modifier-border-focus);
+	box-shadow: 0 0 0 2px var(--background-modifier-border-focus);
+	outline: none;
+}
+
+/* CodeMirror's own theme sets no cursor, and Obsidian's `text` is scoped to
+   the note view — so without this the box reads as something you look at
+   rather than something you type into. On the scroller, so the padding around
+   the text counts too; links and the like keep their own cursor. */
+.obelisk-compose-editor .cm-scroller {
+	cursor: text;
+	padding: var(--size-4-1) 0;
+}
+
+/* A comment is prose in a small box: no note-width clamp, no page gutters. */
+.obelisk-compose-editor .cm-sizer,
+.obelisk-compose-editor .cm-contentContainer {
+	max-width: 100%;
+}
+
+.obelisk-compose-editor .cm-content {
+	padding-inline: var(--size-4-2);
+}
+
+/* The height is set inline as you type — see TextareaField.refresh — so the
+   box fits what it holds; these bound it at both ends. */
 .obelisk-compose-body {
 	font-family: inherit;
 	max-height: 50vh;

@@ -39,6 +39,9 @@ for the decisions behind it and what remains open.
   Obsidian. Edit or delete the quoted passage itself and the comment detaches:
   flagged in the sidebar, highlighting nothing, never guessing at a new home
   and never quietly disappearing. Restore the text and it reattaches.
+- **The editor you already use** — comments are written in Obsidian's own
+  markdown editor, so Cmd+B, list continuation, `[[` autocompletion and live
+  preview work in a comment exactly as they do in a note.
 - **Threaded replies** — on any comment, stored alongside it, and markdown all
   the way down.
 - **Editable** — rewrite a comment or a reply in the same composer that wrote
