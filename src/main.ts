@@ -1,4 +1,3 @@
-import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import {
 	Debouncer,
@@ -14,7 +13,6 @@ import {
 import { registerContextMenu } from "./editor/context-menu";
 import {
 	commentAt,
-	commentField,
 	flashComment,
 	obeliskEditorExtension,
 	setActiveComment,
@@ -24,9 +22,10 @@ import {
 import { highlightQuoteInSection } from "./editor/reading-view";
 import { ObeliskSettingTab } from "./settings";
 import {
-	frameFromState,
+	DocFrame,
+	frameFrom,
+	lineNumberAt,
 	makeAnchor,
-	pendingAnchorWrites,
 	resolveAll,
 } from "./store/anchors";
 import { CommentStore } from "./store/frontmatter";
@@ -43,8 +42,18 @@ import { CommentDraft, CommentModal } from "./view/comment-modal";
 import { ObeliskSidebarView } from "./view/sidebar-view";
 import { newCommentId } from "./util/id";
 
-/** How long the editor has to be quiet before drifted anchors are written. */
-const ANCHOR_FLUSH_DELAY = 1500;
+/**
+ * How long the editor has to be quiet before comments are re-resolved.
+ *
+ * Short, because a resolve is a substring search that writes nothing — the
+ * cost of running one is close to the cost of deciding not to. Long enough
+ * that it lands on a pause in typing rather than on every keystroke, so a
+ * highlight is not torn down while the user is still mid-word inside it.
+ *
+ * Waiting on `metadataCache` instead would mean waiting for Obsidian to
+ * autosave and reparse the file, which is seconds.
+ */
+const RESOLVE_DELAY = 250;
 
 /** How long a jumped-to highlight pulses. */
 const FLASH_DURATION = 700;
@@ -69,24 +78,32 @@ export default class ObeliskPlugin extends Plugin {
 	settings!: ObeliskSettings;
 	store!: CommentStore;
 
-	/** The view whose drifted anchors we owe a write to. */
-	private tracking: MarkdownView | null = null;
 	/**
 	 * The last markdown view that had focus. Focus moving to the sidebar (or
 	 * anywhere else) doesn't mean the reader left the note, so this is what
 	 * "the note we're commenting on" means everywhere below.
 	 */
 	private lastMarkdownView: MarkdownView | null = null;
-	/** Guards against a flush re-entering through its own metadata event. */
-	private flushing = false;
-	private scheduleFlush!: Debouncer<[], void>;
+	/**
+	 * One render pass of Reading view calls the post-processor once per
+	 * section, each time handing over the same source text. Resolving the
+	 * whole note per section would be quadratic, so the pass shares one
+	 * result. Invalidated in `refresh`, which is where comment changes land.
+	 */
+	private readingPass: {
+		path: string;
+		text: string;
+		frame: DocFrame;
+		comments: ResolvedComment[];
+	} | null = null;
+	private scheduleResolve!: Debouncer<[], void>;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.store = new CommentStore(this.app);
-		this.scheduleFlush = debounce(
-			() => void this.flushAnchors(),
-			ANCHOR_FLUSH_DELAY,
+		this.scheduleResolve = debounce(
+			() => this.refresh(),
+			RESOLVE_DELAY,
 			true,
 		);
 
@@ -98,7 +115,7 @@ export default class ObeliskPlugin extends Plugin {
 		this.registerEditorExtension(
 			obeliskEditorExtension({
 				onSelect: (id, opts) => void this.revealComment(id, opts),
-				onDrift: () => this.scheduleFlush(),
+				onEdit: () => this.scheduleResolve(),
 			}),
 		);
 
@@ -135,9 +152,8 @@ export default class ObeliskPlugin extends Plugin {
 			},
 		});
 
-		// Requirement 5 in Reading view. Separate anchoring path: rendered DOM
-		// has no line numbers, so it matches on the quoted text within the
-		// section `ctx.getSectionInfo` reports.
+		// Requirement 5 in Reading view. Same anchoring rule as the editor —
+		// find the quoted text — applied to rendered DOM instead of a buffer.
 		this.registerMarkdownPostProcessor((el, ctx) =>
 			this.decorateReadingView(el, ctx),
 		);
@@ -156,7 +172,6 @@ export default class ObeliskPlugin extends Plugin {
 		);
 		this.registerEvent(
 			this.app.metadataCache.on("changed", (file) => {
-				if (this.flushing) return;
 				if (file.path === this.activeFile()?.path) this.refresh();
 			}),
 		);
@@ -165,20 +180,14 @@ export default class ObeliskPlugin extends Plugin {
 		// can come back empty. This fires when the cache goes quiet; the
 		// sidebar no-ops when nothing actually changed.
 		this.registerEvent(
-			this.app.metadataCache.on("resolved", () => {
-				if (this.flushing) return;
-				this.refresh();
-			}),
+			this.app.metadataCache.on("resolved", () => this.refresh()),
 		);
 
 		this.app.workspace.onLayoutReady(() => void this.onActiveViewChanged());
 	}
 
 	onunload(): void {
-		// Views are torn down by Obsidian, but anchors that drifted since the
-		// last debounce are still only in CodeMirror's head.
-		this.scheduleFlush.cancel();
-		void this.flushAnchors(this.tracking);
+		this.scheduleResolve.cancel();
 	}
 
 	// ── State ────────────────────────────────────────────────────────────────
@@ -186,12 +195,15 @@ export default class ObeliskPlugin extends Plugin {
 	/**
 	 * Recompute everything and push it to both consumers.
 	 *
-	 * This is not on the typing path — it runs on file switches and on
-	 * frontmatter changes only. Live edits are handled inside CodeMirror by
-	 * mapping the existing ranges, which is why this can afford to be
-	 * unconditional rather than cached.
+	 * Runs on file switches, on frontmatter changes, and a beat after the
+	 * editor goes quiet. Resolving is a substring search per comment and
+	 * writes nothing, so this can afford to be unconditional rather than
+	 * cached — and the sidebar redraws only when the result actually differs.
 	 */
 	refresh(): void {
+		// A pending re-resolve has just been made redundant, whoever asked.
+		this.scheduleResolve.cancel();
+		this.readingPass = null;
 		const { file, comments } = this.activeComments();
 
 		this.sidebar()?.setComments(file, comments);
@@ -234,35 +246,29 @@ export default class ObeliskPlugin extends Plugin {
 		const comments = this.store.read(file);
 		if (comments.length === 0) return [];
 
-		const state = this.documentState(file, view);
-		if (!state) {
+		const text = this.documentText(file, view);
+		if (text === null) {
 			return comments.map((c) => ({
 				...c,
 				range: null,
-				state: "orphaned" as const,
+				state: "detached" as const,
 			}));
 		}
 
-		return resolveAll(comments, state, frameFromState(state), {
-			reanchor: this.settings.enableReanchoring,
-		});
+		return resolveAll(comments, frameFrom(text));
 	}
 
 	/**
-	 * The CodeMirror state to anchor against.
-	 *
-	 * Normally the live editor's own. In Reading view the editor exists but may
-	 * not have a CM instance attached, so fall back to a throwaway state built
-	 * from the same text — anchoring only needs a document, not a view.
+	 * The text to anchor against: the live editor's document when there is
+	 * one, and the same text through the Editor API when there is not (a
+	 * Reading-view leaf may have no CodeMirror instance attached). Resolution
+	 * needs a document and nothing else.
 	 */
-	private documentState(
-		file: TFile,
-		view: MarkdownView | null,
-	): EditorState | null {
+	private documentText(file: TFile, view: MarkdownView | null): string | null {
 		const cm = this.editorView(view);
-		if (cm) return cm.state;
+		if (cm) return cm.state.doc.toString();
 		if (!view || view.file?.path !== file.path) return null;
-		return EditorState.create({ doc: view.editor.getValue() });
+		return view.editor.getValue();
 	}
 
 	// ── Actions ──────────────────────────────────────────────────────────────
@@ -298,13 +304,12 @@ export default class ObeliskPlugin extends Plugin {
 		selection: { from: number; to: number; quote: string },
 		draft: CommentDraft,
 	): Promise<void> {
-		const state = this.documentState(file, view);
-		if (!state) return;
+		const text = this.documentText(file, view);
+		if (text === null) return;
 
 		// The Editor API's coordinates are document-absolute and include the
-		// frontmatter; `makeAnchor` shifts them into body coordinates and
-		// grabs the surrounding context for re-anchoring.
-		if (state.sliceDoc(selection.from, selection.to) !== selection.quote) {
+		// frontmatter; `makeAnchor` shifts them into body coordinates.
+		if (text.slice(selection.from, selection.to) !== selection.quote) {
 			new Notice("The selection changed while you were typing. Not saving.");
 			return;
 		}
@@ -312,8 +317,7 @@ export default class ObeliskPlugin extends Plugin {
 		const anchor = makeAnchor(
 			selection.from,
 			selection.to,
-			state,
-			frameFromState(state),
+			frameFrom(text),
 		);
 		const existing = new Set(this.store.read(file).map((c) => c.id));
 
@@ -337,47 +341,34 @@ export default class ObeliskPlugin extends Plugin {
 	}
 
 	async applySuggestion(file: TFile, id: string): Promise<void> {
-		// Flush first: anchors that drifted since the last debounce would send
-		// the splice looking in the wrong place, and everything below reads
-		// from the store.
-		this.scheduleFlush.cancel();
-		await this.flushAnchors();
-
-		const stored = this.store.read(file);
 		const comment = this.resolveFor(file, this.activeMarkdownView()).find(
 			(c) => c.id === id,
 		);
 		if (!comment?.suggestion) return;
 
-		const result = await applySuggestion(this.app, file, comment, stored);
+		const result = await applySuggestion(this.app, file, comment);
 		if (!result.ok) {
 			new Notice(APPLY_FAILURE[result.reason]);
 			return;
 		}
 
 		const appliedAt = new Date().toISOString();
-		const replacement = comment.suggestion!.replacement;
+		const replacement = comment.suggestion.replacement;
 		const remove = this.settings.removeCommentOnApply;
 
-		// One frontmatter write for the whole thing: the re-anchoring the
-		// splice forced, plus the comment's own new state.
-		this.flushing = true;
-		try {
-			await this.store.update(file, (comments) => {
-				for (const { id: target, anchor } of result.anchors) {
-					const entry = comments.find((c) => c.id === target);
-					if (entry) entry.anchor = anchor;
-				}
-				if (remove) return comments.filter((c) => c.id !== id);
-				const applied = comments.find((c) => c.id === id);
-				if (applied) {
-					applied.suggestion = { replacement, appliedAt };
-					applied.modified = appliedAt;
-				}
-			});
-		} finally {
-			this.flushing = false;
-		}
+		// The splice moved every comment after it, and none of them care:
+		// they are found by their quoted text, which the splice did not touch.
+		// The applied comment is the one exception — it now quotes the
+		// replacement rather than the text it replaced.
+		await this.store.update(file, (comments) => {
+			if (remove) return comments.filter((c) => c.id !== id);
+			const applied = comments.find((c) => c.id === id);
+			if (applied) {
+				applied.anchor = result.anchor;
+				applied.suggestion = { replacement, appliedAt };
+				applied.modified = appliedAt;
+			}
+		});
 
 		this.refresh();
 	}
@@ -475,54 +466,10 @@ export default class ObeliskPlugin extends Plugin {
 		return commentAt(cm, editor.posToOffset(editor.getCursor("head")));
 	}
 
-	// ── Anchor drift ─────────────────────────────────────────────────────────
-
-	/**
-	 * Write back anchors that CodeMirror has been moving as the note is typed.
-	 *
-	 * See docs/DESIGN.md § 3c: highlights follow edits live in the editor, and
-	 * the on-disk coordinates catch up here — on a pause in typing, on file
-	 * switch, on unload, and before anything that depends on them being right.
-	 */
-	private async flushAnchors(view = this.activeMarkdownView()): Promise<void> {
-		if (this.flushing) return;
-		const file = view?.file;
-		const cm = this.editorView(view);
-		if (!file || !cm || !cm.dom.isConnected) return;
-
-		const tracked = cm.state.field(commentField, false)?.ranges;
-		if (!tracked?.length) return;
-
-		const writes = pendingAnchorWrites(
-			this.store.read(file),
-			tracked,
-			cm.state,
-			frameFromState(cm.state),
-		);
-		if (writes.length === 0) return;
-
-		this.flushing = true;
-		try {
-			await this.store.patchMany(
-				file,
-				writes.map((w) => ({ id: w.id, patch: { anchor: w.anchor } })),
-				// The reader didn't touch these comments; the text moved under
-				// them. Stamping `modified` here would make it meaningless.
-				{ touch: false },
-			);
-		} finally {
-			this.flushing = false;
-		}
-	}
+	// ── Lifecycle ────────────────────────────────────────────────────────────
 
 	private async onActiveViewChanged(): Promise<void> {
 		const view = this.activeMarkdownView();
-		if (this.tracking && this.tracking !== view) {
-			this.scheduleFlush.cancel();
-			await this.flushAnchors(this.tracking);
-		}
-		this.tracking = view;
-
 		this.refresh();
 
 		if (this.settings.autoOpenSidebar && view?.file) {
@@ -543,23 +490,39 @@ export default class ObeliskPlugin extends Plugin {
 		const comments = this.store.read(file);
 		if (comments.length === 0) return;
 
-		// Rendered blocks have no line numbers of their own; this is the only
-		// bridge back to the source coordinates the anchors are stored in.
+		// Rendered blocks have no line numbers of their own. `getSectionInfo`
+		// is the bridge back to the source, and it hands over the whole file
+		// text — so the same resolution the editor uses decides which section
+		// each comment belongs to, and a quote that occurs twice is
+		// highlighted in the block it actually resolves to rather than both.
 		const section = ctx.getSectionInfo(el);
 		if (!section) return;
+		const pass = this.readingResolution(ctx.sourcePath, section.text, comments);
 
-		const bodyStartLine = this.store.bodyOffset(file).line;
-		const first = section.lineStart - bodyStartLine;
-		const last = section.lineEnd - bodyStartLine;
-
-		for (const comment of comments) {
+		for (const comment of pass.comments) {
 			if (comment.resolved && !this.settings.showResolved) continue;
-			if (comment.anchor.to.line < first) continue;
-			if (comment.anchor.from.line > last) continue;
+			if (!comment.range) continue;
+			const line = lineNumberAt(pass.frame, comment.range.from);
+			if (line < section.lineStart || line > section.lineEnd) continue;
 			highlightQuoteInSection(el, comment, (id) =>
 				void this.revealComment(id),
 			);
 		}
+	}
+
+	/** The resolution shared by every section of one Reading-view render. */
+	private readingResolution(
+		path: string,
+		text: string,
+		comments: Comment[],
+	): { path: string; text: string; frame: DocFrame; comments: ResolvedComment[] } {
+		const cached = this.readingPass;
+		if (cached && cached.path === path && cached.text === text) return cached;
+
+		const frame = frameFrom(text);
+		const pass = { path, text, frame, comments: resolveAll(comments, frame) };
+		this.readingPass = pass;
+		return pass;
 	}
 
 	// ── Plumbing ─────────────────────────────────────────────────────────────
@@ -648,10 +611,8 @@ export default class ObeliskPlugin extends Plugin {
 }
 
 const APPLY_FAILURE: Record<string, string> = {
+	"no-suggestion": "That comment has no suggestion to apply.",
 	"already-applied": "That suggestion has already been applied.",
-	orphaned:
-		"The text this suggestion targets is no longer in the note. Not applying.",
-	stale: "The text this suggestion targets has changed. Not applying.",
-	ambiguous:
-		"The quoted text appears more than once, so it isn't clear where this belongs. Not applying.",
+	detached:
+		"The text this suggestion targets has changed or been removed. Not applying.",
 };

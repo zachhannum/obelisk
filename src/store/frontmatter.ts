@@ -30,6 +30,9 @@ const KNOWN_COMMENT_KEYS = new Set([
 	"tags",
 ]);
 
+// `prefix`/`suffix` are read so that context stored by an earlier version is
+// recognised and dropped on the next write, rather than preserved forever as
+// an unknown key. Nothing uses them: resolution matches on `quote` alone.
 const KNOWN_ANCHOR_KEYS = new Set(["from", "to", "quote", "prefix", "suffix"]);
 
 /**
@@ -107,68 +110,18 @@ export class CommentStore {
 		);
 	}
 
-	/**
-	 * Merge `patch` into one comment.
-	 *
-	 * `touch` controls whether `modified` is bumped. Anchor drift flushes pass
-	 * `false`: the reader did not change the comment, the text moved under it,
-	 * and stamping every keystroke-driven flush would make `modified`
-	 * meaningless.
-	 */
+	/** Merge `patch` into one comment, stamping `modified`. */
 	async patch(
 		file: TFile,
 		id: string,
 		patch: Partial<Comment>,
-		opts: { touch?: boolean } = {},
 	): Promise<void> {
-		await this.patchMany(file, [{ id, patch }], opts);
-	}
-
-	/**
-	 * Apply several patches in a single frontmatter write. Applying a
-	 * suggestion re-anchors every other comment in the note, and doing that as
-	 * N separate writes would be N sync events and N metadata reparses.
-	 */
-	async patchMany(
-		file: TFile,
-		patches: Array<{ id: string; patch: Partial<Comment> }>,
-		opts: { touch?: boolean } = {},
-	): Promise<void> {
-		if (patches.length === 0) return;
-		const touch = opts.touch ?? true;
-		const stamp = new Date().toISOString();
-
 		await this.update(file, (comments) => {
-			for (const { id, patch } of patches) {
-				const target = comments.find((c) => c.id === id);
-				if (!target) continue;
-				Object.assign(target, patch);
-				if (touch) target.modified = stamp;
-			}
+			const target = comments.find((c) => c.id === id);
+			if (!target) return;
+			Object.assign(target, patch);
+			target.modified = new Date().toISOString();
 		});
-	}
-
-	/**
-	 * Character offset in the raw file at which the body begins — i.e. just
-	 * past the closing `---` of the frontmatter block. Anchors are stored
-	 * relative to this point, so callers converting between stored positions
-	 * and editor positions need it.
-	 *
-	 * Returns 0 for a file with no frontmatter.
-	 *
-	 * This is the metadata-cache route, for callers that have a TFile but no
-	 * document text (the Reading-view post-processor). Anything holding an
-	 * EditorState should use `anchors.frameFromState`, which derives the same
-	 * number from the text it is about to anchor against and so cannot be
-	 * stale with respect to it.
-	 */
-	bodyOffset(file: TFile): { line: number; ch: number } {
-		const pos =
-			this.app.metadataCache.getFileCache(file)?.frontmatterPosition;
-		if (!pos) return { line: 0, ch: 0 };
-		// `pos.end.line` is the line of the closing `---`; the body starts on
-		// the following line.
-		return { line: pos.end.line + 1, ch: 0 };
 	}
 }
 
@@ -318,13 +271,10 @@ function normalizeAnchor(
 		to = { line: from.line, col: from.col + quote.length };
 	}
 
-	const value: Anchor = { from, to, quote };
-	const prefix = str(raw.prefix);
-	if (prefix) value.prefix = prefix;
-	const suffix = str(raw.suffix);
-	if (suffix) value.suffix = suffix;
-
-	return { value, extra: unknownKeys(raw, KNOWN_ANCHOR_KEYS) };
+	return {
+		value: { from, to, quote },
+		extra: unknownKeys(raw, KNOWN_ANCHOR_KEYS),
+	};
 }
 
 function normalizePos(raw: unknown): BodyPos | null {
@@ -393,8 +343,6 @@ export function serialize(comment: Comment): Record<string, unknown> {
 		to: { line: comment.anchor.to.line, col: comment.anchor.to.col },
 		quote: comment.anchor.quote,
 	};
-	if (comment.anchor.prefix) anchor.prefix = comment.anchor.prefix;
-	if (comment.anchor.suffix) anchor.suffix = comment.anchor.suffix;
 	Object.assign(anchor, extras?.anchor ?? {});
 
 	const out: Record<string, unknown> = { id: comment.id };

@@ -1,7 +1,6 @@
 import { Extension, StateEffect, StateField } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
 import type { Range } from "@codemirror/state";
-import { TrackedRange } from "../store/anchors";
 import { ResolvedComment } from "../types";
 import { MarkerWidget } from "./marker";
 
@@ -22,9 +21,20 @@ import { MarkerWidget } from "./marker";
  *                                widget for the click-to-open marker
  *
  * Mapping through changes (rather than recomputing from frontmatter on every
- * keystroke) is what makes the highlight follow the text while typing inside
- * it. Frontmatter is only re-read when it actually changes.
+ * keystroke) is what keeps a highlight from flickering while the text around
+ * it is being typed. It is presentation only: nothing here is ever written
+ * back to disk, and the next `setComments` — driven by a fresh resolve against
+ * the document — is the last word on where a comment lives. So editing inside
+ * a commented passage looks stable as you type and then detaches when
+ * resolution next runs, because its quoted text really is gone.
  */
+
+/** A comment's live position in this editor, mapped through every edit. */
+export interface TrackedRange {
+	id: string;
+	from: number;
+	to: number;
+}
 
 /** Dispatched to hand a new set of resolved comments to the editor. */
 export const setComments = StateEffect.define<ResolvedComment[]>();
@@ -171,8 +181,11 @@ export interface EditorHooks {
 	 * a highlighted passage, which should not steal focus into the sidebar.
 	 */
 	onSelect: (id: string, opts: { reveal: boolean }) => void;
-	/** The document changed, so tracked anchors have drifted from disk. */
-	onDrift: () => void;
+	/**
+	 * The document changed, so what the comments resolve to may have changed
+	 * with it. Nothing is written; this only asks for a re-resolve.
+	 */
+	onEdit: () => void;
 }
 
 /**
@@ -222,9 +235,9 @@ export function obeliskEditorExtension(hooks: EditorHooks): Extension {
 		commentClickHandler(hooks),
 		EditorView.updateListener.of((update) => {
 			const field = update.state.field(commentField, false);
-			if (update.docChanged && field?.ranges.length) {
-				hooks.onDrift();
-			}
+			// `comments`, not `ranges`: a note whose comments have all detached
+			// still has to re-resolve, or an undo could never reattach them.
+			if (update.docChanged && field?.comments.length) hooks.onEdit();
 		}),
 	];
 }

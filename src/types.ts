@@ -26,30 +26,32 @@ export interface BodyPos {
 }
 
 /**
- * Where a comment attaches. We deliberately store redundant information:
- * the line/col range is fast and exact for an unedited file, and the
- * quote/prefix/suffix triple lets us re-find the passage after the text has
- * drifted (the same trick the W3C Annotation "TextQuoteSelector" uses).
+ * Where a comment attaches.
+ *
+ * `quote` is the anchor: resolution finds the comment by searching the body
+ * for this exact text, and it is never rewritten once the comment is created.
+ * `from`/`to` record where the passage was at the time, which is what the
+ * sidebar sorts by and what breaks the tie when a quote appears more than once
+ * in the note. They are a hint, not a position — nothing keeps them current as
+ * the note is edited. See docs/DESIGN.md § Anchoring.
  */
 export interface Anchor {
 	from: BodyPos;
 	to: BodyPos;
 	/** The exact text that was selected when the comment was created. */
 	quote: string;
-	/** Up to ANCHOR_CONTEXT_CHARS of text immediately before `quote`. */
-	prefix?: string;
-	/** Up to ANCHOR_CONTEXT_CHARS of text immediately after `quote`. */
-	suffix?: string;
 }
 
-/** How confident we are that a comment is still pointing at the right text. */
+/** Whether a comment still points at text that exists. */
 export type AnchorState =
-	/** line/col matched `quote` exactly. */
-	| "exact"
-	/** line/col was stale; relocated via quote + prefix/suffix search. */
-	| "relocated"
-	/** The quoted text is gone. Comment is shown in the sidebar but not highlighted. */
-	| "orphaned";
+	/** `quote` was found in the body; the comment is highlighted there. */
+	| "attached"
+	/**
+	 * `quote` is nowhere in the body — the passage was edited or deleted. The
+	 * comment is listed in the sidebar, flagged, and decorates nothing. Derived
+	 * fresh on every resolve, so restoring the text reattaches it.
+	 */
+	| "detached";
 
 /**
  * A GitHub-style suggested edit attached to a comment.
@@ -106,8 +108,6 @@ export interface ObeliskSettings {
 	highlightInReadingView: boolean;
 	/** Open the sidebar automatically when a note containing comments is opened. */
 	autoOpenSidebar: boolean;
-	/** Attempt quote-based relocation when line/col no longer matches. */
-	enableReanchoring: boolean;
 	/** Delete a comment's frontmatter entry when its suggestion is applied. */
 	removeCommentOnApply: boolean;
 }
@@ -117,14 +117,10 @@ export const DEFAULT_SETTINGS: ObeliskSettings = {
 	showResolved: false,
 	highlightInReadingView: true,
 	autoOpenSidebar: false,
-	enableReanchoring: true,
 	removeCommentOnApply: false,
 };
 
 /** The frontmatter key everything lives under. */
 export const FRONTMATTER_KEY = "obelisk";
-
-/** How much surrounding text to keep for re-anchoring. */
-export const ANCHOR_CONTEXT_CHARS = 32;
 
 export const VIEW_TYPE_OBELISK = "obelisk-sidebar";

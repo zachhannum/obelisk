@@ -65,21 +65,6 @@ export class ObeliskSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Re-anchor drifted comments")
-			.setDesc(
-				"If the stored position no longer matches, search the note for the quoted text.",
-			)
-			.addToggle((t) =>
-				t
-					.setValue(this.plugin.settings.enableReanchoring)
-					.onChange(async (value) => {
-						this.plugin.settings.enableReanchoring = value;
-						await this.plugin.saveSettings();
-						this.plugin.refresh();
-					}),
-			);
-
-		new Setting(containerEl)
 			.setName("Remove comment after applying its suggestion")
 			.addToggle((t) =>
 				t

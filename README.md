@@ -28,10 +28,11 @@ for the decisions behind it and what remains open.
   marker that opens the comment in the sidebar.
 - **Stored in frontmatter** — plain YAML under an `obelisk` key. Readable,
   diffable, portable.
-- **Survives editing** — anchors record both a line/column range and the quoted
-  text, so comments re-find their passage after the note drifts. A passage that
-  is deleted outright leaves its comment flagged in the sidebar rather than
-  quietly disappearing.
+- **Survives editing** — a comment is anchored to the text it quotes, so it
+  keeps up with edits anywhere else in the note, including ones made outside
+  Obsidian. Edit or delete the quoted passage itself and the comment detaches:
+  flagged in the sidebar, highlighting nothing, never guessing at a new home
+  and never quietly disappearing. Restore the text and it reattaches.
 - **Threaded replies** — on any comment, stored alongside it.
 
 ## Data format
@@ -52,8 +53,11 @@ obelisk:
 ---
 ```
 
-Line numbers are counted from the first line *after* the frontmatter block, so
-adding a comment never invalidates the others.
+The `quote` is what a comment is anchored by. The line/column range records
+where the passage was when the comment was written — it orders the sidebar and
+breaks ties when a quote appears twice, and is never rewritten. Lines are
+counted from the first line *after* the frontmatter block, so adding a comment
+never invalidates the others.
 
 ## Development
 

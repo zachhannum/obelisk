@@ -3,12 +3,14 @@ import { Comment } from "../types";
 /**
  * Requirement 5 in Reading view, via a MarkdownPostProcessor.
  *
- * This is a second, weaker anchoring path and is meant to be: rendered HTML
- * has no line numbers and no markdown syntax, so a stored line/col is useless
- * here and the only thing left to match on is the quoted text. A quote that
- * spans markup (`**bold**`, a link, a footnote) will not be found, because the
- * rendered text no longer contains those characters. That is an accepted
- * limitation — the editor path is the contract; this is a nicety on top.
+ * Anchoring is the same rule as everywhere else — find the quoted text — but
+ * against rendered HTML rather than the source buffer, which makes it weaker
+ * and is meant to be. A quote that spans markup (`**bold**`, a link, a
+ * footnote) will not be found, because the rendered text no longer contains
+ * those characters. The caller has already decided, from the source, which
+ * section a comment resolves to; this only has to find it inside that block.
+ * An accepted limitation — the editor path is the contract; this is a nicety
+ * on top.
  *
  * See docs/DESIGN.md § 5.
  */

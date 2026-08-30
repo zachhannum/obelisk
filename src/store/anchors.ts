@@ -1,371 +1,198 @@
-import { EditorState } from "@codemirror/state";
-import {
-	Anchor,
-	ANCHOR_CONTEXT_CHARS,
-	AnchorState,
-	BodyPos,
-	Comment,
-	ResolvedComment,
-} from "../types";
+import { Anchor, BodyPos, Comment, ResolvedComment } from "../types";
 
 /**
- * Anchor resolution: turning stored, body-relative line/col ranges into
- * absolute offsets in the live document, and back.
+ * Anchor resolution: finding where each comment's quoted text lives in the
+ * note as it stands right now.
  *
- * This is the part that decides whether the plugin feels solid or flaky.
- * The strategy, in order:
+ * There is exactly one rule, and everything else in the plugin defers to it:
  *
- *   1. Convert the stored line/col to absolute offsets and check whether the
- *      text there still equals `anchor.quote`. If so → "exact".
- *   2. If not, search the document for `quote`. If exactly one match → use it.
- *      If several, pick the one whose surrounding text best matches
- *      `prefix`/`suffix`, and the one nearest the original line as a tiebreak.
- *      → "relocated" (the stored line/col should then be rewritten).
- *   3. If `quote` is nowhere to be found → "orphaned". The comment still shows
- *      in the sidebar, flagged, but decorates nothing.
+ *   **The quote is the anchor.** Search the body for it.
+ *     - found once     → attached there
+ *     - found several  → attached to the occurrence nearest the stored
+ *                        line/col, which is a hint and nothing more
+ *     - not found      → detached
  *
- * See docs/DESIGN.md § Anchoring for why we store both forms.
+ * Resolution is a pure function of the document text. It reads the stored
+ * anchor and never writes one back, so there is no drift to flush, nothing
+ * racing the editor, and no second opinion about where a comment lives. A
+ * comment whose text was edited or deleted goes detached and stays detached
+ * until that exact text comes back — which, since detachment is derived rather
+ * than stored, means an undo silently reattaches it.
+ *
+ * The stored line/col earns its keep only when a quote appears more than once.
+ * It is written when the comment is created and never updated, so it drifts as
+ * the note is edited; that is fine, because it is only ever used to choose the
+ * nearest of several identical candidates.
+ *
+ * See docs/DESIGN.md § Anchoring.
  */
 
+/**
+ * A document, indexed for anchoring: the text itself, where its body begins,
+ * and the offset of every line start.
+ *
+ * Deliberately plain strings rather than a CodeMirror `EditorState`. The
+ * editor, the reading-view post-processor and the on-disk apply path all need
+ * to resolve against text they hold in different forms, and offsets into a
+ * string are exactly CodeMirror's offsets.
+ */
 export interface DocFrame {
-	/** Absolute offset in the editor doc at which the note body begins. */
+	/** The full document text this frame describes. */
+	text: string;
+	/** Offset at which the note body — everything past the frontmatter — begins. */
 	bodyStart: number;
-	/** Line number (0-indexed, editor coords) at which the note body begins. */
+	/** 0-indexed line on which the body begins. */
 	bodyStartLine: number;
+	/** Offset of the start of each line, 0-indexed. */
+	lineStarts: readonly number[];
 }
-
-export interface ResolveOptions {
-	/** Fall back to quote search when line/col no longer matches. */
-	reanchor?: boolean;
-}
-
-/**
- * How many occurrences of a quote we are willing to score before giving up.
- * A one-word quote in a long note would otherwise make every resolve O(doc).
- */
-const MAX_CANDIDATES = 256;
-
-/** Below this length a quote is too generic to relocate on its own. */
-const MIN_RELOCATABLE_QUOTE = 1;
 
 // ── Frames ───────────────────────────────────────────────────────────────────
 
 /**
- * Work out where the body starts by reading the document itself.
+ * Index a document for anchoring.
  *
- * Deliberately not `metadataCache`: the frame has to describe the exact text
- * we are about to anchor against, and the cache can lag the buffer by a
- * reparse. Scanning a handful of lines is cheaper than being wrong.
+ * The body start is derived from the text itself rather than from
+ * `metadataCache`: the frame has to describe the exact text we are about to
+ * anchor against, and the cache can lag the buffer by a reparse.
  */
-export function frameFromState(state: EditorState): DocFrame {
-	if (state.doc.lines === 0) return { bodyStart: 0, bodyStartLine: 0 };
-	if (state.doc.line(1).text.trim() !== "---") {
-		return { bodyStart: 0, bodyStartLine: 0 };
+export function frameFrom(text: string): DocFrame {
+	const lineStarts = [0];
+	for (let i = 0; i < text.length; i++) {
+		if (text.charCodeAt(i) === 10) lineStarts.push(i + 1);
 	}
 
-	for (let n = 2; n <= state.doc.lines; n++) {
-		const text = state.doc.line(n).text.trim();
-		if (text === "---" || text === "...") {
-			// `n` is 1-indexed and is the closing fence, so the body starts on
-			// 1-indexed line n + 1 — which is 0-indexed line n.
-			return frameFromBodyLine(state, n);
-		}
+	const bodyStartLine = bodyLineOf(text, lineStarts);
+	return {
+		text,
+		lineStarts,
+		bodyStartLine,
+		bodyStart: lineStarts[bodyStartLine] ?? text.length,
+	};
+}
+
+/** 0-indexed line on which the body begins, i.e. past the frontmatter block. */
+function bodyLineOf(text: string, lineStarts: readonly number[]): number {
+	if (lineOf(text, lineStarts, 0).trim() !== "---") return 0;
+
+	for (let n = 1; n < lineStarts.length; n++) {
+		const line = lineOf(text, lineStarts, n).trim();
+		// `n` is the closing fence, so the body starts on the next line —
+		// which may be one past the end, for a file that is only frontmatter.
+		if (line === "---" || line === "...") return n + 1;
 	}
 
 	// An unterminated fence is not frontmatter; treat the whole file as body.
-	return { bodyStart: 0, bodyStartLine: 0 };
+	return 0;
 }
 
-/** Frame for a body known to start at a given 0-indexed editor line. */
-export function frameFromBodyLine(
-	state: EditorState,
-	bodyStartLine: number,
-): DocFrame {
-	const clamped = Math.max(0, Math.min(bodyStartLine, state.doc.lines - 1));
-	return {
-		bodyStart: state.doc.line(clamped + 1).from,
-		bodyStartLine: clamped,
-	};
+function lineOf(
+	text: string,
+	lineStarts: readonly number[],
+	line: number,
+): string {
+	const next = lineStarts[line + 1];
+	return text.slice(lineStarts[line], next === undefined ? text.length : next - 1);
 }
 
 // ── Resolution ───────────────────────────────────────────────────────────────
 
-/**
- * Resolve every comment against the current document in one pass.
- */
+/** Resolve every comment against the document in one pass. */
 export function resolveAll(
-	comments: Comment[],
-	state: EditorState,
+	comments: readonly Comment[],
 	frame: DocFrame,
-	opts: ResolveOptions = {},
 ): ResolvedComment[] {
-	return comments.map((c) => resolve(c, state, frame, opts));
+	return comments.map((c) => resolve(c, frame));
 }
 
-export function resolve(
-	comment: Comment,
-	state: EditorState,
-	frame: DocFrame,
-	opts: ResolveOptions = {},
-): ResolvedComment {
+/**
+ * Find `comment`'s quoted text in the body.
+ *
+ * The scan walks occurrences left to right and stops as soon as they start
+ * getting further from the stored hint — distance to a fixed point is
+ * decreasing and then increasing, so the first occurrence that fails to
+ * improve is one past the best one. That bounds the search around the hint
+ * instead of over the whole note, with no candidate cap to tune.
+ */
+export function resolve(comment: Comment, frame: DocFrame): ResolvedComment {
 	const { quote } = comment.anchor;
 
-	// An empty quote can be "found" anywhere and highlights nothing, so it is
-	// never anchored — not exact, not relocatable.
-	if (quote.length === 0) return orphan(comment);
+	// An empty quote is "found" everywhere and would highlight nothing.
+	if (quote.length === 0) return detached(comment);
 
-	const from = toOffset(comment.anchor.from, state, frame);
-	const to = toOffset(comment.anchor.to, state, frame);
-
-	if (
-		from !== null &&
-		to !== null &&
-		to > from &&
-		state.sliceDoc(from, to) === quote
-	) {
-		return { ...comment, range: { from, to }, state: "exact" };
-	}
-
-	if (opts.reanchor === false) return orphan(comment);
-	return relocate(comment, state, frame);
-}
-
-/**
- * Step 2 of the strategy: find `quote` elsewhere in the document.
- *
- * Candidates are scored on how much of the stored prefix/suffix still
- * surrounds them, with distance from the stored position as the tiebreak — so
- * an unedited duplicate of the quote elsewhere in the note loses to the one
- * the comment was actually written against.
- */
-export function relocate(
-	comment: Comment,
-	state: EditorState,
-	frame: DocFrame,
-): ResolvedComment {
-	const { quote, prefix, suffix } = comment.anchor;
-	if (quote.length < MIN_RELOCATABLE_QUOTE) return orphan(comment);
-
-	const body = state.sliceDoc(frame.bodyStart);
-	const expected =
-		toOffset(comment.anchor.from, state, frame) ?? frame.bodyStart;
-
-	let bestFrom = -1;
-	let bestScore = -1;
+	const hint = toOffset(comment.anchor.from, frame) ?? frame.bodyStart;
+	let best = -1;
 	let bestDistance = Number.POSITIVE_INFINITY;
 
-	let index = body.indexOf(quote);
-	for (let seen = 0; index !== -1 && seen < MAX_CANDIDATES; seen++) {
-		const from = frame.bodyStart + index;
-		const to = from + quote.length;
-		const score =
-			commonSuffixLength(state.sliceDoc(Math.max(0, from - ANCHOR_CONTEXT_CHARS), from), prefix) +
-			commonPrefixLength(
-				state.sliceDoc(to, Math.min(state.doc.length, to + ANCHOR_CONTEXT_CHARS)),
-				suffix,
-			);
-		const distance = Math.abs(from - expected);
-
-		if (
-			score > bestScore ||
-			(score === bestScore && distance < bestDistance)
-		) {
-			bestFrom = from;
-			bestScore = score;
-			bestDistance = distance;
-		}
-
-		// Non-overlapping scan: a quote cannot start inside its own match.
-		index = body.indexOf(quote, index + quote.length);
+	for (
+		let at = frame.text.indexOf(quote, frame.bodyStart);
+		at !== -1;
+		at = frame.text.indexOf(quote, at + quote.length)
+	) {
+		const distance = Math.abs(at - hint);
+		if (distance >= bestDistance) break;
+		best = at;
+		bestDistance = distance;
 	}
 
-	if (bestFrom === -1) return orphan(comment);
+	if (best === -1) return detached(comment);
 	return {
 		...comment,
-		range: { from: bestFrom, to: bestFrom + quote.length },
-		state: "relocated",
+		range: { from: best, to: best + quote.length },
+		state: "attached",
 	};
 }
 
-/**
- * How many times `quote` occurs in the body, counting up to `cap`.
- *
- * Used to decide whether a relocation is trustworthy: one occurrence means
- * there is nothing to confuse it with, several means we are guessing.
- */
-export function occurrenceCount(
-	quote: string,
-	state: EditorState,
-	frame: DocFrame,
-	cap = MAX_CANDIDATES,
-): number {
-	if (quote.length === 0) return 0;
-	const body = state.sliceDoc(frame.bodyStart);
-	let count = 0;
-	let index = body.indexOf(quote);
-	while (index !== -1 && count < cap) {
-		count++;
-		index = body.indexOf(quote, index + quote.length);
-	}
-	return count;
-}
-
-function orphan(comment: Comment): ResolvedComment {
-	return { ...comment, range: null, state: "orphaned" };
+function detached(comment: Comment): ResolvedComment {
+	return { ...comment, range: null, state: "detached" };
 }
 
 // ── Coordinate conversion ────────────────────────────────────────────────────
 
 /**
- * Body-relative position → absolute document offset.
+ * Body-relative position → absolute offset.
  * Returns null if the position is past the end of the document.
  */
-export function toOffset(
-	pos: BodyPos,
-	state: EditorState,
-	frame: DocFrame,
-): number | null {
-	const lineNo = frame.bodyStartLine + pos.line + 1; // CM lines are 1-indexed
-	if (lineNo < 1 || lineNo > state.doc.lines) return null;
-	const line = state.doc.line(lineNo);
-	return Math.min(line.from + pos.col, line.to);
+export function toOffset(pos: BodyPos, frame: DocFrame): number | null {
+	const line = frame.bodyStartLine + pos.line;
+	if (line < 0 || line >= frame.lineStarts.length) return null;
+	return Math.min(frame.lineStarts[line] + pos.col, lineEnd(frame, line));
 }
 
-/**
- * Absolute document offset → body-relative position.
- */
-export function toBodyPos(
-	offset: number,
-	state: EditorState,
-	frame: DocFrame,
-): BodyPos {
-	const line = state.doc.lineAt(offset);
+/** Absolute offset → body-relative position. */
+export function toBodyPos(offset: number, frame: DocFrame): BodyPos {
+	const line = lineNumberAt(frame, offset);
 	return {
-		line: line.number - 1 - frame.bodyStartLine,
-		col: offset - line.from,
+		line: line - frame.bodyStartLine,
+		col: offset - frame.lineStarts[line],
 	};
 }
 
+/** The 0-indexed line containing `offset`, in whole-document coordinates. */
+export function lineNumberAt(frame: DocFrame, offset: number): number {
+	let lo = 0;
+	let hi = frame.lineStarts.length - 1;
+	while (lo < hi) {
+		const mid = (lo + hi + 1) >> 1;
+		if (frame.lineStarts[mid] <= offset) lo = mid;
+		else hi = mid - 1;
+	}
+	return lo;
+}
+
+function lineEnd(frame: DocFrame, line: number): number {
+	const next = frame.lineStarts[line + 1];
+	return next === undefined ? frame.text.length : next - 1;
+}
+
 /**
- * Build a fresh anchor for a selection. Called when a comment is created.
+ * Build an anchor for a range. Called when a comment is created, and again
+ * when a suggestion is applied and the comment comes to quote its replacement.
  */
-export function makeAnchor(
-	from: number,
-	to: number,
-	state: EditorState,
-	frame: DocFrame,
-): Anchor {
-	const anchor: Anchor = {
-		from: toBodyPos(from, state, frame),
-		to: toBodyPos(to, state, frame),
-		quote: state.sliceDoc(from, to),
+export function makeAnchor(from: number, to: number, frame: DocFrame): Anchor {
+	return {
+		from: toBodyPos(from, frame),
+		to: toBodyPos(to, frame),
+		quote: frame.text.slice(from, to),
 	};
-	const prefix = state.sliceDoc(
-		Math.max(frame.bodyStart, from - ANCHOR_CONTEXT_CHARS),
-		from,
-	);
-	const suffix = state.sliceDoc(
-		to,
-		Math.min(state.doc.length, to + ANCHOR_CONTEXT_CHARS),
-	);
-	if (prefix) anchor.prefix = prefix;
-	if (suffix) anchor.suffix = suffix;
-	return anchor;
 }
-
-// ── Drift write-back ─────────────────────────────────────────────────────────
-
-/** A comment's range as CodeMirror has been mapping it through edits. */
-export interface TrackedRange {
-	id: string;
-	from: number;
-	to: number;
-}
-
-/**
- * Compute the frontmatter writes needed to catch stored anchors up with where
- * the text has actually moved.
- *
- * Highlights follow edits live inside CodeMirror (see editor/highlight-
- * extension.ts); writing that back on every keystroke would be unacceptable,
- * so the drift is flushed on a debounce and on file close. This function is
- * that flush: it turns mapped ranges into anchors, and returns only the ones
- * that actually differ from what is on disk.
- *
- * One rule earns its keep: a comment carrying an unapplied suggestion keeps
- * its original `quote`. Positions still move — an edit above it must not
- * detach it — but if the anchored text *itself* changed, freezing the quote is
- * what makes the anchor resolve as non-exact, which is what makes
- * `applySuggestion` refuse. Retargeting the quote here would quietly re-point
- * a suggestion at text its author never saw. See docs/DESIGN.md § 4.
- */
-export function pendingAnchorWrites(
-	comments: Comment[],
-	tracked: readonly TrackedRange[],
-	state: EditorState,
-	frame: DocFrame,
-): Array<{ id: string; anchor: Anchor }> {
-	const byId = new Map(comments.map((c) => [c.id, c]));
-	const writes: Array<{ id: string; anchor: Anchor }> = [];
-
-	for (const range of tracked) {
-		const comment = byId.get(range.id);
-		if (!comment) continue;
-		// Collapsed: the anchored text was deleted outright. Leave the stored
-		// anchor alone so the comment orphans loudly instead of pointing at an
-		// empty span.
-		if (range.to <= range.from) continue;
-		if (range.from < frame.bodyStart) continue;
-		if (range.to > state.doc.length) continue;
-
-		const next = makeAnchor(range.from, range.to, state, frame);
-		if (comment.suggestion && !comment.suggestion.appliedAt) {
-			next.quote = comment.anchor.quote;
-		}
-		if (!sameAnchor(comment.anchor, next)) {
-			writes.push({ id: comment.id, anchor: next });
-		}
-	}
-
-	return writes;
-}
-
-function sameAnchor(a: Anchor, b: Anchor): boolean {
-	return (
-		a.from.line === b.from.line &&
-		a.from.col === b.from.col &&
-		a.to.line === b.to.line &&
-		a.to.col === b.to.col &&
-		a.quote === b.quote &&
-		(a.prefix ?? "") === (b.prefix ?? "") &&
-		(a.suffix ?? "") === (b.suffix ?? "")
-	);
-}
-
-// ── Text helpers ─────────────────────────────────────────────────────────────
-
-/** Length of the longest common suffix of `text` and `expected`. */
-function commonSuffixLength(text: string, expected?: string): number {
-	if (!expected) return 0;
-	let n = 0;
-	while (
-		n < text.length &&
-		n < expected.length &&
-		text[text.length - 1 - n] === expected[expected.length - 1 - n]
-	) {
-		n++;
-	}
-	return n;
-}
-
-/** Length of the longest common prefix of `text` and `expected`. */
-function commonPrefixLength(text: string, expected?: string): number {
-	if (!expected) return 0;
-	let n = 0;
-	while (n < text.length && n < expected.length && text[n] === expected[n]) {
-		n++;
-	}
-	return n;
-}
-
-export type { AnchorState };

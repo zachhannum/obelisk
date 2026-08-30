@@ -193,7 +193,7 @@
 	opacity: 0.6;
 }
 
-.obelisk-card.is-orphaned {
+.obelisk-card.is-detached {
 	border-style: dashed;
 }
 

@@ -30,8 +30,7 @@ export function renderCommentCard(
 	const card = container.createDiv({ cls: "obelisk-card" });
 	card.dataset.obeliskId = comment.id;
 	card.toggleClass("is-resolved", !!comment.resolved);
-	card.toggleClass("is-orphaned", comment.state === "orphaned");
-	card.toggleClass("is-relocated", comment.state === "relocated");
+	card.toggleClass("is-detached", comment.state === "detached");
 
 	// Requirement 4: clicking the card scrolls the editor to the passage.
 	card.addEventListener("click", (evt) => {
@@ -42,17 +41,11 @@ export function renderCommentCard(
 
 	renderHeader(card, comment);
 
-	if (comment.state === "orphaned") {
+	if (comment.state === "detached") {
 		notice(
 			card,
 			"alert-triangle",
-			"The commented text no longer exists in this note.",
-		);
-	} else if (comment.state === "relocated") {
-		notice(
-			card,
-			"move",
-			"The note moved since this was written; re-found by its quoted text.",
+			"The text this was written on has changed or been removed.",
 		);
 	}
 
@@ -153,7 +146,7 @@ function renderActions(
 			cls: "mod-cta",
 			text: "Apply suggestion",
 		});
-		apply.disabled = comment.state === "orphaned";
+		apply.disabled = comment.state === "detached";
 		if (apply.disabled) {
 			setTooltip(
 				apply,
