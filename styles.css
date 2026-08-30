@@ -457,9 +457,13 @@
 	margin-inline-start: auto;
 }
 
+/* The height is set inline as you type — see Composer.autosize — so the box
+   fits what it holds; these bound it at both ends. */
 .obelisk-compose-body {
 	font-family: inherit;
+	max-height: 50vh;
 	min-height: 5em;
+	overflow-y: auto;
 	resize: vertical;
 	width: 100%;
 }

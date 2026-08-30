@@ -17,6 +17,9 @@ export interface ComposerOptions {
 	onSubmit?: () => void;
 }
 
+/** Past this the box scrolls rather than pushing the buttons off-screen. */
+const MAX_ROWS = 20;
+
 /**
  * The box you write a comment in.
  *
@@ -63,7 +66,10 @@ export class Composer {
 		});
 		this.input.placeholder = opts.placeholder ?? "Leave a comment…";
 		this.input.value = opts.value ?? "";
-		this.input.addEventListener("input", () => this.opts.onChange?.(this.value));
+		this.input.addEventListener("input", () => {
+			this.autosize();
+			this.opts.onChange?.(this.value);
+		});
 		this.input.addEventListener("keydown", (evt) => {
 			if (evt.key === "Enter" && (evt.metaKey || evt.ctrlKey)) {
 				evt.preventDefault();
@@ -80,6 +86,7 @@ export class Composer {
 		});
 
 		this.show("write");
+		this.autosize();
 	}
 
 	get value(): string {
@@ -121,7 +128,28 @@ export class Composer {
 			contentStart + this.opts.quote.length,
 		);
 		this.input.focus();
+		this.autosize();
 		this.opts.onChange?.(this.value);
+	}
+
+	/**
+	 * Grow the box to its content, so an edit or a prefilled suggestion opens
+	 * showing the whole thing rather than a two-line slot you have to drag.
+	 * CSS caps it, past which the textarea scrolls; the height has to be reset
+	 * first or scrollHeight only ever reports the taller of the two.
+	 */
+	private autosize(): void {
+		if (!this.input.isShown()) {
+			// Nothing to measure while detached or on the Preview tab — count
+			// lines instead, and re-measure when Write comes back.
+			this.input.rows = Math.min(
+				MAX_ROWS,
+				this.input.value.split("\n").length,
+			);
+			return;
+		}
+		this.input.style.height = "auto";
+		this.input.style.height = `${this.input.scrollHeight}px`;
 	}
 
 	private show(which: "write" | "preview"): void {
@@ -130,7 +158,10 @@ export class Composer {
 		this.previewTab.toggleClass("is-active", previewing);
 		this.input.toggle(!previewing);
 		this.previewEl.toggle(previewing);
-		if (!previewing) return;
+		if (!previewing) {
+			this.autosize();
+			return;
+		}
 
 		this.previewEl.empty();
 		const markdown = this.value.trim();
