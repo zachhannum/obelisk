@@ -545,6 +545,15 @@
 	margin-block-start: var(--size-4-2);
 }
 
+/* While a body is being rewritten, the card's own row — Reply, Edit, Resolve,
+   Delete — and the pencils on its replies all act on text that is mid-edit, so
+   they stand down and leave the composer's Save and Cancel as the only live
+   buttons on the card. */
+.obelisk-card.is-editing > .obelisk-actions,
+.obelisk-card.is-editing .obelisk-reply .obelisk-icon-button {
+	display: none;
+}
+
 /* The edit control sits in the reply's header, where it would compete with
    the author line for attention; it surfaces when the reply is under the
    pointer or the button itself has keyboard focus. */

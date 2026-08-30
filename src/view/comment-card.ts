@@ -302,6 +302,10 @@ interface EditTarget {
  * composer that wrote it, so a suggestion block can be fixed, added or removed
  * with the button that inserts one — rather than by hand-typing a fence.
  *
+ * The card's own controls step aside with it: Reply, Edit, Resolve and Delete
+ * all act on text that is mid-rewrite, so while the composer is open the only
+ * live pair of buttons on the card is its own Save and Cancel.
+ *
  * Saving writes through the plugin, which refreshes the sidebar and rebuilds
  * this card from the store; nothing here has to put the rendered body back.
  * Cancelling does, since no write happened.
@@ -319,14 +323,20 @@ function openEditor(
 		return;
 	}
 
+	// `host` is the card when the comment itself is being edited, and a reply
+	// within it when a reply is.
+	const card = host.closest<HTMLElement>(".obelisk-card");
+
 	const wrapper = host.createDiv({ cls: "obelisk-editor" });
 	bodyEl.after(wrapper);
 	bodyEl.hide();
+	card?.addClass("is-editing");
 
 	const close = () => {
 		composer.destroy();
 		wrapper.remove();
 		bodyEl.show();
+		card?.removeClass("is-editing");
 	};
 
 	const submit = () => {
