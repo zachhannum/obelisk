@@ -484,13 +484,14 @@
 	outline: none;
 }
 
-/* CodeMirror's own theme sets no cursor, and Obsidian's `text` is scoped to
-   the note view — so without this the box reads as something you look at
-   rather than something you type into. On the scroller, so the padding around
-   the text counts too; links and the like keep their own cursor. */
+/* The whole inset lives on the scroller: it is what you click on, so the
+   padding around the text counts as the field too (CodeMirror's own theme
+   sets no cursor, and Obsidian's `text` is scoped to the note view, so
+   without this the box reads as something you look at rather than something
+   you type into — links and the like keep their own cursor). */
 .obelisk-compose-editor .cm-scroller {
 	cursor: text;
-	padding: var(--size-4-1) 0;
+	padding: var(--size-4-2);
 }
 
 /* A comment is prose in a small box: no note-width clamp, no page gutters. */
@@ -499,8 +500,13 @@
 	max-width: 100%;
 }
 
-.obelisk-compose-editor .cm-content {
-	padding-inline: var(--size-4-2);
+/* Both of these carry gutters of their own — Obsidian's from the source view
+   it thinks it is, CodeMirror's from its base theme — which would land the
+   text off-centre inside the scroller's inset. The `.cm-editor` in the
+   selector is there to outweigh the source-view rules they come from. */
+.obelisk-compose-editor .cm-editor .cm-content,
+.obelisk-compose-editor .cm-editor .cm-line {
+	padding: 0;
 }
 
 /* The height is set inline as you type — see TextareaField.refresh — so the
