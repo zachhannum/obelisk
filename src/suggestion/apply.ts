@@ -14,10 +14,15 @@ export type ApplyResult =
 			 */
 			anchor: Anchor;
 	  }
-	| { ok: false; reason: "no-suggestion" | "already-applied" | "detached" };
+	| { ok: false; reason: "already-applied" | "detached" };
 
 /**
  * Requirement 2c: apply a suggested modification, GitHub-style.
+ *
+ * `replacement` is the content of one ```suggestion block from the thread —
+ * the one whose Apply button was pressed. The comment does not "have" a single
+ * suggestion any more than a GitHub review comment does; it has markdown, and
+ * that markdown may propose several things.
  *
  * The contract that makes this safe: a suggestion is only applied where the
  * text is still character-for-character what the commenter quoted. That is the
@@ -38,10 +43,9 @@ export async function applySuggestion(
 	app: App,
 	file: TFile,
 	comment: ResolvedComment,
+	replacement: string,
 ): Promise<ApplyResult> {
-	const suggestion = comment.suggestion;
-	if (!suggestion) return { ok: false, reason: "no-suggestion" };
-	if (suggestion.appliedAt) return { ok: false, reason: "already-applied" };
+	if (comment.appliedAt) return { ok: false, reason: "already-applied" };
 
 	let result: ApplyResult = { ok: false, reason: "detached" };
 
@@ -53,18 +57,13 @@ export async function applySuggestion(
 		if (!fresh.range) return data;
 
 		const { from, to } = fresh.range;
-		const next =
-			data.slice(0, from) + suggestion.replacement + data.slice(to);
+		const next = data.slice(0, from) + replacement + data.slice(to);
 
 		result = {
 			ok: true,
 			from,
 			to,
-			anchor: makeAnchor(
-				from,
-				from + suggestion.replacement.length,
-				frameFrom(next),
-			),
+			anchor: makeAnchor(from, from + replacement.length, frameFrom(next)),
 		};
 		return next;
 	});

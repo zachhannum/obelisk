@@ -20,8 +20,14 @@ for the decisions behind it and what remains open.
 ## Features
 
 - **Comment on any passage** — select text, right-click, *Add comment*.
-- **Suggested edits** — propose a concrete replacement; apply it from the
-  sidebar. Refuses to apply if the underlying text has changed since.
+- **Markdown everywhere** — comments and replies are ordinary markdown, with a
+  Write/Preview pair while you type. Links, lists, embeds, callouts and math
+  render in the sidebar exactly as they would in a note.
+- **Suggested edits** — a proposal is a fenced ` ```suggestion ` block *inside*
+  the comment, the way GitHub does it. It renders as a diff against the quoted
+  passage with an Apply button, so one comment can explain itself and propose a
+  change, and a reply can offer a counter-proposal. Refuses to apply if the
+  underlying text has changed since.
 - **Sidebar** — all of a note's comments in document order; click one to scroll
   the editor to it.
 - **In-text highlighting** — commented passages are highlighted, with a †
@@ -33,7 +39,8 @@ for the decisions behind it and what remains open.
   Obsidian. Edit or delete the quoted passage itself and the comment detaches:
   flagged in the sidebar, highlighting nothing, never guessing at a new home
   and never quietly disappearing. Restore the text and it reattaches.
-- **Threaded replies** — on any comment, stored alongside it.
+- **Threaded replies** — on any comment, stored alongside it, and markdown all
+  the way down.
 
 ## Data format
 
@@ -43,15 +50,23 @@ obelisk:
   - id: cq7fk2m9x
     author: zach
     created: 2026-08-29T14:02:11.000Z
-    body: This paragraph does two things at once.
+    body: |-
+      This paragraph does two things at once.
+
+      ```suggestion
+      The horse bolted.
+      ```
     anchor:
       from: { line: 12, col: 0 }
       to: { line: 12, col: 47 }
       quote: The horse, which had been standing there, bolted.
-    suggestion:
-      replacement: The horse bolted.
 ---
 ```
+
+A comment is markdown and nothing else. A proposed edit is a ` ```suggestion `
+fenced block inside that markdown — the block's content replaces exactly the
+anchored range when applied — so there is no second, poorer text format beside
+the body, and a comment can hold prose, a link and a proposal at once.
 
 The `quote` is what a comment is anchored by. The line/column range records
 where the passage was when the comment was written — it orders the sidebar and

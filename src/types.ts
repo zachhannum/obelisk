@@ -8,7 +8,7 @@
  */
 
 /** Bumped when the on-disk shape changes in a way that needs migration. */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 /**
  * A position inside the *body* of the note.
@@ -53,23 +53,11 @@ export type AnchorState =
 	 */
 	| "detached";
 
-/**
- * A GitHub-style suggested edit attached to a comment.
- *
- * `replacement` replaces exactly the anchored range. A multi-line suggestion
- * is stored as a plain string with `\n` separators; the YAML serializer will
- * emit it as a block scalar so it stays readable in the frontmatter.
- */
-export interface Suggestion {
-	replacement: string;
-	/** Set once applied so the UI can show it as accepted rather than pending. */
-	appliedAt?: string;
-}
-
 export interface Reply {
 	id: string;
 	author?: string;
 	created: string;
+	/** Markdown, same as a comment body — suggestion blocks and all. */
 	body: string;
 }
 
@@ -81,10 +69,22 @@ export interface Comment {
 	created: string;
 	modified?: string;
 	resolved?: boolean;
-	/** Markdown. Rendered with MarkdownRenderer in the sidebar. */
+	/**
+	 * Markdown, rendered with MarkdownRenderer in the sidebar.
+	 *
+	 * A ```suggestion fenced block inside it is a proposed replacement for the
+	 * anchored text, GitHub-style — there is no separate suggestion field. See
+	 * `suggestion/parse.ts`.
+	 */
 	body: string;
 	anchor: Anchor;
-	suggestion?: Suggestion;
+	/**
+	 * When a suggestion from this thread was applied to the note. Set on the
+	 * comment rather than on the block, because applying re-anchors the whole
+	 * comment onto its replacement: every other proposal in the thread is
+	 * measured against text that no longer exists.
+	 */
+	appliedAt?: string;
 	replies?: Reply[];
 	/** Free-form labels, surfaced as filter chips in the sidebar. */
 	tags?: string[];

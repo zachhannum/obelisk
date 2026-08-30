@@ -1,6 +1,7 @@
 import { Extension, StateEffect, StateField } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
 import type { Range } from "@codemirror/state";
+import { hasSuggestion } from "../suggestion/parse";
 import { ResolvedComment } from "../types";
 import { MarkerWidget } from "./marker";
 
@@ -139,8 +140,8 @@ function buildDecorations(
 		if (comment.id === activeId) classes.push("is-active");
 		if (comment.id === flashId) classes.push("is-flashing");
 		if (comment.resolved) classes.push("is-resolved");
-		if (comment.suggestion) classes.push("has-suggestion");
-		if (comment.suggestion?.appliedAt) classes.push("is-applied");
+		if (hasSuggestion(comment)) classes.push("has-suggestion");
+		if (comment.appliedAt) classes.push("is-applied");
 
 		decorations.push(
 			Decoration.mark({
@@ -163,7 +164,7 @@ function buildDecorations(
 				widget: new MarkerWidget(
 					primary.id,
 					group.length,
-					group.some((c) => !!c.suggestion),
+					group.some((c) => hasSuggestion(c)),
 				),
 				side: 1,
 			}).range(end),

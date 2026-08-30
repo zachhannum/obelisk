@@ -13,7 +13,7 @@ stubs reference it by section.
 | # | Requirement | Where it lives |
 |---|---|---|
 | 1 | Metadata in frontmatter | `src/store/frontmatter.ts` |
-| 2 | Content, line/col range, applicable suggestion | `src/types.ts`, `src/store/anchors.ts`, `src/suggestion/apply.ts` |
+| 2 | Content, line/col range, applicable suggestion | `src/types.ts`, `src/store/anchors.ts`, `src/suggestion/parse.ts`, `src/suggestion/apply.ts` |
 | 3 | Rendered in the sidebar | `src/view/sidebar-view.ts`, `src/view/comment-card.ts` |
 | 4 | Click a comment → scroll to it | `ObeliskPlugin.scrollToComment` |
 | 5 | Highlight + marker icon in the content view | `src/editor/highlight-extension.ts`, `src/editor/marker.ts` |
@@ -28,18 +28,21 @@ Everything lives under a single `obelisk` frontmatter key, as a list:
 ```yaml
 ---
 title: Chapter 3
-obelisk_schema: 1
+obelisk_schema: 2
 obelisk:
   - id: cq7fk2m9x
     author: zach
     created: 2026-08-29T14:02:11.000Z
-    body: This paragraph does two things at once.
+    body: |-
+      This paragraph does two things at once.
+
+      ```suggestion
+      The horse bolted.
+      ```
     anchor:
       from: { line: 12, col: 0 }
       to: { line: 12, col: 47 }
       quote: The horse, which had been standing there, bolted.
-    suggestion:
-      replacement: The horse bolted.
 ---
 ```
 
@@ -62,6 +65,11 @@ free. The costs, accepted knowingly:
 **Forward compatibility.** `obelisk_schema` records the writer's
 `SCHEMA_VERSION`. Unknown keys on a comment must survive a round-trip, so a
 newer version's fields aren't stripped by an older one.
+
+**Migration is a read-time fold, never a sweep.** Schema 1's `suggestion` key
+is understood on read and re-expressed in the new shape; the note on disk is
+left alone until something writes to it anyway. A vault that is only ever read
+is never dirtied, and there is no upgrade pass that can half-finish.
 
 **Trust boundary.** Frontmatter is hand-editable. `normalize()` in
 `frontmatter.ts` is the only place that turns YAML into `Comment[]`, and a
@@ -139,7 +147,40 @@ it raced the resolver for control of the same highlight, is deleted.
 
 ## 4. Suggested edits
 
-`suggestion.replacement` replaces exactly the anchored range.
+**A suggestion is markdown, not a field.** A proposal is a fenced block tagged
+`suggestion` inside the comment body, exactly as on GitHub; its content
+replaces the anchored range. Schema 1 kept it in a `suggestion.replacement`
+key beside the body, and that shape is folded into the body on read
+(`store/frontmatter.ts`, `foldLegacySuggestion`) and dropped on the next write.
+
+The reason to move it is that the old shape made "a comment" two things: a
+prose part that was markdown and a proposal part that was a bare string with
+its own textarea, its own storage and its own place in the card. Everything
+that composes in markdown — a proposal with a paragraph of reasoning above it,
+two alternatives to choose between, a counter-proposal in a *reply* — was
+either impossible or needed a new field. As a fenced block, all of it is just
+writing, and the plugin's job shrinks to two things it can do well:
+
+- `suggestion/parse.ts` finds the blocks. A fence scanner rather than a regex,
+  because fences nest: a suggestion may contain a code sample, and a
+  ` ```suggestion ` mentioned inside some other fenced block is a code sample,
+  not a proposal.
+- `view/markdown.ts` renders the body with Obsidian's own `MarkdownRenderer`
+  and then swaps each rendered `suggestion` code block for a diff and an Apply
+  button. Post-processing the output, rather than registering a global code
+  block processor, keeps the treatment inside comment bodies — a
+  ` ```suggestion ` block typed into a *note* stays an ordinary code block.
+
+Because the body is the only field, one composer serves the dialog and the
+reply box (`view/composer.ts`): a textarea with Write/Preview and a button that
+inserts a suggestion block prefilled with the quoted text, selected, ready to
+be edited in place. "Suggest an edit" is that dialog opened with the button
+already pressed, not a second kind of comment.
+
+`appliedAt` moved to the comment for the same reason there can be several
+blocks: applying re-anchors the whole comment onto its replacement, so every
+other proposal in the thread is now measured against text that no longer
+exists. Applied is a fact about the thread, not about one block.
 
 **A suggestion applies only when the quoted text is still intact.** That is the
 same condition as being attached, so there is no separate staleness check: if
@@ -166,7 +207,9 @@ sequenced operations against the same file, and the frontmatter side is a
 single `processFrontMatter` pass.
 
 Diffing (`suggestion/diff.ts`) is display-only and deliberately dependency-free;
-the inputs are sentences, so a word-level LCS is enough.
+the inputs are sentences, so a word-level LCS is enough. It diffs the block
+against `anchor.quote`, which is also what the compose preview diffs against —
+one renderer, so what you see while writing is what the reader gets.
 
 ---
 

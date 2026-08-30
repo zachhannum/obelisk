@@ -1,3 +1,4 @@
+import { hasSuggestion } from "../suggestion/parse";
 import { Comment } from "../types";
 
 /**
@@ -106,8 +107,8 @@ function wrap(
 function highlightClass(comment: Comment): string {
 	const classes = ["obelisk-highlight", "obelisk-reading-highlight"];
 	if (comment.resolved) classes.push("is-resolved");
-	if (comment.suggestion) classes.push("has-suggestion");
-	if (comment.suggestion?.appliedAt) classes.push("is-applied");
+	if (hasSuggestion(comment)) classes.push("has-suggestion");
+	if (comment.appliedAt) classes.push("is-applied");
 	return classes.join(" ");
 }
 
@@ -123,7 +124,7 @@ function marker(
 	el.setAttribute("aria-label", "Open comment");
 	el.createSpan({
 		cls: "obelisk-marker-glyph",
-		text: comment.suggestion ? "‡" : "†",
+		text: hasSuggestion(comment) ? "‡" : "†",
 	});
 	el.addEventListener("click", (event) => {
 		event.preventDefault();

@@ -1,5 +1,6 @@
 import { Component, ItemView, TFile, WorkspaceLeaf, setIcon, setTooltip } from "obsidian";
 import type ObeliskPlugin from "../main";
+import { hasSuggestion } from "../suggestion/parse";
 import { ResolvedComment, VIEW_TYPE_OBELISK } from "../types";
 import { renderCommentCard } from "./comment-card";
 
@@ -211,7 +212,7 @@ export class ObeliskSidebarView extends ItemView {
 		return this.comments.filter((c) => {
 			if (c.resolved && !this.plugin.settings.showResolved) return false;
 			if (this.filter === "unresolved" && c.resolved) return false;
-			if (this.filter === "suggestions" && !c.suggestion) return false;
+			if (this.filter === "suggestions" && !hasSuggestion(c)) return false;
 			return true;
 		});
 	}

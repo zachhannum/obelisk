@@ -1,4 +1,5 @@
 import { App, TFile } from "obsidian";
+import { hasSuggestionBlock, suggestionFence } from "../suggestion/parse";
 import {
 	Anchor,
 	BodyPos,
@@ -6,7 +7,6 @@ import {
 	FRONTMATTER_KEY,
 	Reply,
 	SCHEMA_VERSION,
-	Suggestion,
 } from "../types";
 
 const SCHEMA_KEY = FRONTMATTER_KEY + "_schema";
@@ -25,8 +25,12 @@ const KNOWN_COMMENT_KEYS = new Set([
 	"resolved",
 	"body",
 	"anchor",
-	"suggestion",
+	"appliedAt",
 	"replies",
+	// Schema 1's separate suggestion field. Read so it can be folded into the
+	// body (see `foldLegacySuggestion`) and dropped on the next write, rather
+	// than preserved forever as an unknown key.
+	"suggestion",
 	"tags",
 ]);
 
@@ -207,8 +211,10 @@ function normalizeComment(
 
 	if (entry.resolved === true) comment.resolved = true;
 
-	const suggestion = normalizeSuggestion(entry.suggestion, source, id);
-	if (suggestion) comment.suggestion = suggestion;
+	const appliedAt = str(entry.appliedAt);
+	if (appliedAt) comment.appliedAt = appliedAt;
+
+	foldLegacySuggestion(comment, entry.suggestion, source);
 
 	const replies = normalizeReplies(entry.replies, source, id);
 	if (replies.length > 0) comment.replies = replies;
@@ -286,28 +292,46 @@ function normalizePos(raw: unknown): BodyPos | null {
 	return { line, col };
 }
 
-function normalizeSuggestion(
+/**
+ * Schema 1 kept the proposed text in `suggestion.replacement`. It now lives in
+ * the body as a ```suggestion fence, so a comment is markdown and nothing else.
+ *
+ * Migration is a read-time fold, not a rewrite pass: the note on disk is left
+ * alone until something writes to it anyway, at which point `serialize` emits
+ * the new shape and the old key falls away. Nothing is lost in between, and a
+ * vault that is only ever read is never dirtied.
+ */
+function foldLegacySuggestion(
+	comment: Comment,
 	raw: unknown,
 	source: string,
-	id: string,
-): Suggestion | null {
-	if (raw == null) return null;
+): void {
+	if (raw == null) return;
 	if (!isRecord(raw)) {
-		warn(source, `comment ${id}: malformed \`suggestion\`; ignoring it`);
-		return null;
+		warn(source, `comment ${comment.id}: malformed \`suggestion\`; ignoring it`);
+		return;
 	}
+
 	const replacement = str(raw.replacement);
 	if (replacement === undefined) {
 		warn(
 			source,
-			`comment ${id}: \`suggestion.replacement\` must be a string; ignoring it`,
+			`comment ${comment.id}: \`suggestion.replacement\` must be a string; ignoring it`,
 		);
-		return null;
+		return;
 	}
-	const suggestion: Suggestion = { replacement };
+
 	const appliedAt = str(raw.appliedAt);
-	if (appliedAt) suggestion.appliedAt = appliedAt;
-	return suggestion;
+	if (appliedAt && !comment.appliedAt) comment.appliedAt = appliedAt;
+
+	// If the body already proposes something, the comment has been through a
+	// newer Obelisk and the old field is a leftover, not a second suggestion.
+	if (hasSuggestionBlock(comment.body)) return;
+
+	const block = suggestionFence(replacement);
+	comment.body = comment.body.trim()
+		? `${comment.body.trimEnd()}\n\n${block}`
+		: block;
 }
 
 function normalizeReplies(raw: unknown, source: string, id: string): Reply[] {
@@ -353,15 +377,7 @@ export function serialize(comment: Comment): Record<string, unknown> {
 	out.body = comment.body;
 	out.anchor = anchor;
 
-	if (comment.suggestion) {
-		const suggestion: Record<string, unknown> = {
-			replacement: comment.suggestion.replacement,
-		};
-		if (comment.suggestion.appliedAt) {
-			suggestion.appliedAt = comment.suggestion.appliedAt;
-		}
-		out.suggestion = suggestion;
-	}
+	if (comment.appliedAt) out.appliedAt = comment.appliedAt;
 
 	if (comment.replies?.length) {
 		out.replies = comment.replies.map((r) => {

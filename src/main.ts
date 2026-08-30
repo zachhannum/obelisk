@@ -293,8 +293,13 @@ export default class ObeliskPlugin extends Plugin {
 		const from = editor.posToOffset(editor.getCursor("from"));
 		const to = editor.posToOffset(editor.getCursor("to"));
 
-		new CommentModal(this.app, quote, opts.withSuggestion, (draft) =>
-			void this.createComment(file, view, { from, to, quote }, draft),
+		new CommentModal(
+			this.app,
+			quote,
+			opts.withSuggestion,
+			file.path,
+			(draft) =>
+				void this.createComment(file, view, { from, to, quote }, draft),
 		).open();
 	}
 
@@ -327,11 +332,6 @@ export default class ObeliskPlugin extends Plugin {
 			created: new Date().toISOString(),
 			body: draft.body,
 			anchor,
-			suggestion:
-				draft.suggestion !== undefined &&
-				draft.suggestion !== selection.quote
-					? { replacement: draft.suggestion }
-					: undefined,
 		};
 
 		await this.store.add(file, comment);
@@ -340,20 +340,28 @@ export default class ObeliskPlugin extends Plugin {
 		void this.revealComment(comment.id);
 	}
 
-	async applySuggestion(file: TFile, id: string): Promise<void> {
+	/**
+	 * Accept one ```suggestion block. `replacement` is that block's content —
+	 * the sidebar passes whichever Apply button was pressed, since a thread may
+	 * propose more than one thing.
+	 */
+	async applySuggestion(
+		file: TFile,
+		id: string,
+		replacement: string,
+	): Promise<void> {
 		const comment = this.resolveFor(file, this.activeMarkdownView()).find(
 			(c) => c.id === id,
 		);
-		if (!comment?.suggestion) return;
+		if (!comment) return;
 
-		const result = await applySuggestion(this.app, file, comment);
+		const result = await applySuggestion(this.app, file, comment, replacement);
 		if (!result.ok) {
 			new Notice(APPLY_FAILURE[result.reason]);
 			return;
 		}
 
 		const appliedAt = new Date().toISOString();
-		const replacement = comment.suggestion.replacement;
 		const remove = this.settings.removeCommentOnApply;
 
 		// The splice moved every comment after it, and none of them care:
@@ -365,7 +373,7 @@ export default class ObeliskPlugin extends Plugin {
 			const applied = comments.find((c) => c.id === id);
 			if (applied) {
 				applied.anchor = result.anchor;
-				applied.suggestion = { replacement, appliedAt };
+				applied.appliedAt = appliedAt;
 				applied.modified = appliedAt;
 			}
 		});
@@ -611,8 +619,7 @@ export default class ObeliskPlugin extends Plugin {
 }
 
 const APPLY_FAILURE: Record<string, string> = {
-	"no-suggestion": "That comment has no suggestion to apply.",
-	"already-applied": "That suggestion has already been applied.",
+	"already-applied": "A suggestion from this comment has already been applied.",
 	detached:
 		"The text this suggestion targets has changed or been removed. Not applying.",
 };

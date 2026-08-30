@@ -5,7 +5,8 @@
 .obelisk-sidebar,
 .obelisk-highlight,
 .obelisk-marker,
-.obelisk-modal {
+.obelisk-modal,
+.obelisk-composer {
 	--obelisk-accent: var(--color-yellow-rgb, 224, 185, 68);
 	--obelisk-add: var(--color-green-rgb, 68, 179, 115);
 	--obelisk-del: var(--color-red-rgb, 224, 91, 82);
@@ -248,13 +249,39 @@
 	line-clamp: unset;
 }
 
+/* Comment bodies are real rendered markdown, so they carry Obsidian's own
+   `.markdown-rendered` styling. Rebinding the text-size variable scales the
+   whole cascade — headings, lists, code — down to sidebar proportions,
+   instead of fighting it selector by selector. */
 .obelisk-body {
 	font-size: var(--font-ui-small);
 	overflow-wrap: anywhere;
 }
 
+.obelisk-body.markdown-rendered {
+	--font-text-size: var(--font-ui-small);
+	line-height: var(--line-height-tight);
+	padding: 0;
+	user-select: text;
+}
+
 .obelisk-body > :first-child { margin-block-start: 0; }
 .obelisk-body > :last-child  { margin-block-end: 0; }
+
+.obelisk-body p,
+.obelisk-body li {
+	margin-block: var(--size-4-1);
+}
+
+.obelisk-body ul,
+.obelisk-body ol {
+	padding-inline-start: var(--size-4-4);
+}
+
+.obelisk-body pre {
+	font-size: var(--font-smallest);
+	padding: var(--size-4-2);
+}
 
 .obelisk-notice {
 	align-items: center;
@@ -284,32 +311,73 @@
 	padding-inline-start: var(--size-4-2);
 }
 
-.obelisk-composer {
-	display: flex;
-	flex-direction: column;
-	gap: var(--size-4-1);
-	margin-block-start: var(--size-4-2);
-}
-
 /* ── Suggested edits (requirement 2c) ─────────────────────────────────────── */
 
+/* A ```suggestion block, rendered in place of the code block it was written
+   as: a header that says what it is and offers to accept it, over the diff. */
 .obelisk-suggestion {
 	border: 1px solid var(--background-modifier-border);
 	border-radius: var(--radius-s);
+	margin: var(--size-4-2) 0;
+	overflow: hidden;
+}
+
+.obelisk-suggestion.is-applied {
+	border-color: rgba(var(--obelisk-add), 0.5);
+}
+
+.obelisk-suggestion-header {
+	align-items: center;
+	background-color: var(--background-primary-alt);
+	border-block-end: 1px solid var(--background-modifier-border);
+	color: var(--text-muted);
+	display: flex;
+	font-size: var(--font-ui-smaller);
+	gap: var(--size-4-1);
+	padding: var(--size-4-1) var(--size-4-2);
+}
+
+.obelisk-suggestion-icon {
+	display: flex;
+}
+
+.obelisk-suggestion-icon .svg-icon {
+	height: var(--icon-s);
+	width: var(--icon-s);
+}
+
+.obelisk-suggestion-title {
+	font-weight: var(--font-semibold);
+}
+
+.obelisk-suggestion-header .obelisk-badge,
+.obelisk-suggestion-header .obelisk-apply {
+	margin-inline-start: auto;
+}
+
+.obelisk-suggestion-header .obelisk-apply {
+	font-size: var(--font-ui-smaller);
+	padding: 2px var(--size-4-2);
+}
+
+.obelisk-diff {
 	font-family: var(--font-monospace);
 	font-size: var(--font-smallest);
-	margin: var(--size-4-2) 0;
 	overflow-x: auto;
 	white-space: pre-wrap;
 }
 
+/* A left rule rather than a leading −/+ glyph: a suggestion is often several
+   lines, and one glyph on the first line marks the wrong thing. */
 .obelisk-diff-del {
 	background-color: rgba(var(--obelisk-del), 0.15);
+	border-inline-start: 2px solid rgba(var(--obelisk-del), 0.7);
 	padding: 2px var(--size-4-2);
 }
 
 .obelisk-diff-add {
 	background-color: rgba(var(--obelisk-add), 0.15);
+	border-inline-start: 2px solid rgba(var(--obelisk-add), 0.7);
 	padding: 2px var(--size-4-2);
 }
 
@@ -340,35 +408,67 @@
 	padding: var(--size-4-1) var(--size-4-2);
 }
 
-/* ── Compose dialog ───────────────────────────────────────────────────────── */
+/* ── Composer ─────────────────────────────────────────────────────────────── */
 
 .obelisk-modal .obelisk-quote {
 	margin-block-start: 0;
 }
 
-.obelisk-compose {
+.obelisk-composer {
 	display: flex;
 	flex-direction: column;
 	gap: var(--size-4-1);
-	margin-block-end: var(--size-4-3);
+	margin-block-start: var(--size-4-2);
 }
 
-.obelisk-compose-label {
+.obelisk-composer-bar {
+	align-items: center;
+	border-block-end: 1px solid var(--background-modifier-border);
+	display: flex;
+	gap: var(--size-4-1);
+}
+
+.obelisk-tab {
+	background: transparent;
+	border-block-end: 2px solid transparent;
+	border-radius: 0;
+	box-shadow: none;
 	color: var(--text-muted);
+	cursor: pointer;
 	font-size: var(--font-ui-smaller);
+	margin-block-end: -1px;
+	padding: var(--size-4-1) var(--size-4-2);
 }
 
-.obelisk-compose-body,
-.obelisk-compose-suggestion {
+.obelisk-tab.is-active {
+	border-block-end-color: var(--text-accent);
+	color: var(--text-normal);
+}
+
+.obelisk-composer-tools {
+	display: flex;
+	gap: var(--size-4-1);
+	margin-inline-start: auto;
+}
+
+.obelisk-compose-body {
 	font-family: inherit;
 	min-height: 5em;
 	resize: vertical;
 	width: 100%;
 }
 
-.obelisk-compose-suggestion {
-	font-family: var(--font-monospace);
-	font-size: var(--font-smallest);
+/* The preview stands in for the textarea, so it holds the same ground rather
+   than letting the dialog jump between tabs. */
+.obelisk-preview {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	min-height: 5em;
+	padding: var(--size-4-2);
+}
+
+.obelisk-preview .obelisk-empty {
+	padding: var(--size-4-2);
 }
 
 .obelisk-compose-actions {
@@ -376,10 +476,14 @@
 	display: flex;
 	gap: var(--size-4-2);
 	justify-content: flex-end;
+	margin-block-start: var(--size-4-3);
 }
 
 .obelisk-compose-hint {
 	color: var(--text-faint);
 	font-size: var(--font-ui-smaller);
-	margin-inline-end: auto;
+}
+
+.obelisk-reply-composer {
+	margin-block-start: var(--size-4-2);
 }

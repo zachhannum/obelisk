@@ -1,5 +1,6 @@
 import { Editor, MarkdownFileInfo, MarkdownView, Menu } from "obsidian";
 import type ObeliskPlugin from "../main";
+import { threadSuggestions } from "../suggestion/parse";
 
 /**
  * Requirement 6: right-clicking a selection offers "Add comment" and
@@ -60,14 +61,26 @@ export function registerContextMenu(plugin: ObeliskPlugin): void {
 						.onClick(() => void plugin.revealComment(comment.id)),
 				);
 
-				if (comment.suggestion && !comment.suggestion.appliedAt) {
+				// A thread can propose more than one thing; the menu offers the
+				// first, and sends anyone who wants the others to the sidebar,
+				// where each block has its own Apply button next to its diff.
+				const proposals = threadSuggestions(comment);
+				if (proposals.length > 0 && !comment.appliedAt) {
 					menu.addItem((item) =>
 						item
-							.setTitle("Apply suggestion")
+							.setTitle(
+								proposals.length > 1
+									? "Apply first suggestion"
+									: "Apply suggestion",
+							)
 							.setIcon("check")
 							.setSection("selection")
 							.onClick(() =>
-								void plugin.applySuggestion(file, comment.id),
+								void plugin.applySuggestion(
+									file,
+									comment.id,
+									proposals[0],
+								),
 							),
 					);
 				}

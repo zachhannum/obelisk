@@ -1,8 +1,10 @@
-import { Component, MarkdownRenderer, TFile, setIcon, setTooltip } from "obsidian";
+import { Component, TFile, setIcon, setTooltip } from "obsidian";
 import type ObeliskPlugin from "../main";
-import { diffWords, renderDiff } from "../suggestion/diff";
+import { hasSuggestion } from "../suggestion/parse";
 import { ResolvedComment } from "../types";
 import { absoluteTime, relativeTime } from "../util/format";
+import { Composer } from "./composer";
+import { SuggestionOptions, renderCommentBody } from "./markdown";
 
 export interface CardContext {
 	plugin: ObeliskPlugin;
@@ -17,8 +19,8 @@ export interface CardContext {
 }
 
 /**
- * One comment in the sidebar: quoted text, body, optional suggestion diff,
- * and the action row.
+ * One comment in the sidebar: quoted text, the body as rendered markdown —
+ * suggestion blocks and all — its replies, and the action row.
  */
 export function renderCommentCard(
 	container: HTMLElement,
@@ -35,7 +37,8 @@ export function renderCommentCard(
 	// Requirement 4: clicking the card scrolls the editor to the passage.
 	card.addEventListener("click", (evt) => {
 		const target = evt.target as HTMLElement;
-		if (target.closest("button, textarea, a")) return;
+		// Not while the reader is using a control, a link, or the reply box.
+		if (target.closest("button, textarea, a, .obelisk-composer")) return;
 		plugin.scrollToComment(comment.id);
 	});
 
@@ -55,21 +58,38 @@ export function renderCommentCard(
 	quote.addEventListener("click", () => quote.toggleClass("is-expanded", !quote.hasClass("is-expanded")));
 
 	if (comment.body) {
-		const body = card.createDiv({ cls: "obelisk-body" });
-		void MarkdownRenderer.render(
-			plugin.app,
-			comment.body,
-			body,
-			file.path,
+		renderCommentBody(card, comment.body, {
+			app: plugin.app,
+			sourcePath: file.path,
 			component,
-		);
+			suggestion: suggestionOptions(comment, ctx),
+		});
 	}
 
-	if (comment.suggestion) renderSuggestion(card, comment);
 	renderReplies(card, comment, ctx);
 	renderActions(card, comment, ctx);
 
 	return card;
+}
+
+/**
+ * How suggestion blocks in this thread behave: what they diff against, and
+ * whether they can still be accepted.
+ */
+function suggestionOptions(
+	comment: ResolvedComment,
+	ctx: CardContext,
+): SuggestionOptions {
+	return {
+		quote: comment.anchor.quote,
+		applied: !!comment.appliedAt,
+		blocked:
+			comment.state === "detached"
+				? "The quoted text is gone, so there is nothing to replace."
+				: undefined,
+		onApply: (replacement) =>
+			void ctx.plugin.applySuggestion(ctx.file, comment.id, replacement),
+	};
 }
 
 function renderHeader(card: HTMLElement, comment: ResolvedComment): void {
@@ -79,12 +99,9 @@ function renderHeader(card: HTMLElement, comment: ResolvedComment): void {
 		text: comment.author || "Anonymous",
 	});
 
-	if (comment.suggestion?.appliedAt) {
-		header.createSpan({
-			cls: "obelisk-badge is-applied",
-			text: "Applied",
-		});
-	} else if (comment.suggestion) {
+	if (comment.appliedAt) {
+		header.createSpan({ cls: "obelisk-badge is-applied", text: "Applied" });
+	} else if (hasSuggestion(comment)) {
 		header.createSpan({ cls: "obelisk-badge", text: "Suggestion" });
 	}
 
@@ -93,14 +110,6 @@ function renderHeader(card: HTMLElement, comment: ResolvedComment): void {
 		text: relativeTime(comment.created),
 	});
 	if (comment.created) setTooltip(date, absoluteTime(comment.created));
-}
-
-function renderSuggestion(card: HTMLElement, comment: ResolvedComment): void {
-	const sug = card.createDiv({ cls: "obelisk-suggestion" });
-	renderDiff(
-		sug,
-		diffWords(comment.anchor.quote, comment.suggestion!.replacement),
-	);
 }
 
 function renderReplies(
@@ -122,14 +131,15 @@ function renderReplies(
 			text: relativeTime(reply.created),
 		});
 		if (reply.created) setTooltip(date, absoluteTime(reply.created));
-		const body = el.createDiv({ cls: "obelisk-body" });
-		void MarkdownRenderer.render(
-			ctx.plugin.app,
-			reply.body,
-			body,
-			ctx.file.path,
-			ctx.component,
-		);
+
+		// A reply is a comment body in every respect, so a counter-proposal in
+		// one is applied from exactly where it is written.
+		renderCommentBody(el, reply.body, {
+			app: ctx.plugin.app,
+			sourcePath: ctx.file.path,
+			component: ctx.component,
+			suggestion: suggestionOptions(comment, ctx),
+		});
 	}
 }
 
@@ -140,23 +150,6 @@ function renderActions(
 ): void {
 	const { plugin, file } = ctx;
 	const actions = card.createDiv({ cls: "obelisk-actions" });
-
-	if (comment.suggestion && !comment.suggestion.appliedAt) {
-		const apply = actions.createEl("button", {
-			cls: "mod-cta",
-			text: "Apply suggestion",
-		});
-		apply.disabled = comment.state === "detached";
-		if (apply.disabled) {
-			setTooltip(
-				apply,
-				"The quoted text is gone, so there is nothing to replace.",
-			);
-		}
-		apply.addEventListener("click", () =>
-			plugin.applySuggestion(file, comment.id),
-		);
-	}
 
 	const reply = actions.createEl("button", { text: "Reply" });
 	reply.addEventListener("click", () => openComposer(card, comment, ctx));
@@ -175,7 +168,7 @@ function renderActions(
 }
 
 /**
- * The reply box is created on demand: a textarea per card, always mounted,
+ * The reply box is created on demand: a composer per card, always mounted,
  * would be a lot of DOM for a list that re-renders on every keystroke
  * elsewhere in the note.
  */
@@ -190,30 +183,30 @@ function openComposer(
 		return;
 	}
 
-	const composer = card.createDiv({ cls: "obelisk-composer" });
-	const input = composer.createEl("textarea", { cls: "obelisk-compose-body" });
-	input.placeholder = "Reply…";
-
-	const row = composer.createDiv({ cls: "obelisk-actions" });
-	const send = row.createEl("button", { cls: "mod-cta", text: "Reply" });
-	const cancel = row.createEl("button", { text: "Cancel" });
-
+	const wrapper = card.createDiv({ cls: "obelisk-reply-composer" });
 	const submit = () => {
-		const body = input.value.trim();
+		const body = composer.value.trim();
 		if (!body) return;
 		void ctx.plugin.addReply(ctx.file, comment.id, body);
 	};
 
-	send.addEventListener("click", submit);
-	cancel.addEventListener("click", () => composer.remove());
-	input.addEventListener("keydown", (evt) => {
-		if (evt.key === "Enter" && (evt.metaKey || evt.ctrlKey)) {
-			evt.preventDefault();
-			submit();
-		}
+	const composer = new Composer(wrapper, {
+		app: ctx.plugin.app,
+		sourcePath: ctx.file.path,
+		component: ctx.component,
+		quote: comment.anchor.quote,
+		placeholder: "Reply… (markdown, suggestions and all)",
+		onSubmit: submit,
 	});
 
-	input.focus();
+	const row = wrapper.createDiv({ cls: "obelisk-actions" });
+	row.createEl("button", { cls: "mod-cta", text: "Reply" })
+		.addEventListener("click", submit);
+	row.createEl("button", { text: "Cancel" }).addEventListener("click", () =>
+		wrapper.remove(),
+	);
+
+	composer.focus();
 }
 
 function notice(card: HTMLElement, icon: string, text: string): void {
