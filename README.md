@@ -41,6 +41,10 @@ for the decisions behind it and what remains open.
   and never quietly disappearing. Restore the text and it reattaches.
 - **Threaded replies** — on any comment, stored alongside it, and markdown all
   the way down.
+- **Editable** — rewrite a comment or a reply in the same composer that wrote
+  it, suggestion button and all, from the card's *Edit* button or by
+  right-clicking the passage. Edited bodies are marked as such; the anchor is
+  left alone, so changing what you said never changes what you said it about.
 
 ## Data format
 

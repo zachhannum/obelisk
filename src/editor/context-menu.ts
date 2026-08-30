@@ -87,6 +87,14 @@ export function registerContextMenu(plugin: ObeliskPlugin): void {
 
 				menu.addItem((item) =>
 					item
+						.setTitle("Edit comment")
+						.setIcon("pencil")
+						.setSection("selection")
+						.onClick(() => void plugin.startEditComment(comment.id)),
+				);
+
+				menu.addItem((item) =>
+					item
 						.setTitle(
 							comment.resolved
 								? "Reopen comment"

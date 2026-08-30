@@ -1,8 +1,16 @@
-import { Component, ItemView, TFile, WorkspaceLeaf, setIcon, setTooltip } from "obsidian";
+import {
+	Component,
+	ItemView,
+	Notice,
+	TFile,
+	WorkspaceLeaf,
+	setIcon,
+	setTooltip,
+} from "obsidian";
 import type ObeliskPlugin from "../main";
 import { hasSuggestion } from "../suggestion/parse";
 import { ResolvedComment, VIEW_TYPE_OBELISK } from "../types";
-import { renderCommentCard } from "./comment-card";
+import { beginEditing, renderCommentCard } from "./comment-card";
 
 type Filter = "all" | "unresolved" | "suggestions";
 type Sort = "document" | "newest";
@@ -107,6 +115,20 @@ export class ObeliskSidebarView extends ItemView {
 		if (!card) return;
 		card.addClass("is-active");
 		if (scrollIntoView) card.scrollIntoView({ block: "nearest" });
+	}
+
+	/** Start editing a comment's body from outside the sidebar. */
+	beginEdit(id: string): void {
+		const card = this.listEl.querySelector<HTMLElement>(
+			`.obelisk-card[data-obelisk-id="${id}"]`,
+		);
+		if (!card) {
+			// Filtered out, or resolved with resolved comments hidden.
+			new Notice("That comment is hidden by the current filter.");
+			return;
+		}
+		card.scrollIntoView({ block: "nearest" });
+		beginEditing(card);
 	}
 
 	// ── Rendering ────────────────────────────────────────────────────────────

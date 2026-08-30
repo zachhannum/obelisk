@@ -54,8 +54,8 @@ free. The costs, accepted knowingly:
 - Comments are visible when the frontmatter is expanded in source mode. Noisy
   for a note under heavy review.
 - Every comment write dirties the file. Only deliberate actions write —
-  creating, replying, resolving, deleting, applying — so editing a note never
-  touches its comments, but a burst of review activity is still a burst of
+  creating, editing, replying, resolving, deleting, applying — so editing a
+  note never touches its comments, but a burst of review activity is still a burst of
   sync events.
 - Frontmatter is a poor fit for long threaded discussions. If replies grow past
   a handful, the escape hatch is to move bodies to a sidecar and keep only
@@ -176,6 +176,16 @@ reply box (`view/composer.ts`): a textarea with Write/Preview and a button that
 inserts a suggestion block prefilled with the quoted text, selected, ready to
 be edited in place. "Suggest an edit" is that dialog opened with the button
 already pressed, not a second kind of comment.
+
+Editing a body reuses that composer too, in place of the rendered markdown —
+so a proposal can be revised with the same button that inserted it rather than
+by hand-typing a fence. An edit rewrites `body` and stamps `edited`; the anchor
+is untouched, because changing what you said about a passage is not a claim
+about a different passage, and a suggestion block written during the edit is
+measured against the same quoted text as before. `edited` is separate from
+`modified` — the latter moves for any write at all, including resolving — so
+the "edited" marker on a card means the text in front of you was rewritten,
+not that something on the record changed.
 
 `appliedAt` moved to the comment for the same reason there can be several
 blocks: applying re-anchors the whole comment onto its replacement, so every

@@ -398,6 +398,55 @@ export default class ObeliskPlugin extends Plugin {
 		this.refresh();
 	}
 
+	/**
+	 * Rewrite a comment's body. The anchor is untouched: editing what you said
+	 * about a passage is not a claim about a different passage — and a
+	 * suggestion block added or changed here is measured against the same
+	 * quoted text as before.
+	 */
+	async editComment(file: TFile, id: string, body: string): Promise<void> {
+		const comment = this.store.read(file).find((c) => c.id === id);
+		if (!comment) return;
+
+		const next = body.trim();
+		if (!next || next === comment.body) return;
+
+		await this.store.patch(file, id, {
+			body: next,
+			edited: new Date().toISOString(),
+		});
+		this.refresh();
+	}
+
+	/** The context menu's route into the sidebar's editor. */
+	async startEditComment(id: string): Promise<void> {
+		await this.revealComment(id);
+		this.sidebar()?.beginEdit(id);
+	}
+
+	async editReply(
+		file: TFile,
+		commentId: string,
+		replyId: string,
+		body: string,
+	): Promise<void> {
+		const comment = this.store.read(file).find((c) => c.id === commentId);
+		const replies = comment?.replies;
+		const reply = replies?.find((r) => r.id === replyId);
+		if (!replies || !reply) return;
+
+		const next = body.trim();
+		if (!next || next === reply.body) return;
+
+		const edited = new Date().toISOString();
+		await this.store.patch(file, commentId, {
+			replies: replies.map((r) =>
+				r.id === replyId ? { ...r, body: next, edited } : r,
+			),
+		});
+		this.refresh();
+	}
+
 	async toggleResolved(file: TFile, id: string): Promise<void> {
 		const comment = this.store.read(file).find((c) => c.id === id);
 		if (!comment) return;

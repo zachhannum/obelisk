@@ -57,6 +57,12 @@ export interface Reply {
 	id: string;
 	author?: string;
 	created: string;
+	/**
+	 * ISO-8601, set when the body is rewritten. Distinct from a comment's
+	 * `modified`, which moves for any change at all — this one means the text
+	 * you are reading is not the text that was originally posted.
+	 */
+	edited?: string;
 	/** Markdown, same as a comment body — suggestion blocks and all. */
 	body: string;
 }
@@ -68,6 +74,8 @@ export interface Comment {
 	/** ISO-8601. */
 	created: string;
 	modified?: string;
+	/** ISO-8601, set when the body is rewritten. See `Reply.edited`. */
+	edited?: string;
 	resolved?: boolean;
 	/**
 	 * Markdown, rendered with MarkdownRenderer in the sidebar.

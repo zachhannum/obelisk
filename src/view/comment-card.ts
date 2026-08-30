@@ -1,4 +1,4 @@
-import { Component, TFile, setIcon, setTooltip } from "obsidian";
+import { Component, Notice, TFile, setIcon, setTooltip } from "obsidian";
 import type ObeliskPlugin from "../main";
 import { hasSuggestion } from "../suggestion/parse";
 import { ResolvedComment } from "../types";
@@ -16,6 +16,21 @@ export interface CardContext {
 	 * held them rather than accumulating for the life of the leaf.
 	 */
 	component: Component;
+}
+
+/**
+ * How to start editing a given card's body, keyed by the card itself.
+ *
+ * The card is the handle the sidebar (and through it the context menu) already
+ * has; this saves it from having to reach into the DOM and synthesise a click
+ * on a button whose markup is this file's business. Weak, so a card that has
+ * been re-rendered away takes its entry with it.
+ */
+const EDIT_OPENERS = new WeakMap<HTMLElement, () => void>();
+
+/** Open the body editor on an already-rendered card. */
+export function beginEditing(card: HTMLElement): void {
+	EDIT_OPENERS.get(card)?.();
 }
 
 /**
@@ -57,8 +72,9 @@ export function renderCommentCard(
 	// every other comment off the screen.
 	quote.addEventListener("click", () => quote.toggleClass("is-expanded", !quote.hasClass("is-expanded")));
 
+	const body = card.createDiv({ cls: "obelisk-body" });
 	if (comment.body) {
-		renderCommentBody(card, comment.body, {
+		renderCommentBody(body, comment.body, {
 			app: plugin.app,
 			sourcePath: file.path,
 			component,
@@ -110,6 +126,19 @@ function renderHeader(card: HTMLElement, comment: ResolvedComment): void {
 		text: relativeTime(comment.created),
 	});
 	if (comment.created) setTooltip(date, absoluteTime(comment.created));
+	editedMarker(header, comment.edited);
+}
+
+/**
+ * "edited" next to the timestamp. Driven by `edited` rather than `modified`,
+ * which also moves when a comment is resolved or replied to — the reader is
+ * being told the text in front of them was rewritten, not that something
+ * somewhere on the record changed.
+ */
+function editedMarker(header: HTMLElement, edited: string | undefined): void {
+	if (!edited) return;
+	const el = header.createSpan({ cls: "obelisk-edited", text: "edited" });
+	setTooltip(el, `Edited ${absoluteTime(edited)}`);
 }
 
 function renderReplies(
@@ -131,15 +160,33 @@ function renderReplies(
 			text: relativeTime(reply.created),
 		});
 		if (reply.created) setTooltip(date, absoluteTime(reply.created));
+		editedMarker(head, reply.edited);
 
 		// A reply is a comment body in every respect, so a counter-proposal in
 		// one is applied from exactly where it is written.
-		renderCommentBody(el, reply.body, {
+		const body = el.createDiv({ cls: "obelisk-body" });
+		renderCommentBody(body, reply.body, {
 			app: ctx.plugin.app,
 			sourcePath: ctx.file.path,
 			component: ctx.component,
 			suggestion: suggestionOptions(comment, ctx),
 		});
+
+		const edit = head.createEl("button", { cls: "obelisk-icon-button" });
+		setIcon(edit, "pencil");
+		setTooltip(edit, "Edit this reply");
+		edit.addEventListener("click", () =>
+			openEditor(el, body, comment, ctx, {
+				value: reply.body,
+				save: (next) =>
+					void ctx.plugin.editReply(
+						ctx.file,
+						comment.id,
+						reply.id,
+						next,
+					),
+			}),
+		);
 	}
 }
 
@@ -153,6 +200,20 @@ function renderActions(
 
 	const reply = actions.createEl("button", { text: "Reply" });
 	reply.addEventListener("click", () => openComposer(card, comment, ctx));
+
+	const startEdit = () => {
+		const body = card.querySelector<HTMLElement>(":scope > .obelisk-body");
+		if (!body) return;
+		openEditor(card, body, comment, ctx, {
+			value: comment.body,
+			save: (next) => void plugin.editComment(file, comment.id, next),
+		});
+	};
+	EDIT_OPENERS.set(card, startEdit);
+
+	actions
+		.createEl("button", { text: "Edit" })
+		.addEventListener("click", startEdit);
 
 	actions
 		.createEl("button", {
@@ -205,6 +266,73 @@ function openComposer(
 	row.createEl("button", { text: "Cancel" }).addEventListener("click", () =>
 		wrapper.remove(),
 	);
+
+	composer.focus();
+}
+
+interface EditTarget {
+	/** The markdown as it stands. */
+	value: string;
+	save: (body: string) => void;
+}
+
+/**
+ * Rewrite a body in place: the rendered markdown steps aside for the same
+ * composer that wrote it, so a suggestion block can be fixed, added or removed
+ * with the button that inserts one — rather than by hand-typing a fence.
+ *
+ * Saving writes through the plugin, which refreshes the sidebar and rebuilds
+ * this card from the store; nothing here has to put the rendered body back.
+ * Cancelling does, since no write happened.
+ */
+function openEditor(
+	host: HTMLElement,
+	bodyEl: HTMLElement,
+	comment: ResolvedComment,
+	ctx: CardContext,
+	target: EditTarget,
+): void {
+	const existing = host.querySelector<HTMLElement>(":scope > .obelisk-editor");
+	if (existing) {
+		existing.querySelector("textarea")?.focus();
+		return;
+	}
+
+	const wrapper = host.createDiv({ cls: "obelisk-editor" });
+	bodyEl.after(wrapper);
+	bodyEl.hide();
+
+	const close = () => {
+		wrapper.remove();
+		bodyEl.show();
+	};
+
+	const submit = () => {
+		const body = composer.value.trim();
+		if (!body) {
+			new Notice("A comment needs a body. Delete it instead?");
+			return;
+		}
+		// An unchanged body is a no-op in the store, so close on this side
+		// rather than waiting for a re-render that will never come.
+		if (body !== target.value.trim()) target.save(body);
+		close();
+	};
+
+	const composer = new Composer(wrapper, {
+		app: ctx.plugin.app,
+		sourcePath: ctx.file.path,
+		component: ctx.component,
+		quote: comment.anchor.quote,
+		value: target.value,
+		placeholder: "Edit… (markdown, suggestions and all)",
+		onSubmit: submit,
+	});
+
+	const row = wrapper.createDiv({ cls: "obelisk-actions" });
+	row.createEl("button", { cls: "mod-cta", text: "Save" })
+		.addEventListener("click", submit);
+	row.createEl("button", { text: "Cancel" }).addEventListener("click", close);
 
 	composer.focus();
 }

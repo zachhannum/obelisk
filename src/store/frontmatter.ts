@@ -22,6 +22,7 @@ const KNOWN_COMMENT_KEYS = new Set([
 	"author",
 	"created",
 	"modified",
+	"edited",
 	"resolved",
 	"body",
 	"anchor",
@@ -349,6 +350,8 @@ function normalizeReplies(raw: unknown, source: string, id: string): Reply[] {
 		};
 		const author = str(entry.author);
 		if (author) reply.author = author;
+		const edited = str(entry.edited);
+		if (edited) reply.edited = edited;
 		return [reply];
 	});
 }
@@ -373,6 +376,7 @@ export function serialize(comment: Comment): Record<string, unknown> {
 	if (comment.author) out.author = comment.author;
 	out.created = comment.created;
 	if (comment.modified) out.modified = comment.modified;
+	if (comment.edited) out.edited = comment.edited;
 	if (comment.resolved) out.resolved = true;
 	out.body = comment.body;
 	out.anchor = anchor;
@@ -384,6 +388,7 @@ export function serialize(comment: Comment): Record<string, unknown> {
 			const reply: Record<string, unknown> = { id: r.id };
 			if (r.author) reply.author = r.author;
 			reply.created = r.created;
+			if (r.edited) reply.edited = r.edited;
 			reply.body = r.body;
 			return reply;
 		});

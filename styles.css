@@ -216,6 +216,12 @@
 	white-space: nowrap;
 }
 
+.obelisk-edited {
+	color: var(--text-faint);
+	font-style: italic;
+	white-space: nowrap;
+}
+
 .obelisk-badge {
 	background-color: var(--background-modifier-border);
 	border-radius: var(--radius-s);
@@ -484,6 +490,20 @@
 	font-size: var(--font-ui-smaller);
 }
 
-.obelisk-reply-composer {
+.obelisk-reply-composer,
+.obelisk-editor {
 	margin-block-start: var(--size-4-2);
+}
+
+/* The edit control sits in the reply's header, where it would compete with
+   the author line for attention; it surfaces when the reply is under the
+   pointer or the button itself has keyboard focus. */
+.obelisk-reply .obelisk-icon-button {
+	opacity: 0;
+	padding: 0;
+}
+
+.obelisk-reply:hover .obelisk-icon-button,
+.obelisk-reply .obelisk-icon-button:focus-visible {
+	opacity: 1;
 }
