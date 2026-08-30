@@ -352,6 +352,13 @@ export default class ObeliskPlugin extends Plugin {
 				applied.anchor = result.anchor;
 				applied.appliedAt = appliedAt;
 				applied.modified = appliedAt;
+				// Taking the edit is the strongest possible answer to the
+				// comment that proposed it, and no other proposal in the
+				// thread can be applied afterwards — leaving it in the open
+				// count would make that count a to-do list with nothing to do
+				// on it. Reopen is one click away if the comment also asked
+				// something the edit did not answer.
+				applied.resolved = true;
 			}
 		});
 

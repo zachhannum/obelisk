@@ -110,8 +110,6 @@ export interface ResolvedComment extends Comment {
 export interface ObeliskSettings {
 	/** Written into `author` on new comments. Empty = omit the field. */
 	authorName: string;
-	/** Show resolved comments in the sidebar. */
-	showResolved: boolean;
 	/** Open the sidebar automatically when a note containing comments is opened. */
 	autoOpenSidebar: boolean;
 	/** Delete a comment's frontmatter entry when its suggestion is applied. */
@@ -120,7 +118,6 @@ export interface ObeliskSettings {
 
 export const DEFAULT_SETTINGS: ObeliskSettings = {
 	authorName: "",
-	showResolved: false,
 	autoOpenSidebar: false,
 	removeCommentOnApply: false,
 };

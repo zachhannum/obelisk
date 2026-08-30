@@ -123,7 +123,6 @@ export class ObeliskSidebarView extends ItemView {
 			`.obelisk-card[data-obelisk-id="${id}"]`,
 		);
 		if (!card) {
-			// Filtered out, or resolved with resolved comments hidden.
 			new Notice("That comment is hidden by the current filter.");
 			return;
 		}
@@ -156,8 +155,13 @@ export class ObeliskSidebarView extends ItemView {
 		// Anchored comments in document order, so the list mirrors the note;
 		// detached ones sink into a section of their own at the bottom, where
 		// they can be dealt with instead of interleaving with live ones.
-		const anchored = visible.filter((c) => c.range !== null);
-		const detached = visible.filter((c) => c.range === null);
+		//
+		// Resolved comments are not part of that pile even when their text is
+		// gone. Losing the passage is how a settled comment usually ends —
+		// the edit it asked for was made — so it sorts quietly to the bottom
+		// of the main list rather than being flagged as something to fix.
+		const anchored = visible.filter((c) => c.range !== null || c.resolved);
+		const detached = visible.filter((c) => c.range === null && !c.resolved);
 		const file = this.file;
 
 		for (const comment of this.sorted(anchored)) {
@@ -232,7 +236,6 @@ export class ObeliskSidebarView extends ItemView {
 
 	private visibleComments(): ResolvedComment[] {
 		return this.comments.filter((c) => {
-			if (c.resolved && !this.plugin.settings.showResolved) return false;
 			if (this.filter === "unresolved" && c.resolved) return false;
 			if (this.filter === "suggestions" && !hasSuggestion(c)) return false;
 			return true;
@@ -256,16 +259,9 @@ export class ObeliskSidebarView extends ItemView {
 		});
 	}
 
-	/**
-	 * Everything the list is drawn from — the file, the comments as resolved,
-	 * and the one setting that changes what is visible.
-	 */
+	/** Everything the list is drawn from: the file and its resolved comments. */
 	private signature(): string {
-		return JSON.stringify([
-			this.file?.path ?? null,
-			this.plugin.settings.showResolved,
-			this.comments,
-		]);
+		return JSON.stringify([this.file?.path ?? null, this.comments]);
 	}
 
 	private empty(text: string): void {

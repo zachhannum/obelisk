@@ -27,9 +27,13 @@ for the decisions behind it and what remains open.
   the comment, the way GitHub does it. It renders as a diff against the quoted
   passage with an Apply button, so one comment can explain itself and propose a
   change, and a reply can offer a counter-proposal. Refuses to apply if the
-  underlying text has changed since.
+  underlying text has changed since. Applying resolves the comment — the
+  proposal got the only answer it was after — and *Reopen* is there if it also
+  asked something the edit did not settle.
 - **Sidebar** — all of a note's comments in document order; click one to scroll
-  the editor to it.
+  the editor to it. Resolved ones stay in the list, greyed rather than hidden,
+  since they are still highlighted in the note; the *Open* filter is there when
+  you want only the working set.
 - **In-text highlighting** — commented passages are highlighted, with a †
   marker that opens the comment in the sidebar.
 - **Stored in frontmatter** — plain YAML under an `obelisk` key. Readable,
@@ -38,7 +42,9 @@ for the decisions behind it and what remains open.
   keeps up with edits anywhere else in the note, including ones made outside
   Obsidian. Edit or delete the quoted passage itself and the comment detaches:
   flagged in the sidebar, highlighting nothing, never guessing at a new home
-  and never quietly disappearing. Restore the text and it reattaches.
+  and never quietly disappearing. Restore the text and it reattaches. Resolved
+  comments are exempt from the flag — a settled comment usually comes loose
+  because the edit it asked for was made.
 - **The editor you already use** — comments are written in Obsidian's own
   markdown editor, so Cmd+B, list continuation, `[[` autocompletion and live
   preview work in a comment exactly as they do in a note.

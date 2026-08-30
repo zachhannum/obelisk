@@ -47,7 +47,9 @@ export function renderCommentCard(
 	const card = container.createDiv({ cls: "obelisk-card" });
 	card.dataset.obeliskId = comment.id;
 	card.toggleClass("is-resolved", !!comment.resolved);
-	card.toggleClass("is-detached", comment.state === "detached");
+	// Detachment is only a problem while the comment is still open; see
+	// `flagDetached`.
+	card.toggleClass("is-detached", flagDetached(comment));
 
 	// Requirement 4: clicking the card scrolls the editor to the passage.
 	card.addEventListener("click", (evt) => {
@@ -59,7 +61,7 @@ export function renderCommentCard(
 
 	renderHeader(card, comment);
 
-	if (comment.state === "detached") {
+	if (flagDetached(comment)) {
 		notice(
 			card,
 			"alert-triangle",
@@ -86,6 +88,19 @@ export function renderCommentCard(
 	renderActions(card, comment, ctx);
 
 	return card;
+}
+
+/**
+ * Whether losing the quoted text is worth flagging on this card.
+ *
+ * Only while the comment is open. A resolved comment that has come loose has
+ * almost always come loose *because* it was settled — its suggestion was
+ * applied, or the passage was rewritten in answer to it — so warning about it
+ * is warning about the thing having worked. It keeps its quote and its card,
+ * without the dashed border and the alert.
+ */
+function flagDetached(comment: ResolvedComment): boolean {
+	return comment.state === "detached" && !comment.resolved;
 }
 
 /**

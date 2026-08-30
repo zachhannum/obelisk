@@ -104,6 +104,13 @@ confidently; detaching produces a right answer that asks for help.
 **Detachment is derived, never stored.** It is recomputed on every resolve, so
 undoing a deletion reattaches the comment on its own.
 
+**It is only flagged while the comment is open.** A resolved comment that has
+come loose has usually come loose *because* it was settled: its suggestion was
+applied, or the passage was rewritten in answer to it. Warning there is warning
+that the comment worked. So a resolved comment keeps its card and its quote,
+without the dashed border, the alert, or a place in the detached pile — it
+sorts to the bottom of the list and stays out of the way.
+
 ### 3b. Positions are a hint, and body-relative
 
 `anchor.from`/`to` record where the passage was when the comment was written.
@@ -209,6 +216,14 @@ blocks: applying re-anchors the whole comment onto its replacement, so every
 other proposal in the thread is now measured against text that no longer
 exists. Applied is a fact about the thread, not about one block.
 
+**Applying resolves the comment.** Taking the edit is the strongest answer a
+proposal can get, and once it is taken no other block in the thread can be
+applied anyway — a comment left open there would sit in the open count with
+nothing to do on it. The card stays, marked *Applied*, and *Reopen* is one
+click away if the comment also asked something the edit did not answer.
+`removeCommentOnApply` is the same gesture taken further: throw the record
+away rather than keep it.
+
 **A suggestion applies only when the quoted text is still intact.** That is the
 same condition as being attached, so there is no separate staleness check: if
 `resolve` found the quote, the splice lands on exactly the characters the
@@ -254,7 +269,14 @@ noticed. Comments live in the editor; Reading view is for reading.
 
 **Sidebar** — an `ItemView` in the right leaf. It renders and delegates; every
 mutation goes back through the plugin. Cards sort in document order so the list
-mirrors the note, with detached ones in a section at the bottom.
+mirrors the note, with open detached ones in a section at the bottom.
+
+Resolved comments are always listed. There is no setting to hide them: they
+still highlight their passage in the note, so hiding them from the sidebar only
+made the list disagree with the text, and it made resolving a comment feel like
+deleting it. The *Open* filter is there for anyone who wants the working set,
+and it is a chip in front of the reader rather than a preference two menus
+away.
 
 ---
 
