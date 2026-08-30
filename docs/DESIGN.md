@@ -229,15 +229,11 @@ one renderer, so what you see while writing is what the reader gets.
 highlight, a widget decoration for the trailing marker. This is the primary
 path and the only one where highlights track edits in real time.
 
-**Reading view** — a `MarkdownPostProcessor`, gated behind
-`highlightInReadingView`. Same rule, different haystack: `ctx.getSectionInfo`
-hands over the file's source text, so comments resolve exactly as they do for
-the editor and the plugin then asks which section each resolved offset falls
-in — a quote appearing twice is highlighted in the block it resolves to, not
-both. Only finding it *within* the rendered block is DOM work, and a quote
-spanning markup will not be found there. Expect this to be less reliable than
-the editor path; it is a nice-to-have, not the contract. One render pass calls
-the post-processor once per section, so the pass shares a single resolution.
+**Reading view** — nothing. A `MarkdownPostProcessor` version existed and was
+removed: anchoring against rendered HTML loses to any quote spanning markup, a
+baked-in highlight has to be re-rendered rather than dispatched to whenever a
+comment changes, and what survived all that was a hairline underline nobody
+noticed. Comments live in the editor; Reading view is for reading.
 
 **Sidebar** — an `ItemView` in the right leaf. It renders and delegates; every
 mutation goes back through the plugin. Cards sort in document order so the list

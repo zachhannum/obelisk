@@ -32,9 +32,9 @@ import { Anchor, BodyPos, Comment, ResolvedComment } from "../types";
  * and the offset of every line start.
  *
  * Deliberately plain strings rather than a CodeMirror `EditorState`. The
- * editor, the reading-view post-processor and the on-disk apply path all need
- * to resolve against text they hold in different forms, and offsets into a
- * string are exactly CodeMirror's offsets.
+ * editor and the on-disk apply path both need to resolve against text they
+ * hold in different forms, and offsets into a string are exactly CodeMirror's
+ * offsets.
  */
 export interface DocFrame {
 	/** The full document text this frame describes. */

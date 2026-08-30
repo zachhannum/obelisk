@@ -2,7 +2,6 @@ import { EditorView } from "@codemirror/view";
 import {
 	Debouncer,
 	Editor,
-	MarkdownPostProcessorContext,
 	MarkdownView,
 	Notice,
 	Plugin,
@@ -19,12 +18,9 @@ import {
 	setComments,
 	trackedRange,
 } from "./editor/highlight-extension";
-import { highlightQuoteInSection } from "./editor/reading-view";
 import { ObeliskSettingTab } from "./settings";
 import {
-	DocFrame,
 	frameFrom,
-	lineNumberAt,
 	makeAnchor,
 	resolveAll,
 } from "./store/anchors";
@@ -84,18 +80,6 @@ export default class ObeliskPlugin extends Plugin {
 	 * "the note we're commenting on" means everywhere below.
 	 */
 	private lastMarkdownView: MarkdownView | null = null;
-	/**
-	 * One render pass of Reading view calls the post-processor once per
-	 * section, each time handing over the same source text. Resolving the
-	 * whole note per section would be quadratic, so the pass shares one
-	 * result. Invalidated in `refresh`, which is where comment changes land.
-	 */
-	private readingPass: {
-		path: string;
-		text: string;
-		frame: DocFrame;
-		comments: ResolvedComment[];
-	} | null = null;
 	private scheduleResolve!: Debouncer<[], void>;
 
 	async onload(): Promise<void> {
@@ -152,12 +136,6 @@ export default class ObeliskPlugin extends Plugin {
 			},
 		});
 
-		// Requirement 5 in Reading view. Same anchoring rule as the editor —
-		// find the quoted text — applied to rendered DOM instead of a buffer.
-		this.registerMarkdownPostProcessor((el, ctx) =>
-			this.decorateReadingView(el, ctx),
-		);
-
 		// Re-render whenever the active file changes or its metadata is
 		// re-parsed (which is how we learn that frontmatter changed).
 		this.registerEvent(
@@ -203,7 +181,6 @@ export default class ObeliskPlugin extends Plugin {
 	refresh(): void {
 		// A pending re-resolve has just been made redundant, whoever asked.
 		this.scheduleResolve.cancel();
-		this.readingPass = null;
 		const { file, comments } = this.activeComments();
 
 		this.sidebar()?.setComments(file, comments);
@@ -532,54 +509,6 @@ export default class ObeliskPlugin extends Plugin {
 		if (this.settings.autoOpenSidebar && view?.file) {
 			if (this.store.read(view.file).length > 0) await this.openSidebar();
 		}
-	}
-
-	// ── Reading view ─────────────────────────────────────────────────────────
-
-	private decorateReadingView(
-		el: HTMLElement,
-		ctx: MarkdownPostProcessorContext,
-	): void {
-		if (!this.settings.highlightInReadingView) return;
-
-		const file = this.app.vault.getFileByPath(ctx.sourcePath);
-		if (!file) return;
-		const comments = this.store.read(file);
-		if (comments.length === 0) return;
-
-		// Rendered blocks have no line numbers of their own. `getSectionInfo`
-		// is the bridge back to the source, and it hands over the whole file
-		// text — so the same resolution the editor uses decides which section
-		// each comment belongs to, and a quote that occurs twice is
-		// highlighted in the block it actually resolves to rather than both.
-		const section = ctx.getSectionInfo(el);
-		if (!section) return;
-		const pass = this.readingResolution(ctx.sourcePath, section.text, comments);
-
-		for (const comment of pass.comments) {
-			if (comment.resolved && !this.settings.showResolved) continue;
-			if (!comment.range) continue;
-			const line = lineNumberAt(pass.frame, comment.range.from);
-			if (line < section.lineStart || line > section.lineEnd) continue;
-			highlightQuoteInSection(el, comment, (id) =>
-				void this.revealComment(id),
-			);
-		}
-	}
-
-	/** The resolution shared by every section of one Reading-view render. */
-	private readingResolution(
-		path: string,
-		text: string,
-		comments: Comment[],
-	): { path: string; text: string; frame: DocFrame; comments: ResolvedComment[] } {
-		const cached = this.readingPass;
-		if (cached && cached.path === path && cached.text === text) return cached;
-
-		const frame = frameFrom(text);
-		const pass = { path, text, frame, comments: resolveAll(comments, frame) };
-		this.readingPass = pass;
-		return pass;
 	}
 
 	// ── Plumbing ─────────────────────────────────────────────────────────────

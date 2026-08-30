@@ -100,11 +100,6 @@
 	padding: 0 3px;
 }
 
-/* Reading view gets the same treatment, minus the live tracking. */
-.obelisk-reading-highlight {
-	cursor: pointer;
-}
-
 /* ── Sidebar (requirement 3) ──────────────────────────────────────────────── */
 
 .obelisk-sidebar {

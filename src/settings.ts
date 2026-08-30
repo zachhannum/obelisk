@@ -38,21 +38,6 @@ export class ObeliskSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Highlight in Reading view")
-			.setDesc(
-				"Also highlight commented passages when the note is rendered.",
-			)
-			.addToggle((t) =>
-				t
-					.setValue(this.plugin.settings.highlightInReadingView)
-					.onChange(async (value) => {
-						this.plugin.settings.highlightInReadingView = value;
-						await this.plugin.saveSettings();
-						this.plugin.refresh();
-					}),
-			);
-
-		new Setting(containerEl)
 			.setName("Open sidebar automatically")
 			.setDesc("When opening a note that already has comments.")
 			.addToggle((t) =>

@@ -112,8 +112,6 @@ export interface ObeliskSettings {
 	authorName: string;
 	/** Show resolved comments in the sidebar. */
 	showResolved: boolean;
-	/** Highlight commented text in Reading view as well as Live Preview. */
-	highlightInReadingView: boolean;
 	/** Open the sidebar automatically when a note containing comments is opened. */
 	autoOpenSidebar: boolean;
 	/** Delete a comment's frontmatter entry when its suggestion is applied. */
@@ -123,7 +121,6 @@ export interface ObeliskSettings {
 export const DEFAULT_SETTINGS: ObeliskSettings = {
 	authorName: "",
 	showResolved: false,
-	highlightInReadingView: true,
 	autoOpenSidebar: false,
 	removeCommentOnApply: false,
 };
