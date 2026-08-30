@@ -431,6 +431,57 @@ export default class ObeliskPlugin extends Plugin {
 		this.refresh();
 	}
 
+	/**
+	 * Drop one reply out of a thread, leaving the comment itself alone.
+	 *
+	 * Undo rather than a confirmation, for the same reason deleting a comment
+	 * offers one — except that a reply also has to go back *where it was*, so
+	 * the restore splices it in at its old index rather than appending it and
+	 * quietly reordering the conversation.
+	 */
+	async deleteReply(
+		file: TFile,
+		commentId: string,
+		replyId: string,
+	): Promise<void> {
+		const comment = this.store.read(file).find((c) => c.id === commentId);
+		const replies = comment?.replies;
+		const index = replies?.findIndex((r) => r.id === replyId) ?? -1;
+		if (!replies || index < 0) return;
+
+		const reply = replies[index];
+		await this.store.patch(file, commentId, {
+			replies: replies.filter((r) => r.id !== replyId),
+		});
+		this.refresh();
+
+		const notice = new Notice("Reply deleted. Click to undo.", 8000);
+		notice.noticeEl.addClass("mod-clickable");
+		notice.noticeEl.addEventListener("click", () => {
+			notice.hide();
+			void this.restoreReply(file, commentId, reply, index);
+		});
+	}
+
+	/** Put a deleted reply back at `index`, as far as the thread still allows. */
+	private async restoreReply(
+		file: TFile,
+		commentId: string,
+		reply: Reply,
+		index: number,
+	): Promise<void> {
+		const comment = this.store.read(file).find((c) => c.id === commentId);
+		// The whole comment may have been deleted in the meantime, and its
+		// replies with it; there is nothing left to restore into.
+		if (!comment) return;
+		if (comment.replies?.some((r) => r.id === reply.id)) return;
+
+		const replies = [...(comment.replies ?? [])];
+		replies.splice(Math.min(index, replies.length), 0, reply);
+		await this.store.patch(file, commentId, { replies });
+		this.refresh();
+	}
+
 	async toggleResolved(file: TFile, id: string): Promise<void> {
 		const comment = this.store.read(file).find((c) => c.id === id);
 		if (!comment) return;

@@ -202,6 +202,18 @@ function renderReplies(
 					),
 			}),
 		);
+
+		// Deleting a reply is the thread's own business: the card's Delete
+		// takes the whole comment with it, which is not what someone striking
+		// out one remark in the middle of a conversation is asking for.
+		const remove = head.createEl("button", {
+			cls: "obelisk-icon-button is-destructive",
+		});
+		setIcon(remove, "trash-2");
+		setTooltip(remove, "Delete this reply");
+		remove.addEventListener("click", () =>
+			void ctx.plugin.deleteReply(ctx.file, comment.id, reply.id),
+		);
 	}
 }
 

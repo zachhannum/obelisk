@@ -138,6 +138,12 @@
 	color: var(--text-normal);
 }
 
+/* Deleting is the one icon action that cannot be walked back from the card
+   itself, so it warns on hover instead of settling into the text colour. */
+.obelisk-icon-button.is-destructive:hover {
+	color: var(--text-error);
+}
+
 .obelisk-chips {
 	display: flex;
 	gap: var(--size-4-1);
@@ -552,7 +558,7 @@
 }
 
 /* While a body is being rewritten, the card's own row — Reply, Edit, Resolve,
-   Delete — and the pencils on its replies all act on text that is mid-edit, so
+   Delete — and the per-reply controls all act on text that is mid-edit, so
    they stand down and leave the composer's Save and Cancel as the only live
    buttons on the card. */
 .obelisk-card.is-editing > .obelisk-actions,
@@ -560,9 +566,9 @@
 	display: none;
 }
 
-/* The edit control sits in the reply's header, where it would compete with
-   the author line for attention; it surfaces when the reply is under the
-   pointer or the button itself has keyboard focus. */
+/* The edit and delete controls sit in the reply's header, where they would
+   compete with the author line for attention; they surface when the reply is
+   under the pointer or the button itself has keyboard focus. */
 .obelisk-reply .obelisk-icon-button {
 	opacity: 0;
 	padding: 0;

@@ -54,6 +54,10 @@ for the decisions behind it and what remains open.
   it, suggestion button and all, from the card's *Edit* button or by
   right-clicking the passage. Edited bodies are marked as such; the anchor is
   left alone, so changing what you said never changes what you said it about.
+- **Deletable** — a whole comment from the card's *Delete*, or a single reply
+  from the trash icon in its header, so striking one remark out of a thread
+  does not take the conversation with it. Both offer an undo rather than a
+  confirmation dialog.
 
 ## Data format
 
