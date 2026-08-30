@@ -12,12 +12,12 @@ sidecar database, nothing to lose.
 
 ## Status
 
-**Scaffold.** The project structure, data model, build tooling, and the
-architecture are in place; the anchoring, decoration, and suggestion-apply
-internals are marked `TODO` and not yet implemented. See
-[`docs/DESIGN.md`](docs/DESIGN.md) for the design those stubs are filling in.
+**Working.** Anchoring, decoration, the sidebar, and suggested edits are
+implemented. Not yet released or submitted to the community plugin list, and
+not yet exercised against a large vault. See [`docs/DESIGN.md`](docs/DESIGN.md)
+for the decisions behind it and what remains open.
 
-## Planned features
+## Features
 
 - **Comment on any passage** — select text, right-click, *Add comment*.
 - **Suggested edits** — propose a concrete replacement; apply it from the
@@ -29,7 +29,10 @@ internals are marked `TODO` and not yet implemented. See
 - **Stored in frontmatter** — plain YAML under an `obelisk` key. Readable,
   diffable, portable.
 - **Survives editing** — anchors record both a line/column range and the quoted
-  text, so comments re-find their passage after the note drifts.
+  text, so comments re-find their passage after the note drifts. A passage that
+  is deleted outright leaves its comment flagged in the sidebar rather than
+  quietly disappearing.
+- **Threaded replies** — on any comment, stored alongside it.
 
 ## Data format
 

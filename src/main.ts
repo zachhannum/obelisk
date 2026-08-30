@@ -1,30 +1,53 @@
+import { EditorState } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
 import {
+	Debouncer,
 	Editor,
+	MarkdownPostProcessorContext,
 	MarkdownView,
 	Notice,
 	Plugin,
 	TFile,
 	WorkspaceLeaf,
+	debounce,
 } from "obsidian";
 import { registerContextMenu } from "./editor/context-menu";
 import {
+	commentAt,
+	commentField,
+	flashComment,
 	obeliskEditorExtension,
 	setActiveComment,
 	setComments,
+	trackedRange,
 } from "./editor/highlight-extension";
+import { highlightQuoteInSection } from "./editor/reading-view";
 import { ObeliskSettingTab } from "./settings";
+import {
+	frameFromState,
+	makeAnchor,
+	pendingAnchorWrites,
+	resolveAll,
+} from "./store/anchors";
 import { CommentStore } from "./store/frontmatter";
 import { applySuggestion } from "./suggestion/apply";
 import {
 	Comment,
 	DEFAULT_SETTINGS,
 	ObeliskSettings,
+	Reply,
 	ResolvedComment,
 	VIEW_TYPE_OBELISK,
 } from "./types";
 import { CommentDraft, CommentModal } from "./view/comment-modal";
 import { ObeliskSidebarView } from "./view/sidebar-view";
 import { newCommentId } from "./util/id";
+
+/** How long the editor has to be quiet before drifted anchors are written. */
+const ANCHOR_FLUSH_DELAY = 1500;
+
+/** How long a jumped-to highlight pulses. */
+const FLASH_DURATION = 700;
 
 /**
  * Obelisk — inline comments and suggested edits for Obsidian.
@@ -46,9 +69,26 @@ export default class ObeliskPlugin extends Plugin {
 	settings!: ObeliskSettings;
 	store!: CommentStore;
 
+	/** The view whose drifted anchors we owe a write to. */
+	private tracking: MarkdownView | null = null;
+	/**
+	 * The last markdown view that had focus. Focus moving to the sidebar (or
+	 * anywhere else) doesn't mean the reader left the note, so this is what
+	 * "the note we're commenting on" means everywhere below.
+	 */
+	private lastMarkdownView: MarkdownView | null = null;
+	/** Guards against a flush re-entering through its own metadata event. */
+	private flushing = false;
+	private scheduleFlush!: Debouncer<[], void>;
+
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.store = new CommentStore(this.app);
+		this.scheduleFlush = debounce(
+			() => void this.flushAnchors(),
+			ANCHOR_FLUSH_DELAY,
+			true,
+		);
 
 		this.registerView(
 			VIEW_TYPE_OBELISK,
@@ -56,7 +96,10 @@ export default class ObeliskPlugin extends Plugin {
 		);
 
 		this.registerEditorExtension(
-			obeliskEditorExtension((id) => this.revealComment(id)),
+			obeliskEditorExtension({
+				onSelect: (id, opts) => void this.revealComment(id, opts),
+				onDrift: () => this.scheduleFlush(),
+			}),
 		);
 
 		registerContextMenu(this);
@@ -92,71 +135,134 @@ export default class ObeliskPlugin extends Plugin {
 			},
 		});
 
+		// Requirement 5 in Reading view. Separate anchoring path: rendered DOM
+		// has no line numbers, so it matches on the quoted text within the
+		// section `ctx.getSectionInfo` reports.
+		this.registerMarkdownPostProcessor((el, ctx) =>
+			this.decorateReadingView(el, ctx),
+		);
+
 		// Re-render whenever the active file changes or its metadata is
 		// re-parsed (which is how we learn that frontmatter changed).
 		this.registerEvent(
-			this.app.workspace.on("active-leaf-change", () => this.refresh()),
+			this.app.workspace.on("active-leaf-change", () => {
+				void this.onActiveViewChanged();
+			}),
+		);
+		this.registerEvent(
+			this.app.workspace.on("file-open", () => {
+				void this.onActiveViewChanged();
+			}),
 		);
 		this.registerEvent(
 			this.app.metadataCache.on("changed", (file) => {
+				if (this.flushing) return;
 				if (file.path === this.activeFile()?.path) this.refresh();
 			}),
 		);
+		// At startup the open note's frontmatter may not be parsed yet, and a
+		// file already in the queue never fires "changed" — so the first read
+		// can come back empty. This fires when the cache goes quiet; the
+		// sidebar no-ops when nothing actually changed.
+		this.registerEvent(
+			this.app.metadataCache.on("resolved", () => {
+				if (this.flushing) return;
+				this.refresh();
+			}),
+		);
 
-		this.app.workspace.onLayoutReady(() => this.refresh());
-
-		// TODO: register a markdown post-processor so requirement 5 also holds
-		// in Reading view (settings.highlightInReadingView). It needs its own
-		// anchoring path — the rendered DOM has no line numbers, so it has to
-		// match on `anchor.quote` within each rendered block, using the
-		// section info from `ctx.getSectionInfo(el)` to map back to lines.
+		this.app.workspace.onLayoutReady(() => void this.onActiveViewChanged());
 	}
 
 	onunload(): void {
-		// Views are torn down by Obsidian; nothing else to clean up yet.
-		// TODO: flush any pending anchor rewrites (anchors.pendingAnchorWrites)
-		// before the plugin goes away.
+		// Views are torn down by Obsidian, but anchors that drifted since the
+		// last debounce are still only in CodeMirror's head.
+		this.scheduleFlush.cancel();
+		void this.flushAnchors(this.tracking);
 	}
 
 	// ── State ────────────────────────────────────────────────────────────────
 
 	/**
-	 * TODO: this recomputes everything on every call. Once anchoring is real,
-	 * cache ResolvedComment[] per file and invalidate on metadata change +
-	 * document change, rather than re-resolving from scratch.
+	 * Recompute everything and push it to both consumers.
+	 *
+	 * This is not on the typing path — it runs on file switches and on
+	 * frontmatter changes only. Live edits are handled inside CodeMirror by
+	 * mapping the existing ranges, which is why this can afford to be
+	 * unconditional rather than cached.
 	 */
 	refresh(): void {
-		const file = this.activeFile();
-		const view = this.activeMarkdownView();
-		const comments: ResolvedComment[] = file
-			? this.resolveFor(file, view)
-			: [];
+		const { file, comments } = this.activeComments();
 
 		this.sidebar()?.setComments(file, comments);
+		if (!file) return;
 
-		// @ts-expect-error — `editor.cm` is the CM6 EditorView; not in the
-		// public typings but stable in practice, and how every editor plugin
-		// reaches it.
-		const cm = view?.editor?.cm;
-		cm?.dispatch({ effects: setComments.of(comments) });
+		// Every leaf showing this note, not just the active one: a note open in
+		// a split has a CodeMirror view per leaf, and they all need the
+		// decorations. The offsets are shared because the text is.
+		for (const leaf of this.app.workspace.getLeavesOfType("markdown")) {
+			const md = leaf.view;
+			if (!(md instanceof MarkdownView)) continue;
+			if (md.file?.path !== file.path) continue;
+			this.editorView(md)?.dispatch({
+				effects: setComments.of(comments),
+			});
+		}
 	}
 
 	/**
-	 * TODO: resolve stored anchors against the live document.
-	 * Needs `anchors.resolveAll(this.store.read(file), cm.state, frame)`,
-	 * where `frame` comes from `store.bodyOffset(file)`. Until anchoring is
-	 * implemented this returns comments with no ranges, so the sidebar lists
-	 * them but nothing is highlighted.
+	 * The current note and its resolved comments.
+	 *
+	 * Pull as well as push: a sidebar that Obsidian restores (or un-defers)
+	 * after the last `refresh` has no way to know what it missed, so it asks
+	 * for this in `onOpen` rather than waiting for the next event.
 	 */
+	activeComments(): { file: TFile | null; comments: ResolvedComment[] } {
+		const view = this.activeMarkdownView();
+		const file = view?.file ?? null;
+		return {
+			file,
+			comments: file ? this.resolveFor(file, view) : [],
+		};
+	}
+
+	/** Resolve a file's stored anchors against the document as it stands. */
 	private resolveFor(
 		file: TFile,
-		_view: MarkdownView | null,
+		view: MarkdownView | null,
 	): ResolvedComment[] {
-		return this.store.read(file).map((c) => ({
-			...c,
-			range: null,
-			state: "orphaned" as const,
-		}));
+		const comments = this.store.read(file);
+		if (comments.length === 0) return [];
+
+		const state = this.documentState(file, view);
+		if (!state) {
+			return comments.map((c) => ({
+				...c,
+				range: null,
+				state: "orphaned" as const,
+			}));
+		}
+
+		return resolveAll(comments, state, frameFromState(state), {
+			reanchor: this.settings.enableReanchoring,
+		});
+	}
+
+	/**
+	 * The CodeMirror state to anchor against.
+	 *
+	 * Normally the live editor's own. In Reading view the editor exists but may
+	 * not have a CM instance attached, so fall back to a throwaway state built
+	 * from the same text — anchoring only needs a document, not a view.
+	 */
+	private documentState(
+		file: TFile,
+		view: MarkdownView | null,
+	): EditorState | null {
+		const cm = this.editorView(view);
+		if (cm) return cm.state;
+		if (!view || view.file?.path !== file.path) return null;
+		return EditorState.create({ doc: view.editor.getValue() });
 	}
 
 	// ── Actions ──────────────────────────────────────────────────────────────
@@ -176,22 +282,39 @@ export default class ObeliskPlugin extends Plugin {
 			return;
 		}
 
+		// Capture the selection now: the modal takes focus, and by the time it
+		// closes `getSelection()` may report something else entirely.
+		const from = editor.posToOffset(editor.getCursor("from"));
+		const to = editor.posToOffset(editor.getCursor("to"));
+
 		new CommentModal(this.app, quote, opts.withSuggestion, (draft) =>
-			this.createComment(file, editor, draft),
+			void this.createComment(file, view, { from, to, quote }, draft),
 		).open();
 	}
 
 	private async createComment(
 		file: TFile,
-		editor: Editor,
+		view: MarkdownView,
+		selection: { from: number; to: number; quote: string },
 		draft: CommentDraft,
 	): Promise<void> {
-		// TODO: build the anchor with anchors.makeAnchor() from the CM6 state
-		// so we get quote/prefix/suffix and body-relative coordinates. The
-		// Editor API's line numbers are document-absolute and include the
-		// frontmatter, so they must be shifted by store.bodyOffset(file).
-		const from = editor.getCursor("from");
-		const to = editor.getCursor("to");
+		const state = this.documentState(file, view);
+		if (!state) return;
+
+		// The Editor API's coordinates are document-absolute and include the
+		// frontmatter; `makeAnchor` shifts them into body coordinates and
+		// grabs the surrounding context for re-anchoring.
+		if (state.sliceDoc(selection.from, selection.to) !== selection.quote) {
+			new Notice("The selection changed while you were typing. Not saving.");
+			return;
+		}
+
+		const anchor = makeAnchor(
+			selection.from,
+			selection.to,
+			state,
+			frameFromState(state),
+		);
 		const existing = new Set(this.store.read(file).map((c) => c.id));
 
 		const comment: Comment = {
@@ -199,13 +322,10 @@ export default class ObeliskPlugin extends Plugin {
 			author: this.settings.authorName || undefined,
 			created: new Date().toISOString(),
 			body: draft.body,
-			anchor: {
-				from: { line: from.line, col: from.ch },
-				to: { line: to.line, col: to.ch },
-				quote: editor.getSelection(),
-			},
+			anchor,
 			suggestion:
-				draft.suggestion !== undefined
+				draft.suggestion !== undefined &&
+				draft.suggestion !== selection.quote
 					? { replacement: draft.suggestion }
 					: undefined,
 		};
@@ -213,35 +333,69 @@ export default class ObeliskPlugin extends Plugin {
 		await this.store.add(file, comment);
 		await this.openSidebar();
 		this.refresh();
-		this.revealComment(comment.id);
+		void this.revealComment(comment.id);
 	}
 
 	async applySuggestion(file: TFile, id: string): Promise<void> {
+		// Flush first: anchors that drifted since the last debounce would send
+		// the splice looking in the wrong place, and everything below reads
+		// from the store.
+		this.scheduleFlush.cancel();
+		await this.flushAnchors();
+
+		const stored = this.store.read(file);
 		const comment = this.resolveFor(file, this.activeMarkdownView()).find(
 			(c) => c.id === id,
 		);
-		if (!comment) return;
+		if (!comment?.suggestion) return;
 
-		const result = await applySuggestion(this.app, file, comment);
+		const result = await applySuggestion(this.app, file, comment, stored);
 		if (!result.ok) {
-			new Notice(
-				result.reason === "already-applied"
-					? "That suggestion has already been applied."
-					: "The text this suggestion targets has changed. Not applying.",
-			);
+			new Notice(APPLY_FAILURE[result.reason]);
 			return;
 		}
 
-		if (this.settings.removeCommentOnApply) {
-			await this.store.remove(file, id);
-		} else {
-			await this.store.patch(file, id, {
-				suggestion: {
-					replacement: comment.suggestion!.replacement,
-					appliedAt: new Date().toISOString(),
-				},
+		const appliedAt = new Date().toISOString();
+		const replacement = comment.suggestion!.replacement;
+		const remove = this.settings.removeCommentOnApply;
+
+		// One frontmatter write for the whole thing: the re-anchoring the
+		// splice forced, plus the comment's own new state.
+		this.flushing = true;
+		try {
+			await this.store.update(file, (comments) => {
+				for (const { id: target, anchor } of result.anchors) {
+					const entry = comments.find((c) => c.id === target);
+					if (entry) entry.anchor = anchor;
+				}
+				if (remove) return comments.filter((c) => c.id !== id);
+				const applied = comments.find((c) => c.id === id);
+				if (applied) {
+					applied.suggestion = { replacement, appliedAt };
+					applied.modified = appliedAt;
+				}
 			});
+		} finally {
+			this.flushing = false;
 		}
+
+		this.refresh();
+	}
+
+	async addReply(file: TFile, id: string, body: string): Promise<void> {
+		const comment = this.store.read(file).find((c) => c.id === id);
+		if (!comment) return;
+
+		const reply: Reply = {
+			id: newCommentId(new Set((comment.replies ?? []).map((r) => r.id))),
+			author: this.settings.authorName || undefined,
+			created: new Date().toISOString(),
+			body,
+		};
+
+		await this.store.patch(file, id, {
+			replies: [...(comment.replies ?? []), reply],
+		});
 		this.refresh();
 	}
 
@@ -253,48 +407,159 @@ export default class ObeliskPlugin extends Plugin {
 	}
 
 	async deleteComment(file: TFile, id: string): Promise<void> {
-		// TODO: confirmation modal, or an undo affordance via Notice.
+		const comment = this.store.read(file).find((c) => c.id === id);
+		if (!comment) return;
+
 		await this.store.remove(file, id);
 		this.refresh();
+
+		// Undo rather than a confirmation dialog: deleting a comment is a
+		// one-click action taken often, and a modal on each one would be worse
+		// than the occasional restore.
+		const notice = new Notice("Comment deleted. Click to undo.", 8000);
+		notice.noticeEl.addClass("mod-clickable");
+		notice.noticeEl.addEventListener("click", () => {
+			notice.hide();
+			void this.store.add(file, comment).then(() => this.refresh());
+		});
 	}
 
 	// ── Navigation ───────────────────────────────────────────────────────────
 
 	/** Requirement 4: sidebar card → editor. */
 	scrollToComment(id: string): void {
-		const view = this.activeMarkdownView();
-		const comment = this.currentComments().find((c) => c.id === id);
-		if (!view || !comment?.range) return;
-
-		// TODO: scroll the editor and flash the highlight.
-		//   const { from, to } = comment.range;
-		//   cm.dispatch({
-		//     selection: { anchor: from, head: to },
-		//     effects: EditorView.scrollIntoView(from, { y: "center" }),
-		//   });
-		// Then add `.is-flashing` to the decoration for ~600ms.
 		this.sidebar()?.setActive(id);
+
+		const cm = this.editorView(this.activeMarkdownView());
+		if (!cm) return;
+		const range = trackedRange(cm, id);
+		if (!range || range.to <= range.from) return;
+
+		cm.dispatch({
+			selection: { anchor: range.from, head: range.to },
+			effects: [
+				EditorView.scrollIntoView(range.from, { y: "center" }),
+				setActiveComment.of(id),
+				flashComment.of(id),
+			],
+		});
+		cm.focus();
+
+		window.setTimeout(() => {
+			if (!cm.dom.isConnected) return;
+			cm.dispatch({ effects: flashComment.of(null) });
+		}, FLASH_DURATION);
 	}
 
 	/** Requirement 5's marker click: editor → sidebar. */
-	async revealComment(id: string): Promise<void> {
-		await this.openSidebar();
+	async revealComment(
+		id: string,
+		opts: { reveal?: boolean } = {},
+	): Promise<void> {
+		// A click that merely landed inside a highlight follows along in an
+		// already-open sidebar; it does not yank one open and take focus.
+		if (opts.reveal !== false) await this.openSidebar();
 		this.sidebar()?.setActive(id);
-
-		// @ts-expect-error — see note in refresh().
-		const cm = this.activeMarkdownView()?.editor?.cm;
-		cm?.dispatch({ effects: setActiveComment.of(id) });
+		this.editorView(this.activeMarkdownView())?.dispatch({
+			effects: setActiveComment.of(id),
+		});
 	}
 
-	/**
-	 * TODO: find the comment whose range contains the cursor, preferring the
-	 * innermost when several overlap. Needs real anchoring first.
-	 */
+	/** The innermost comment whose live range contains the cursor. */
 	commentAtCursor(
-		_editor: Editor,
-		_view: MarkdownView,
+		editor: Editor,
+		view: MarkdownView,
 	): ResolvedComment | null {
-		return null;
+		const cm = this.editorView(view);
+		if (!cm) return null;
+		return commentAt(cm, editor.posToOffset(editor.getCursor("head")));
+	}
+
+	// ── Anchor drift ─────────────────────────────────────────────────────────
+
+	/**
+	 * Write back anchors that CodeMirror has been moving as the note is typed.
+	 *
+	 * See docs/DESIGN.md § 3c: highlights follow edits live in the editor, and
+	 * the on-disk coordinates catch up here — on a pause in typing, on file
+	 * switch, on unload, and before anything that depends on them being right.
+	 */
+	private async flushAnchors(view = this.activeMarkdownView()): Promise<void> {
+		if (this.flushing) return;
+		const file = view?.file;
+		const cm = this.editorView(view);
+		if (!file || !cm || !cm.dom.isConnected) return;
+
+		const tracked = cm.state.field(commentField, false)?.ranges;
+		if (!tracked?.length) return;
+
+		const writes = pendingAnchorWrites(
+			this.store.read(file),
+			tracked,
+			cm.state,
+			frameFromState(cm.state),
+		);
+		if (writes.length === 0) return;
+
+		this.flushing = true;
+		try {
+			await this.store.patchMany(
+				file,
+				writes.map((w) => ({ id: w.id, patch: { anchor: w.anchor } })),
+				// The reader didn't touch these comments; the text moved under
+				// them. Stamping `modified` here would make it meaningless.
+				{ touch: false },
+			);
+		} finally {
+			this.flushing = false;
+		}
+	}
+
+	private async onActiveViewChanged(): Promise<void> {
+		const view = this.activeMarkdownView();
+		if (this.tracking && this.tracking !== view) {
+			this.scheduleFlush.cancel();
+			await this.flushAnchors(this.tracking);
+		}
+		this.tracking = view;
+
+		this.refresh();
+
+		if (this.settings.autoOpenSidebar && view?.file) {
+			if (this.store.read(view.file).length > 0) await this.openSidebar();
+		}
+	}
+
+	// ── Reading view ─────────────────────────────────────────────────────────
+
+	private decorateReadingView(
+		el: HTMLElement,
+		ctx: MarkdownPostProcessorContext,
+	): void {
+		if (!this.settings.highlightInReadingView) return;
+
+		const file = this.app.vault.getFileByPath(ctx.sourcePath);
+		if (!file) return;
+		const comments = this.store.read(file);
+		if (comments.length === 0) return;
+
+		// Rendered blocks have no line numbers of their own; this is the only
+		// bridge back to the source coordinates the anchors are stored in.
+		const section = ctx.getSectionInfo(el);
+		if (!section) return;
+
+		const bodyStartLine = this.store.bodyOffset(file).line;
+		const first = section.lineStart - bodyStartLine;
+		const last = section.lineEnd - bodyStartLine;
+
+		for (const comment of comments) {
+			if (comment.resolved && !this.settings.showResolved) continue;
+			if (comment.anchor.to.line < first) continue;
+			if (comment.anchor.from.line > last) continue;
+			highlightQuoteInSection(el, comment, (id) =>
+				void this.revealComment(id),
+			);
+		}
 	}
 
 	// ── Plumbing ─────────────────────────────────────────────────────────────
@@ -309,7 +574,7 @@ export default class ObeliskPlugin extends Plugin {
 		if (!existing) {
 			await leaf.setViewState({ type: VIEW_TYPE_OBELISK, active: true });
 		}
-		this.app.workspace.revealLeaf(leaf);
+		await this.app.workspace.revealLeaf(leaf);
 		this.refresh();
 	}
 
@@ -319,17 +584,54 @@ export default class ObeliskPlugin extends Plugin {
 		return view instanceof ObeliskSidebarView ? view : null;
 	}
 
+	/**
+	 * The note the sidebar is about.
+	 *
+	 * Deliberately *not* just `getActiveViewOfType`: that goes null as soon as
+	 * the sidebar itself takes focus, which would empty the comment list on
+	 * the first click into it — and leave card clicks with no editor to scroll.
+	 * We fall back to the last markdown view instead, as long as it is still
+	 * open somewhere in the workspace.
+	 */
 	private activeMarkdownView(): MarkdownView | null {
-		return this.app.workspace.getActiveViewOfType(MarkdownView);
+		const active = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (active) {
+			this.lastMarkdownView = active;
+			return active;
+		}
+		if (this.lastMarkdownView && this.isOpen(this.lastMarkdownView)) {
+			return this.lastMarkdownView;
+		}
+		this.lastMarkdownView = null;
+		return null;
+	}
+
+	/**
+	 * Whether a remembered view is still live. Closed leaves — and views
+	 * Obsidian has deferred out of a background tab — drop off this list, so
+	 * identity against it is the check that matters, not DOM connectedness.
+	 */
+	private isOpen(view: MarkdownView): boolean {
+		return this.app.workspace
+			.getLeavesOfType("markdown")
+			.some((leaf) => leaf.view === view);
 	}
 
 	private activeFile(): TFile | null {
 		return this.activeMarkdownView()?.file ?? null;
 	}
 
-	private currentComments(): ResolvedComment[] {
-		const file = this.activeFile();
-		return file ? this.resolveFor(file, this.activeMarkdownView()) : [];
+	/**
+	 * The CodeMirror view behind a MarkdownView, if it has one. Reading-mode
+	 * leaves and embedded editors may not.
+	 */
+	private editorView(view: MarkdownView | null): EditorView | null {
+		if (!view) return null;
+		// @ts-expect-error — `editor.cm` is the CM6 EditorView; not in the
+		// public typings but stable in practice, and how every editor plugin
+		// reaches it.
+		const cm: unknown = view.editor?.cm;
+		return cm instanceof EditorView ? cm : null;
 	}
 
 	async loadSettings(): Promise<void> {
@@ -344,3 +646,12 @@ export default class ObeliskPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 }
+
+const APPLY_FAILURE: Record<string, string> = {
+	"already-applied": "That suggestion has already been applied.",
+	orphaned:
+		"The text this suggestion targets is no longer in the note. Not applying.",
+	stale: "The text this suggestion targets has changed. Not applying.",
+	ambiguous:
+		"The quoted text appears more than once, so it isn't clear where this belongs. Not applying.",
+};

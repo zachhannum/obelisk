@@ -1,6 +1,9 @@
 import { Extension, StateEffect, StateField } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
+import type { Range } from "@codemirror/state";
+import { TrackedRange } from "../store/anchors";
 import { ResolvedComment } from "../types";
+import { MarkerWidget } from "./marker";
 
 /**
  * The CodeMirror 6 layer: highlights commented passages in Live Preview /
@@ -29,9 +32,18 @@ export const setComments = StateEffect.define<ResolvedComment[]>();
 /** Dispatched when the sidebar wants a comment visually emphasized. */
 export const setActiveComment = StateEffect.define<string | null>();
 
+/** Dispatched to pulse a comment's highlight after jumping to it. */
+export const flashComment = StateEffect.define<string | null>();
+
 export interface CommentFieldValue {
 	comments: ResolvedComment[];
+	/**
+	 * Live positions, mapped through every document change. These, not
+	 * `comment.range`, are the truth while the note is being edited.
+	 */
+	ranges: TrackedRange[];
 	activeId: string | null;
+	flashId: string | null;
 	decorations: DecorationSet;
 }
 
@@ -39,71 +51,216 @@ export const commentField = StateField.define<CommentFieldValue>({
 	create() {
 		return {
 			comments: [],
+			ranges: [],
 			activeId: null,
+			flashId: null,
 			decorations: Decoration.none,
 		};
 	},
 
 	update(value, tr) {
-		let { comments, activeId, decorations } = value;
+		let { comments, ranges, activeId, flashId } = value;
+		let changed = false;
 
 		// Keep existing highlights glued to the text as the user types.
-		decorations = decorations.map(tr.changes);
+		// Insertions at either edge land outside the highlight: typing just
+		// before a commented word should not silently extend the comment over
+		// it, and the same at the end.
+		if (tr.docChanged) {
+			ranges = ranges.map((r) => ({
+				id: r.id,
+				from: tr.changes.mapPos(r.from, 1),
+				to: tr.changes.mapPos(r.to, -1),
+			}));
+			changed = true;
+		}
 
 		for (const effect of tr.effects) {
 			if (effect.is(setComments)) {
 				comments = effect.value;
-				decorations = buildDecorations(comments, activeId);
+				ranges = comments.flatMap((c) =>
+					c.range ? [{ id: c.id, ...c.range }] : [],
+				);
+				changed = true;
 			} else if (effect.is(setActiveComment)) {
 				activeId = effect.value;
-				decorations = buildDecorations(comments, activeId);
+				changed = true;
+			} else if (effect.is(flashComment)) {
+				flashId = effect.value;
+				changed = true;
 			}
 		}
 
-		return { comments, activeId, decorations };
+		const decorations = changed
+			? buildDecorations(comments, ranges, activeId, flashId)
+			: value.decorations;
+
+		return { comments, ranges, activeId, flashId, decorations };
 	},
 
 	provide: (field) => EditorView.decorations.from(field, (v) => v.decorations),
 });
 
 /**
- * TODO: build the decoration set.
+ * Mark decorations for each live range, plus one marker widget per distinct
+ * end position (several comments can end at the same spot; they share a marker
+ * carrying a count).
  *
- *   - One `Decoration.mark` per resolved comment range, class
- *     `obelisk-highlight` (+ `is-active`, `is-resolved`, `has-suggestion`
- *     modifiers). Overlapping comments must nest, so sort by `from` then by
- *     descending length and let CM handle the layering; the CSS uses
- *     progressively darker underlines so a doubly-commented span reads as two.
- *   - One `Decoration.widget` at the *end* of each range holding the marker
- *     (see marker.ts) — side: 1 so it sits after the text, and `block: false`.
- *   - Skip comments with `range === null` (orphaned) entirely.
- *   - Decoration ranges must be added in sorted order or CM throws.
+ * Empty ranges are skipped: CodeMirror rejects a zero-length mark decoration,
+ * and a comment whose text has been deleted has nothing to highlight anyway.
  */
 function buildDecorations(
 	comments: ResolvedComment[],
+	ranges: readonly TrackedRange[],
 	activeId: string | null,
+	flashId: string | null,
 ): DecorationSet {
-	void comments;
-	void activeId;
-	return Decoration.none;
+	if (ranges.length === 0) return Decoration.none;
+
+	const byId = new Map(comments.map((c) => [c.id, c]));
+	const decorations: Range<Decoration>[] = [];
+	const markerEnds = new Map<number, ResolvedComment[]>();
+
+	for (const range of ranges) {
+		const comment = byId.get(range.id);
+		if (!comment || range.to <= range.from) continue;
+
+		const classes = ["obelisk-highlight"];
+		if (comment.id === activeId) classes.push("is-active");
+		if (comment.id === flashId) classes.push("is-flashing");
+		if (comment.resolved) classes.push("is-resolved");
+		if (comment.suggestion) classes.push("has-suggestion");
+		if (comment.suggestion?.appliedAt) classes.push("is-applied");
+
+		decorations.push(
+			Decoration.mark({
+				class: classes.join(" "),
+				attributes: { "data-obelisk-id": comment.id },
+			}).range(range.from, range.to),
+		);
+
+		const group = markerEnds.get(range.to);
+		if (group) group.push(comment);
+		else markerEnds.set(range.to, [comment]);
+	}
+
+	for (const [end, group] of markerEnds) {
+		// The innermost comment — the one that started last — is what a click
+		// on the shared marker opens.
+		const primary = group[group.length - 1];
+		decorations.push(
+			Decoration.widget({
+				widget: new MarkerWidget(
+					primary.id,
+					group.length,
+					group.some((c) => !!c.suggestion),
+				),
+				side: 1,
+			}).range(end),
+		);
+	}
+
+	// `true` lets CodeMirror sort; it throws on out-of-order ranges otherwise.
+	return Decoration.set(decorations, true);
+}
+
+export interface EditorHooks {
+	/**
+	 * A comment was clicked. `reveal` is true for the marker (an explicit
+	 * "show me this comment") and false for a click that merely landed inside
+	 * a highlighted passage, which should not steal focus into the sidebar.
+	 */
+	onSelect: (id: string, opts: { reveal: boolean }) => void;
+	/** The document changed, so tracked anchors have drifted from disk. */
+	onDrift: () => void;
 }
 
 /**
- * TODO: click handling. A click on `.obelisk-marker` should reveal the comment
- * in the sidebar; a click anywhere inside `.obelisk-highlight` should select
- * it. Implement as an `EditorView.domEventHandlers({ mousedown })` that walks
- * up from `event.target` looking for `[data-obelisk-id]` and dispatches to the
- * app-level bus in main.ts.
+ * Clicks on a marker open the comment; clicks inside a highlight select it
+ * without taking over the event, so the caret still lands where the user
+ * aimed.
  */
-export function commentClickHandler(
-	onSelect: (id: string) => void,
-): Extension {
-	void onSelect;
-	return [];
+export function commentClickHandler(hooks: EditorHooks): Extension {
+	const idAt = (target: EventTarget | null) => {
+		const el =
+			target instanceof HTMLElement
+				? target.closest<HTMLElement>("[data-obelisk-id]")
+				: null;
+		const id = el?.dataset.obeliskId;
+		if (!el || !id) return null;
+		return { id, isMarker: el.classList.contains("obelisk-marker") };
+	};
+
+	return EditorView.domEventHandlers({
+		mousedown(event) {
+			const hit = idAt(event.target);
+			if (!hit) return false;
+			if (!hit.isMarker) {
+				// Let the click through to the editor; just follow along.
+				hooks.onSelect(hit.id, { reveal: false });
+				return false;
+			}
+			event.preventDefault();
+			hooks.onSelect(hit.id, { reveal: true });
+			return true;
+		},
+
+		keydown(event) {
+			if (event.key !== "Enter" && event.key !== " ") return false;
+			const hit = idAt(event.target);
+			if (!hit?.isMarker) return false;
+			event.preventDefault();
+			hooks.onSelect(hit.id, { reveal: true });
+			return true;
+		},
+	});
 }
 
-export function obeliskEditorExtension(
-	onSelect: (id: string) => void,
-): Extension {
-	return [commentField, commentClickHandler(onSelect)];
+export function obeliskEditorExtension(hooks: EditorHooks): Extension {
+	return [
+		commentField,
+		commentClickHandler(hooks),
+		EditorView.updateListener.of((update) => {
+			const field = update.state.field(commentField, false);
+			if (update.docChanged && field?.ranges.length) {
+				hooks.onDrift();
+			}
+		}),
+	];
+}
+
+/**
+ * The live range of a comment in this editor, or null if it has none.
+ *
+ * `field(..., false)` throughout: the extension is not installed in embedded
+ * editors, and asking for a missing field throws.
+ */
+export function trackedRange(
+	view: EditorView,
+	id: string,
+): TrackedRange | null {
+	const field = view.state.field(commentField, false);
+	return field?.ranges.find((r) => r.id === id) ?? null;
+}
+
+/**
+ * The comment whose live range contains `pos`, innermost first when several
+ * overlap.
+ */
+export function commentAt(
+	view: EditorView,
+	pos: number,
+): ResolvedComment | null {
+	const field = view.state.field(commentField, false);
+	if (!field) return null;
+	const { comments, ranges } = field;
+	let best: TrackedRange | null = null;
+	for (const range of ranges) {
+		if (pos < range.from || pos > range.to || range.to <= range.from) {
+			continue;
+		}
+		if (!best || range.to - range.from < best.to - best.from) best = range;
+	}
+	const hit = best;
+	return hit ? (comments.find((c) => c.id === hit.id) ?? null) : null;
 }

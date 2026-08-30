@@ -1,17 +1,27 @@
 /* Obelisk — all selectors namespaced with .obelisk-* so themes can override. */
 
+/* Obsidian exposes these as comma-separated RGB triples, so they compose with
+   rgba() and not with hsla(). The fallbacks match the default theme. */
+.obelisk-sidebar,
+.obelisk-highlight,
+.obelisk-marker,
+.obelisk-modal {
+	--obelisk-accent: var(--color-yellow-rgb, 224, 185, 68);
+	--obelisk-add: var(--color-green-rgb, 68, 179, 115);
+	--obelisk-del: var(--color-red-rgb, 224, 91, 82);
+}
+
 /* ── Editor: highlighted passages (requirement 5) ─────────────────────────── */
 
 .obelisk-highlight {
-	background-color: hsla(var(--color-yellow-rgb, 231 181 62), 0.18);
-	border-bottom: 1px solid
-		hsla(var(--color-yellow-rgb, 231 181 62), 0.65);
+	background-color: rgba(var(--obelisk-accent), 0.18);
+	border-bottom: 1px solid rgba(var(--obelisk-accent), 0.65);
 	border-radius: 2px;
 	cursor: pointer;
 }
 
 .obelisk-highlight.is-active {
-	background-color: hsla(var(--color-yellow-rgb, 231 181 62), 0.38);
+	background-color: rgba(var(--obelisk-accent), 0.38);
 }
 
 .obelisk-highlight.is-resolved {
@@ -20,7 +30,35 @@
 	opacity: 0.6;
 }
 
-/* TODO: nested/overlapping comments should read as visibly layered. */
+.obelisk-highlight.has-suggestion {
+	border-bottom-color: rgba(var(--obelisk-add), 0.75);
+}
+
+.obelisk-highlight.is-applied {
+	background-color: rgba(var(--obelisk-add), 0.14);
+}
+
+/* Overlapping comments nest as nested spans; each layer deepens the wash and
+   adds its own underline, so two stacked comments read as two. */
+.obelisk-highlight .obelisk-highlight {
+	background-color: rgba(var(--obelisk-accent), 0.22);
+	border-bottom-width: 2px;
+	border-radius: 0;
+}
+
+.obelisk-highlight .obelisk-highlight .obelisk-highlight {
+	border-bottom-style: double;
+	border-bottom-width: 3px;
+}
+
+.obelisk-highlight.is-flashing {
+	animation: obelisk-flash 700ms ease-out;
+}
+
+@keyframes obelisk-flash {
+	0% { background-color: rgba(var(--obelisk-accent), 0.75); }
+	100% { background-color: rgba(var(--obelisk-accent), 0.18); }
+}
 
 .obelisk-marker {
 	color: var(--text-accent);
@@ -29,10 +67,26 @@
 	margin-inline-start: 2px;
 	user-select: none;
 	vertical-align: super;
+	white-space: nowrap;
 }
 
-.obelisk-marker:hover {
+.obelisk-marker:hover,
+.obelisk-marker:focus-visible {
 	color: var(--text-accent-hover);
+}
+
+.obelisk-marker-count {
+	background-color: var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	color: var(--text-muted);
+	font-size: 0.85em;
+	margin-inline-start: 1px;
+	padding: 0 3px;
+}
+
+/* Reading view gets the same treatment, minus the live tracking. */
+.obelisk-reading-highlight {
+	cursor: pointer;
 }
 
 /* ── Sidebar (requirement 3) ──────────────────────────────────────────────── */
@@ -41,9 +95,58 @@
 	padding: 0;
 }
 
-.obelisk-sidebar-header {
+.obelisk-sidebar-header:not(:empty) {
 	border-bottom: 1px solid var(--background-modifier-border);
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-2);
 	padding: var(--size-4-2) var(--size-4-3);
+}
+
+.obelisk-header-row {
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+}
+
+.obelisk-count {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+.obelisk-icon-button {
+	background: transparent;
+	box-shadow: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	display: flex;
+	padding: var(--size-4-1);
+}
+
+.obelisk-icon-button:hover {
+	color: var(--text-normal);
+}
+
+.obelisk-chips {
+	display: flex;
+	gap: var(--size-4-1);
+}
+
+.obelisk-chip {
+	background-color: transparent;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-l);
+	box-shadow: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	font-size: var(--font-ui-smaller);
+	padding: 1px var(--size-4-2);
+}
+
+.obelisk-chip.is-active {
+	background-color: var(--background-modifier-hover);
+	border-color: var(--text-accent);
+	color: var(--text-normal);
 }
 
 .obelisk-list {
@@ -51,6 +154,15 @@
 	flex-direction: column;
 	gap: var(--size-4-2);
 	padding: var(--size-4-2);
+}
+
+.obelisk-section-heading {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-semibold);
+	letter-spacing: 0.04em;
+	margin-block-start: var(--size-4-2);
+	text-transform: uppercase;
 }
 
 .obelisk-empty {
@@ -86,37 +198,97 @@
 }
 
 .obelisk-card-header {
+	align-items: center;
+	color: var(--text-muted);
 	display: flex;
 	font-size: var(--font-ui-smaller);
-	justify-content: space-between;
-	color: var(--text-muted);
+	gap: var(--size-4-1);
 }
 
 .obelisk-author {
+	color: var(--text-normal);
 	font-weight: var(--font-semibold);
+}
+
+.obelisk-date {
+	margin-inline-start: auto;
+	white-space: nowrap;
+}
+
+.obelisk-badge {
+	background-color: var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	padding: 0 var(--size-4-1);
+}
+
+.obelisk-badge.is-applied {
+	background-color: rgba(var(--obelisk-add), 0.2);
 	color: var(--text-normal);
 }
 
 .obelisk-quote {
 	border-inline-start: 2px solid var(--text-accent);
 	color: var(--text-muted);
+	display: -webkit-box;
 	font-size: var(--font-ui-smaller);
+	-webkit-line-clamp: 3;
+	line-clamp: 3;
+	-webkit-box-orient: vertical;
 	margin: var(--size-4-2) 0;
 	overflow: hidden;
 	padding-inline-start: var(--size-4-2);
-	/* TODO: clamp long quotes to 3 lines with an expand affordance. */
+	white-space: pre-wrap;
+}
+
+.obelisk-quote.is-expanded {
+	display: block;
+	-webkit-line-clamp: unset;
+	line-clamp: unset;
 }
 
 .obelisk-body {
 	font-size: var(--font-ui-small);
+	overflow-wrap: anywhere;
 }
 
 .obelisk-body > :first-child { margin-block-start: 0; }
 .obelisk-body > :last-child  { margin-block-end: 0; }
 
-.obelisk-orphan-notice {
+.obelisk-notice {
+	align-items: center;
 	color: var(--text-warning);
+	display: flex;
 	font-size: var(--font-ui-smaller);
+	gap: var(--size-4-1);
+}
+
+.obelisk-notice-icon {
+	display: flex;
+}
+
+.obelisk-notice-icon .svg-icon {
+	height: var(--icon-s);
+	width: var(--icon-s);
+}
+
+/* ── Replies ──────────────────────────────────────────────────────────────── */
+
+.obelisk-replies {
+	border-inline-start: 1px solid var(--background-modifier-border);
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-2);
+	margin-block-start: var(--size-4-2);
+	padding-inline-start: var(--size-4-2);
+}
+
+.obelisk-composer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-1);
+	margin-block-start: var(--size-4-2);
 }
 
 /* ── Suggested edits (requirement 2c) ─────────────────────────────────────── */
@@ -132,17 +304,24 @@
 }
 
 .obelisk-diff-del {
-	background-color: hsla(var(--color-red-rgb, 224 91 82), 0.15);
-	display: block;
+	background-color: rgba(var(--obelisk-del), 0.15);
 	padding: 2px var(--size-4-2);
-	text-decoration: line-through;
-	text-decoration-color: hsla(var(--color-red-rgb, 224 91 82), 0.6);
 }
 
 .obelisk-diff-add {
-	background-color: hsla(var(--color-green-rgb, 68 179 115), 0.15);
-	display: block;
+	background-color: rgba(var(--obelisk-add), 0.15);
 	padding: 2px var(--size-4-2);
+}
+
+/* Only the words that actually changed carry the strike-through and the
+   stronger wash; the untouched words stay legible in both rows. */
+.obelisk-diff-word-del {
+	background-color: rgba(var(--obelisk-del), 0.3);
+	text-decoration: line-through;
+}
+
+.obelisk-diff-word-add {
+	background-color: rgba(var(--obelisk-add), 0.3);
 }
 
 .obelisk-diff-equal {
@@ -159,4 +338,48 @@
 .obelisk-actions button {
 	font-size: var(--font-ui-smaller);
 	padding: var(--size-4-1) var(--size-4-2);
+}
+
+/* ── Compose dialog ───────────────────────────────────────────────────────── */
+
+.obelisk-modal .obelisk-quote {
+	margin-block-start: 0;
+}
+
+.obelisk-compose {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-1);
+	margin-block-end: var(--size-4-3);
+}
+
+.obelisk-compose-label {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+.obelisk-compose-body,
+.obelisk-compose-suggestion {
+	font-family: inherit;
+	min-height: 5em;
+	resize: vertical;
+	width: 100%;
+}
+
+.obelisk-compose-suggestion {
+	font-family: var(--font-monospace);
+	font-size: var(--font-smallest);
+}
+
+.obelisk-compose-actions {
+	align-items: center;
+	display: flex;
+	gap: var(--size-4-2);
+	justify-content: flex-end;
+}
+
+.obelisk-compose-hint {
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+	margin-inline-end: auto;
 }

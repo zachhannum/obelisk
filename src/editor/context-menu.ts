@@ -18,6 +18,8 @@ export function registerContextMenu(plugin: ObeliskPlugin): void {
 				// MarkdownView. Those have no sidebar to reveal into, so skip them.
 				if (!(info instanceof MarkdownView)) return;
 				const view = info;
+				const file = view.file;
+				if (!file) return;
 
 				const selection = editor.getSelection();
 				const commentUnderCursor = plugin.commentAtCursor(editor, view);
@@ -47,19 +49,53 @@ export function registerContextMenu(plugin: ObeliskPlugin): void {
 					);
 				}
 
-				if (commentUnderCursor) {
+				if (!commentUnderCursor) return;
+				const comment = commentUnderCursor;
+
+				menu.addItem((item) =>
+					item
+						.setTitle("Show comment in sidebar")
+						.setIcon("panel-right")
+						.setSection("selection")
+						.onClick(() => void plugin.revealComment(comment.id)),
+				);
+
+				if (comment.suggestion && !comment.suggestion.appliedAt) {
 					menu.addItem((item) =>
 						item
-							.setTitle("Show comment in sidebar")
-							.setIcon("panel-right")
+							.setTitle("Apply suggestion")
+							.setIcon("check")
 							.setSection("selection")
 							.onClick(() =>
-								plugin.revealComment(commentUnderCursor.id),
+								void plugin.applySuggestion(file, comment.id),
 							),
 					);
-					// TODO: "Apply suggestion" / "Resolve" / "Delete comment"
-					// entries, shown conditionally on the comment's state.
 				}
+
+				menu.addItem((item) =>
+					item
+						.setTitle(
+							comment.resolved
+								? "Reopen comment"
+								: "Resolve comment",
+						)
+						.setIcon(comment.resolved ? "rotate-ccw" : "check-check")
+						.setSection("selection")
+						.onClick(() =>
+							void plugin.toggleResolved(file, comment.id),
+						),
+				);
+
+				menu.addItem((item) =>
+					item
+						.setTitle("Delete comment")
+						.setIcon("trash")
+						.setSection("danger")
+						.setWarning(true)
+						.onClick(() =>
+							void plugin.deleteComment(file, comment.id),
+						),
+				);
 			},
 		),
 	);

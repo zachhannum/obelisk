@@ -121,16 +121,32 @@ numbers are stale, which is exactly what step 2 of resolution exists to absorb.
 
 `suggestion.replacement` replaces exactly the anchored range.
 
-**A suggestion applies only from an `exact` anchor.** If the text has changed
-since the suggestion was written, we refuse and say so, rather than splicing a
-replacement over text the commenter never saw. This mirrors GitHub greying out
-stale suggestions, and it's the difference between a useful feature and a
-data-loss bug.
+**A suggestion applies only when the quoted text is still intact.** If the
+text has changed since the suggestion was written, we refuse and say so, rather
+than splicing a replacement over text the commenter never saw. This mirrors
+GitHub greying out stale suggestions, and it's the difference between a useful
+feature and a data-loss bug.
+
+Concretely that means an `exact` anchor, or a `relocated` one whose quote
+occurs exactly once in the body. The guarantee is about the *text*, not the
+coordinates: `relocated` means the quote was found verbatim, just not on the
+recorded line, which is the ordinary state of a note edited above the anchor or
+from another device — refusing there would reject an edit that is provably
+safe. A relocation with several candidate matches is refused as *ambiguous*,
+because picking one would be a guess about which paragraph the commenter meant.
+
+After the splice, every other comment's anchor is translated across the edit in
+the same write (`suggestion/apply.ts#reanchorAfterSplice`) rather than being
+left to quote search — which is least reliable exactly where it matters most,
+among neighbours on the same line. Comments straddling the replaced range are
+left alone; their text really did change.
 
 Applying writes through `vault.process` rather than the editor, so it works on
-notes that aren't open. The write and the subsequent frontmatter update are two
-separate operations against the same file — they must be sequenced, not
-interleaved.
+notes that aren't open. The body splice and the subsequent frontmatter update
+are two separate operations against the same file — they are sequenced, and the
+frontmatter side (re-anchoring, `appliedAt`, optional removal) is collapsed
+into a single `processFrontMatter` pass so a note under review doesn't emit a
+burst of sync events per applied suggestion.
 
 Diffing (`suggestion/diff.ts`) is display-only and deliberately dependency-free;
 the inputs are sentences, so a word-level LCS is enough.
@@ -161,15 +177,20 @@ mirrors the note, with orphans in a section at the bottom.
 - **Multi-user attribution.** `author` is a free-text setting today. Fine for
   one person across devices, weak for a shared vault. Worth revisiting only if
   someone actually shares a vault.
-- **Overlapping comments.** The data model allows them; the CSS currently
-  doesn't distinguish one highlight from two stacked. Needs a visual answer.
+- **Overlapping comments.** Nested highlights deepen the wash and thicken the
+  underline per layer (`.obelisk-highlight .obelisk-highlight`), and comments
+  sharing an end position collapse into one marker with a count. Legible to
+  three deep; past that it is mush, and the marker only opens the innermost.
 - **Comments on frontmatter itself.** Currently impossible by construction
   (negative body lines). Probably correct.
 - **Canvas, PDF, and non-markdown files.** Out of scope. The store assumes a
   markdown file with frontmatter.
-- **Performance ceiling.** Quote search is O(doc × comments) per resolve. Fine
-  at a few dozen comments; needs a cap and a cache before it's fine at a
-  thousand.
+- **Performance ceiling.** Quote search is O(doc × comments) per resolve, now
+  capped at `MAX_CANDIDATES` scored occurrences per comment. Resolution runs on
+  file switches and frontmatter changes rather than on keystrokes — typing is
+  handled by mapping ranges inside CodeMirror — so the cost is bounded in
+  practice. A note with a thousand comments would still want a cache keyed on
+  document version.
 
 ---
 

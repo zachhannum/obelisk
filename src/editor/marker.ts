@@ -30,10 +30,23 @@ export class MarkerWidget extends WidgetType {
 		el.dataset.obeliskId = this.commentId;
 		el.setAttribute("role", "button");
 		el.setAttribute("tabindex", "0");
-		el.setAttribute("aria-label", "Open comment");
-		// TODO: swap for setIcon() with a registered custom icon, and render
-		// `count` as a badge when several comments share an anchor.
-		el.textContent = this.hasSuggestion ? "‡" : "†";
+		el.setAttribute(
+			"aria-label",
+			this.count > 1 ? `Open ${this.count} comments` : "Open comment",
+		);
+
+		// An obelus for a comment, a double obelus when there is something to
+		// apply — the same distinction the marks had in the margin.
+		const glyph = el.createSpan({ cls: "obelisk-marker-glyph" });
+		glyph.setText(this.hasSuggestion ? "‡" : "†");
+
+		if (this.count > 1) {
+			el.createSpan({
+				cls: "obelisk-marker-count",
+				text: String(this.count),
+			});
+		}
+
 		return el;
 	}
 
