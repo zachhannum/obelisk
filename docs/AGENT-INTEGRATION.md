@@ -211,7 +211,8 @@ where the agent is doing work the person actually queued.
 A thin wrapper over the same core, one tool per verb, no logic of its own.
 
 ```
-claude mcp add obelisk -- npx obelisk-mcp --vault ~/vault
+claude mcp add obelisk --scope user -- \
+  node "$PWD/dist/mcp.mjs" --vault /path/to/your/vault
 ```
 
 This is the layer that makes the feature feel like an integration rather than a
@@ -231,6 +232,22 @@ anchor wrong in exactly the way § 4 exists to prevent.
 > with the message that fixes the call. The server mints one run id at startup
 > and uses it for every comment that does not name its own, so a session's pass
 > leaves one chip in the sidebar rather than twenty.
+>
+> **Registering it** is where the two sharp edges are, and neither announces
+> itself. `claude mcp add` defaults to `--scope local`, which files the server
+> under the directory it was run in: run it here and the server exists only in
+> this repo, which is the one directory with no notes in it. And the `npx
+> obelisk-mcp` this section originally showed resolves only *inside* this repo,
+> off the local `package.json`; from anywhere else npm goes to the registry and
+> 404s, because § 10's package is still `private`. So: `--scope user`, and an
+> absolute path to `dist/mcp.mjs` until there is something to `npx`. The
+> vault path must be absolute too — the server is spawned without a shell, so a
+> `~` never expands, and the process's own cwd belongs to the agent.
+>
+> There is no server to start. Stdio means one process per session, spawned and
+> killed by the agent, which is also what gives a session its single run id.
+> `README.md` has the commands, including a stdio handshake to run by hand when
+> the question is whether the server or the agent is at fault.
 
 ---
 

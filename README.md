@@ -118,13 +118,61 @@ obelisk comment note.md --quote "The horse, which had been standing there, bolte
   --body "Two clauses fighting for one sentence." --run r7k2mq
 ```
 
-For an agent that speaks MCP:
+For an agent that speaks MCP, register the server with it. Nothing is published
+to npm yet, so point at the built file:
 
 ```bash
-claude mcp add obelisk -- npx obelisk-mcp --vault ~/vault
+npm run build                          # from the root of this repo
+claude mcp add obelisk --scope user -- \
+  node "$PWD/dist/mcp.mjs" --vault /path/to/your/vault
 ```
 
-For one that does not, paste
+`$PWD` fills in this repo's half, so the vault is the only path you have to
+supply — and it has to be a real one. A path that does not exist makes `node`
+exit before it says anything, which reaches the agent as `CONNECTION_CLOSED`
+and names nothing; if you see that, the path in `claude mcp get obelisk` is the
+first thing to check.
+
+Two things bite here, both of them silent:
+
+- **Scope.** `claude mcp add` defaults to `local`, which files the server under
+  the directory you happened to run it in. Run it from this repo and you get a
+  server that exists only while you are in this repo — the one place you have
+  no notes to comment on. `--scope user` registers it everywhere; `--scope
+  project` writes a `.mcp.json` in the vault instead, if the vault is a repo
+  and everyone working in it should get the server.
+- **`npx obelisk-mcp` only works inside this repo.** The package is `private`
+  and unpublished, and inside the repo npx resolves the bin out of the local
+  `package.json` — anywhere else it goes to the registry and 404s. Use the
+  absolute path above, or `npm link` first and register `obelisk-mcp`.
+
+Both paths have to be absolute. The server is spawned without a shell, so a `~`
+in a config file stays a literal tilde, and the process inherits the agent's
+working directory rather than the vault's.
+
+**There is nothing to start.** It speaks MCP over stdio: the agent spawns a
+process when a session opens and kills it when the session ends, so
+`obelisk-mcp` is never run by hand and there is no port and no daemon. One
+process per session is also what makes a session's comments share one run chip
+in the sidebar. Rebuild while a session is open and it keeps the old process —
+reconnect it from `/mcp`, or start a new session.
+
+To check the registration, `claude mcp list`, or `/mcp` inside a session. To
+check the server itself with no agent in the way:
+
+```bash
+printf '%s\n' \
+  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"smoke","version":"0"}}}' \
+  '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+  '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+  | node dist/mcp.mjs --vault /abs/path/to/vault
+```
+
+That should print the handshake and then the four tools. A server that fails
+this fails the same way for an agent, which is worth knowing before you go
+looking at the agent's end of it.
+
+For an agent that does not speak MCP, paste
 [`docs/agents-fragment.md`](docs/agents-fragment.md) into the vault's
 `AGENTS.md` or `CLAUDE.md`.
 

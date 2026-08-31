@@ -19,9 +19,14 @@ import { ResolvedComment } from "../core/types";
  * rule and the comment budget, and the failure messages come straight back as
  * text the caller can act on.
  *
- *   claude mcp add obelisk -- npx obelisk-mcp --vault ~/vault
+ *   claude mcp add obelisk --scope user -- \
+ *     node "$PWD/dist/mcp.mjs" --vault /path/to/your/vault
  *
- * See docs/AGENT-INTEGRATION.md § 6.
+ * Stdio: the agent spawns one process per session and kills it at the end, so
+ * there is nothing to start by hand, and RUN below is per session as a result.
+ * Both paths are absolute because the process gets no shell and inherits the
+ * agent's cwd, not the vault's. See docs/AGENT-INTEGRATION.md § 6 and the
+ * Agents section of README.md.
  */
 
 const { values } = parseArgs({

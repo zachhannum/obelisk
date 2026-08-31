@@ -5,8 +5,15 @@ vault, for agents that do not speak MCP. Agents that do should use the MCP
 server instead, which carries the same rules in its tool descriptions:
 
 ```
-claude mcp add obelisk -- npx obelisk-mcp --vault ~/vault
+claude mcp add obelisk --scope user -- \
+  node "$PWD/dist/mcp.mjs" --vault /path/to/your/vault
 ```
+
+See the *Agents* section of [`../README.md`](../README.md) for why that command
+is spelled out the long way, and for how to tell whether it took.
+
+The fragment below assumes `obelisk` is on the reader's PATH: `npm run build`
+and `npm link` in this repo, until the package is published.
 
 Everything after the line is the fragment.
 
