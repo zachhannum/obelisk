@@ -12,10 +12,12 @@ sidecar database, nothing to lose.
 
 ## Status
 
-**Working.** Anchoring, decoration, the sidebar, and suggested edits are
-implemented. Not yet released or submitted to the community plugin list, and
-not yet exercised against a large vault. See [`docs/DESIGN.md`](docs/DESIGN.md)
-for the decisions behind it and what remains open.
+**Working.** Anchoring, decoration, the sidebar, suggested edits, and the agent
+integration are implemented. Not yet released or submitted to the community
+plugin list, and not yet exercised against a large vault. See
+[`docs/DESIGN.md`](docs/DESIGN.md) for the decisions behind it and what remains
+open, and [`docs/AGENT-INTEGRATION.md`](docs/AGENT-INTEGRATION.md) for the
+half of it that runs outside Obsidian.
 
 ## Features
 
@@ -58,6 +60,11 @@ for the decisions behind it and what remains open.
   from the trash icon in its header, so striking one remark out of a thread
   does not take the conversation with it. Both offer an undo rather than a
   confirmation dialog.
+- **Open to agents** — a command-line tool and an MCP server can read and write
+  the same comments from outside Obsidian, so a model can review a note into
+  your sidebar, or answer the comments you left for it. Its comments are
+  badged, and a whole review pass is one chip in the header with a *dismiss
+  all* on it. See below.
 
 ## Data format
 
@@ -91,13 +98,60 @@ breaks ties when a quote appears twice, and is never rewritten. Lines are
 counted from the first line *after* the frontmatter block, so adding a comment
 never invalidates the others.
 
+A comment written by a model carries one more key, `origin`, holding the model
+and an id shared by every comment in that review pass. Its absence means a
+person wrote it, so nothing already in a vault needs migrating.
+
+## Agents
+
+The same comments, from outside Obsidian. A model reviews a note and its
+remarks appear in the sidebar of the note you already have open; or you leave
+comments asking for things and a model reads them, makes the edits, and
+resolves them.
+
+```bash
+npm run build
+npm link                              # puts `obelisk` and `obelisk-mcp` on PATH
+
+obelisk list note.md
+obelisk comment note.md --quote "The horse, which had been standing there, bolted." \
+  --body "Two clauses fighting for one sentence." --run r7k2mq
+```
+
+For an agent that speaks MCP:
+
+```bash
+claude mcp add obelisk -- npx obelisk-mcp --vault ~/vault
+```
+
+For one that does not, paste
+[`docs/agents-fragment.md`](docs/agents-fragment.md) into the vault's
+`AGENTS.md` or `CLAUDE.md`.
+
+The one rule worth knowing: **the quote is the anchor.** There is no way to
+pass a line or a column, because a model asked for one will produce a plausible
+wrong number and a plausible wrong number attaches a comment to the wrong
+paragraph without ever looking like an error. `--quote` has to appear in the
+note character for character, and if it does not — or appears twice — nothing
+is written and the tool says so. `obelisk list` prints the body line-numbered
+so the exact text is there to copy.
+
+Writes are frontmatter-only and leave the body byte-identical, so they are safe
+while the note is open in Obsidian; a write also re-reads the file first and
+refuses if it changed underneath. See
+[`docs/AGENT-INTEGRATION.md`](docs/AGENT-INTEGRATION.md).
+
 ## Development
 
 ```bash
 npm install
-npm run dev      # watch build
-npm run build    # typecheck + production build
+npm run dev      # watch build, plugin only
+npm run build    # typecheck, then main.js plus dist/cli.mjs and dist/mcp.mjs
 ```
+
+`src/core/` is the half that does not import Obsidian — the model, the anchor
+arithmetic, the YAML and the four verbs. The plugin, the CLI and the MCP server
+are three front ends over it.
 
 Symlink the repo into a test vault to try it:
 

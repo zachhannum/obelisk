@@ -284,7 +284,9 @@ away.
 
 - **Multi-user attribution.** `author` is a free-text setting today. Fine for
   one person across devices, weak for a shared vault. Worth revisiting only if
-  someone actually shares a vault.
+  someone actually shares a vault. An agent leaving comments makes this
+  concrete rather than hypothetical — see
+  [`AGENT-INTEGRATION.md`](AGENT-INTEGRATION.md) § 3.
 - **Overlapping comments.** Nested highlights deepen the wash and thicken the
   underline per layer (`.obelisk-highlight .obelisk-highlight`), and comments
   sharing an end position collapse into one marker with a count. Legible to
