@@ -1,7 +1,7 @@
 import { Extension, StateEffect, StateField } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
 import type { Range } from "@codemirror/state";
-import { hasSuggestion } from "../suggestion/parse";
+import { hasSuggestion } from "../core/suggestion";
 import { ResolvedComment } from "../types";
 import { MarkerWidget } from "./marker";
 

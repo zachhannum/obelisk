@@ -8,7 +8,7 @@ import {
 	setTooltip,
 } from "obsidian";
 import type ObeliskPlugin from "../main";
-import { hasSuggestion } from "../suggestion/parse";
+import { hasSuggestion } from "../core/suggestion";
 import { ResolvedComment, VIEW_TYPE_OBELISK } from "../types";
 import { beginEditing, renderCommentCard } from "./comment-card";
 

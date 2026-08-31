@@ -1,6 +1,6 @@
 import { Component, Notice, TFile, setIcon, setTooltip } from "obsidian";
 import type ObeliskPlugin from "../main";
-import { hasSuggestion } from "../suggestion/parse";
+import { hasSuggestion } from "../core/suggestion";
 import { ResolvedComment } from "../types";
 import { absoluteTime, relativeTime } from "../util/format";
 import { Composer } from "./composer";

@@ -1,5 +1,5 @@
 import { App, TFile } from "obsidian";
-import { frameFrom, makeAnchor, resolve } from "../store/anchors";
+import { frameFrom, makeAnchor, resolve } from "../core/anchors";
 import { Anchor, ResolvedComment } from "../types";
 
 export type ApplyResult =

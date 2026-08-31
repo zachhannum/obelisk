@@ -1,6 +1,6 @@
 import { Editor, MarkdownFileInfo, MarkdownView, Menu } from "obsidian";
 import type ObeliskPlugin from "../main";
-import { threadSuggestions } from "../suggestion/parse";
+import { threadSuggestions } from "../core/suggestion";
 
 /**
  * Requirement 6: right-clicking a selection offers "Add comment" and

@@ -23,7 +23,7 @@ import {
 	frameFrom,
 	makeAnchor,
 	resolveAll,
-} from "./store/anchors";
+} from "./core/anchors";
 import { CommentStore } from "./store/frontmatter";
 import { applySuggestion } from "./suggestion/apply";
 import {
@@ -36,7 +36,7 @@ import {
 } from "./types";
 import { CommentDraft, CommentModal } from "./view/comment-modal";
 import { ObeliskSidebarView } from "./view/sidebar-view";
-import { newCommentId } from "./util/id";
+import { newCommentId } from "./core/id";
 
 /**
  * How long the editor has to be quiet before comments are re-resolved.

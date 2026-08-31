@@ -1,4 +1,4 @@
-import { Anchor, BodyPos, Comment, ResolvedComment } from "../types";
+import { Anchor, BodyPos, Comment, ResolvedComment } from "./types";
 
 /**
  * Anchor resolution: finding where each comment's quoted text lives in the

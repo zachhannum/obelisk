@@ -1,5 +1,5 @@
 import { App, Component, Modal } from "obsidian";
-import { findSuggestions, stripSuggestions } from "../suggestion/parse";
+import { findSuggestions, stripSuggestions } from "../core/suggestion";
 import { Composer } from "./composer";
 
 export interface CommentDraft {

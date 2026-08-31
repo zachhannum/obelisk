@@ -1,6 +1,6 @@
 import { App, Component, MarkdownRenderer, setIcon, setTooltip } from "obsidian";
 import { diffWords, renderDiff } from "../suggestion/diff";
-import { SUGGESTION_LANG, findSuggestions } from "../suggestion/parse";
+import { SUGGESTION_LANG, findSuggestions } from "../core/suggestion";
 
 /**
  * What a rendered suggestion block can do, and against what.

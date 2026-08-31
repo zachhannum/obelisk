@@ -30,6 +30,13 @@ export interface SuggestionBlock {
 	startLine: number;
 	/** 0-indexed line of the closing fence, or of the last line if unclosed. */
 	endLine: number;
+	/**
+	 * Whether the fence was actually closed. An unclosed one still parses —
+	 * CommonMark runs it to the end of the string — but it is nearly always a
+	 * generation accident rather than a proposal, so a writer can refuse it.
+	 * See `core/ops.ts`.
+	 */
+	closed: boolean;
 }
 
 /**
@@ -66,6 +73,7 @@ export function findSuggestions(markdown: string): SuggestionBlock[] {
 		i++;
 
 		let endLine = lines.length - 1;
+		let closed = false;
 		for (; i < lines.length; i++) {
 			const close = CLOSE.exec(lines[i]);
 			if (
@@ -74,6 +82,7 @@ export function findSuggestions(markdown: string): SuggestionBlock[] {
 				close[1].length >= fence.length
 			) {
 				endLine = i;
+				closed = true;
 				i++;
 				break;
 			}
@@ -83,7 +92,7 @@ export function findSuggestions(markdown: string): SuggestionBlock[] {
 		}
 
 		if (info.toLowerCase() === SUGGESTION_LANG) {
-			out.push({ text: content.join("\n"), startLine, endLine });
+			out.push({ text: content.join("\n"), startLine, endLine, closed });
 		}
 	}
 

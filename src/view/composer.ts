@@ -6,7 +6,7 @@ import {
 	setIcon,
 	setTooltip,
 } from "obsidian";
-import { suggestionFence } from "../suggestion/parse";
+import { suggestionFence } from "../core/suggestion";
 import { EmbeddedEditor, createEmbeddedEditor } from "./embedded-editor";
 import { renderCommentBody } from "./markdown";
 
