@@ -10,7 +10,7 @@
     "strict": true,
     "strictNullChecks": true,
     "noUnusedLocals": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "importHelpers": true,
     "isolatedModules": true,
     "skipLibCheck": true,

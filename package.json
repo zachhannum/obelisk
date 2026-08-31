@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "Inline comments and GitHub-style suggested edits for Obsidian, stored in note frontmatter.",
   "main": "main.js",
+  "bin": {
+    "obelisk": "dist/cli.mjs",
+    "obelisk-mcp": "dist/mcp.mjs"
+  },
   "license": "MIT",
   "private": true,
   "scripts": {
@@ -15,11 +19,20 @@
     "@codemirror/language": "^6.10.2",
     "@codemirror/state": "6.5.0",
     "@codemirror/view": "6.38.6",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@types/node": "^20.14.0",
     "builtin-modules": "^3.3.0",
     "esbuild": "^0.21.5",
     "obsidian": "^1.7.2",
     "tslib": "^2.6.3",
-    "typescript": "^5.5.0"
-  }
+    "typescript": "^5.5.0",
+    "yaml": "^2.9.0",
+    "zod": "^4.5.4"
+  },
+  "files": [
+    "main.js",
+    "manifest.json",
+    "styles.css",
+    "dist/"
+  ]
 }
