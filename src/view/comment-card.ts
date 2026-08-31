@@ -1,7 +1,7 @@
 import { Component, Notice, TFile, setIcon, setTooltip } from "obsidian";
 import type ObeliskPlugin from "../main";
 import { hasSuggestion } from "../core/suggestion";
-import { ResolvedComment } from "../types";
+import { Origin, ResolvedComment } from "../types";
 import { absoluteTime, relativeTime } from "../util/format";
 import { Composer } from "./composer";
 import { SuggestionOptions, renderCommentBody } from "./markdown";
@@ -130,6 +130,8 @@ function renderHeader(card: HTMLElement, comment: ResolvedComment): void {
 		text: comment.author || "Anonymous",
 	});
 
+	agentBadge(header, comment.origin);
+
 	if (comment.appliedAt) {
 		header.createSpan({ cls: "obelisk-badge is-applied", text: "Applied" });
 	} else if (hasSuggestion(comment)) {
@@ -142,6 +144,27 @@ function renderHeader(card: HTMLElement, comment: ResolvedComment): void {
 	});
 	if (comment.created) setTooltip(date, absoluteTime(comment.created));
 	editedMarker(header, comment.edited);
+}
+
+/**
+ * A comment written by a model says so, next to whatever name it gave itself.
+ *
+ * Badged and nothing more: agent comments are not hidden by default and not
+ * sorted apart, because a second list is a second inbox rather than a review.
+ * The pass a comment belongs to is on the tooltip and, more usefully, on the
+ * run chip in the header. See docs/AGENT-INTEGRATION.md § 3.
+ */
+function agentBadge(header: HTMLElement, origin: Origin | undefined): void {
+	if (origin?.kind !== "agent") return;
+
+	const badge = header.createSpan({
+		cls: "obelisk-badge is-agent",
+		text: "Agent",
+	});
+	const detail = [origin.model, origin.run && `run ${origin.run}`]
+		.filter(Boolean)
+		.join(" · ");
+	setTooltip(badge, detail || "Written by an agent");
 }
 
 /**

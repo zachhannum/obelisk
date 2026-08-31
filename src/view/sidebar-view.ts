@@ -12,7 +12,8 @@ import { hasSuggestion } from "../core/suggestion";
 import { ResolvedComment, VIEW_TYPE_OBELISK } from "../types";
 import { beginEditing, renderCommentCard } from "./comment-card";
 
-type Filter = "all" | "unresolved" | "suggestions";
+/** A `run:` filter narrows to one agent pass; the rest are the fixed three. */
+type Filter = "all" | "unresolved" | "suggestions" | `run:${string}`;
 type Sort = "document" | "newest";
 
 const FILTERS: Array<{ id: Filter; label: string }> = [
@@ -20,6 +21,14 @@ const FILTERS: Array<{ id: Filter; label: string }> = [
 	{ id: "unresolved", label: "Open" },
 	{ id: "suggestions", label: "Suggestions" },
 ];
+
+/** One agent pass over this note, as gathered from the comments it left. */
+interface Run {
+	id: string;
+	/** What to call it: the model, failing that whatever name it wrote under. */
+	label: string;
+	count: number;
+}
 
 /**
  * Requirements 3 and 4: the comment list, and click-to-scroll.
@@ -133,6 +142,16 @@ export class ObeliskSidebarView extends ItemView {
 	// ── Rendering ────────────────────────────────────────────────────────────
 
 	private render(): void {
+		// A dismissed run takes its chip with it, and a filter still pinned to
+		// it would leave an empty list with nothing on screen explaining why.
+		// Checked before the header is drawn, so the chip and the list agree.
+		if (
+			this.filter.startsWith("run:") &&
+			!this.runs().some((r) => `run:${r.id}` === this.filter)
+		) {
+			this.filter = "all";
+		}
+
 		this.renderHeader();
 		this.listEl.empty();
 		const scope = this.newScope();
@@ -232,12 +251,70 @@ export class ObeliskSidebarView extends ItemView {
 				this.render();
 			});
 		}
+
+		for (const run of this.runs()) this.renderRunChip(chips, run);
+	}
+
+	/**
+	 * One chip per agent pass, beside the fixed filters.
+	 *
+	 * A model does not leave a comment, it leaves twenty, and the gesture a
+	 * reader wants afterwards is *all of these, gone* — so the chip that
+	 * isolates a pass is also where it is dismissed. Without it, undoing a
+	 * review is twenty deletions and no way to tell one pass from the next.
+	 * See docs/AGENT-INTEGRATION.md § 3.
+	 */
+	private renderRunChip(chips: HTMLElement, run: Run): void {
+		const chip = chips.createEl("button", { cls: "obelisk-chip is-run" });
+		chip.toggleClass("is-active", this.filter === `run:${run.id}`);
+		chip.createSpan({ text: run.label });
+		setTooltip(chip, `Run ${run.id} — ${run.count} comments`);
+		chip.addEventListener("click", () => {
+			this.filter =
+				this.filter === `run:${run.id}` ? "all" : `run:${run.id}`;
+			this.render();
+		});
+
+		const dismiss = chip.createSpan({ cls: "obelisk-chip-dismiss" });
+		setIcon(dismiss, "x");
+		setTooltip(dismiss, `Dismiss all ${run.count} comments from this run`);
+		dismiss.addEventListener("click", (evt) => {
+			// The chip underneath is a filter; the × on it is not.
+			evt.stopPropagation();
+			const file = this.file;
+			if (file) void this.plugin.dismissRun(file, run.id);
+		});
+	}
+
+	/** The agent passes represented in this note, in the order they appear. */
+	private runs(): Run[] {
+		const runs = new Map<string, Run>();
+		for (const comment of this.comments) {
+			const id = comment.origin?.run;
+			if (!id) continue;
+			const existing = runs.get(id);
+			if (existing) {
+				existing.count++;
+				continue;
+			}
+			runs.set(id, {
+				id,
+				label: comment.origin?.model || comment.author || "Agent",
+				count: 1,
+			});
+		}
+		return [...runs.values()];
 	}
 
 	private visibleComments(): ResolvedComment[] {
+		const run = this.filter.startsWith("run:")
+			? this.filter.slice("run:".length)
+			: null;
+
 		return this.comments.filter((c) => {
 			if (this.filter === "unresolved" && c.resolved) return false;
 			if (this.filter === "suggestions" && !hasSuggestion(c)) return false;
+			if (run !== null && c.origin?.run !== run) return false;
 			return true;
 		});
 	}

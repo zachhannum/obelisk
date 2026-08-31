@@ -4,6 +4,7 @@ import {
 	BodyPos,
 	Comment,
 	FRONTMATTER_KEY,
+	Origin,
 	Reply,
 	SCHEMA_VERSION,
 } from "./types";
@@ -27,6 +28,7 @@ import {
 const KNOWN_COMMENT_KEYS = new Set([
 	"id",
 	"author",
+	"origin",
 	"created",
 	"modified",
 	"edited",
@@ -138,6 +140,9 @@ function normalizeComment(
 	const author = str(entry.author);
 	if (author) comment.author = author;
 
+	const origin = normalizeOrigin(entry.origin);
+	if (origin) comment.origin = origin;
+
 	const modified = str(entry.modified);
 	if (modified) comment.modified = modified;
 
@@ -225,6 +230,24 @@ function normalizePos(raw: unknown): BodyPos | null {
 }
 
 /**
+ * A missing or unreadable `origin` is a human comment, which is what the
+ * absence of the field has always meant. Nothing here drops a comment: an
+ * anchor that cannot be read makes a comment unplaceable, but not knowing who
+ * wrote one never does.
+ */
+function normalizeOrigin(raw: unknown): Origin | undefined {
+	if (!isRecord(raw)) return undefined;
+	if (str(raw.kind) !== "agent") return undefined;
+
+	const origin: Origin = { kind: "agent" };
+	const model = str(raw.model);
+	if (model) origin.model = model;
+	const run = str(raw.run);
+	if (run) origin.run = run;
+	return origin;
+}
+
+/**
  * Schema 1 kept the proposed text in `suggestion.replacement`. It now lives in
  * the body as a ```suggestion fence, so a comment is markdown and nothing else.
  *
@@ -305,6 +328,14 @@ export function serialize(comment: Comment): Record<string, unknown> {
 
 	const out: Record<string, unknown> = { id: comment.id };
 	if (comment.author) out.author = comment.author;
+	// `human` is the default, so writing it would be noise in every note that
+	// has never seen an agent.
+	if (comment.origin && comment.origin.kind !== "human") {
+		const origin: Record<string, unknown> = { kind: comment.origin.kind };
+		if (comment.origin.model) origin.model = comment.origin.model;
+		if (comment.origin.run) origin.run = comment.origin.run;
+		out.origin = origin;
+	}
 	out.created = comment.created;
 	if (comment.modified) out.modified = comment.modified;
 	if (comment.edited) out.edited = comment.edited;

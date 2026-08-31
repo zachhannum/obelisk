@@ -12,8 +12,13 @@
  * docs/AGENT-INTEGRATION.md § 5.
  */
 
-/** Bumped when the on-disk shape changes in a way that needs migration. */
-export const SCHEMA_VERSION = 2;
+/**
+ * Bumped when the on-disk shape changes in a way that needs migration.
+ *
+ * 3 added `origin` — see the `Origin` doc comment for why it needs no
+ * migration despite the bump.
+ */
+export const SCHEMA_VERSION = 3;
 
 /**
  * A position inside the *body* of the note.
@@ -58,6 +63,26 @@ export type AnchorState =
 	 */
 	| "detached";
 
+/**
+ * Who — or what — wrote a comment, and as part of which pass.
+ *
+ * Absent means `kind: "human"`, so every comment written before this field
+ * existed is already correct and no migration runs. Same read-time fold as
+ * schema 1's separate suggestion key.
+ *
+ * `run` is the half that earns its place. A model does not leave a comment; it
+ * leaves twenty in one pass, and the gesture a reader wants afterwards is *all
+ * of these, gone*. A shared run id makes a pass an addressable thing: one
+ * filter chip, one dismissal, one undo. See docs/AGENT-INTEGRATION.md § 3.
+ */
+export interface Origin {
+	kind: "human" | "agent";
+	/** The model that wrote it, when one did. Free text; display only. */
+	model?: string;
+	/** Groups every comment from a single review pass. */
+	run?: string;
+}
+
 export interface Reply {
 	id: string;
 	author?: string;
@@ -76,6 +101,8 @@ export interface Comment {
 	/** Stable, URL-safe, unique within the note. Never reused. */
 	id: string;
 	author?: string;
+	/** Omitted for a human comment, which is what an absent value means. */
+	origin?: Origin;
 	/** ISO-8601. */
 	created: string;
 	modified?: string;

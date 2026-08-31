@@ -507,6 +507,52 @@ export default class ObeliskPlugin extends Plugin {
 		});
 	}
 
+	/**
+	 * Drop every comment left by one agent pass.
+	 *
+	 * The one gesture a review pass needs and a thread does not: twenty
+	 * comments arrived together, and they leave together. Undo rather than a
+	 * confirmation, like every other deletion here — and the restore puts each
+	 * comment back at its old index, so undoing a dismissal does not quietly
+	 * reorder the note's frontmatter.
+	 */
+	async dismissRun(file: TFile, run: string): Promise<void> {
+		const removed = this.store
+			.read(file)
+			.map((comment, index) => ({ comment, index }))
+			.filter(({ comment }) => comment.origin?.run === run);
+		if (removed.length === 0) return;
+
+		await this.store.update(file, (comments) =>
+			comments.filter((c) => c.origin?.run !== run),
+		);
+		this.refresh();
+
+		const notice = new Notice(
+			`${removed.length} comment${removed.length === 1 ? "" : "s"} from ` +
+				`run ${run} dismissed. Click to undo.`,
+			8000,
+		);
+		notice.noticeEl.addClass("mod-clickable");
+		notice.noticeEl.addEventListener("click", () => {
+			notice.hide();
+			void this.restoreRun(file, removed);
+		});
+	}
+
+	private async restoreRun(
+		file: TFile,
+		removed: ReadonlyArray<{ comment: Comment; index: number }>,
+	): Promise<void> {
+		await this.store.update(file, (comments) => {
+			for (const { comment, index } of removed) {
+				if (comments.some((c) => c.id === comment.id)) continue;
+				comments.splice(Math.min(index, comments.length), 0, comment);
+			}
+		});
+		this.refresh();
+	}
+
 	// ── Navigation ───────────────────────────────────────────────────────────
 
 	/** Requirement 4: sidebar card → editor. */

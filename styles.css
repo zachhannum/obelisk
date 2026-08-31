@@ -166,6 +166,31 @@
 	color: var(--text-normal);
 }
 
+/* A run chip is a filter with a dismissal on it, so it carries two hit areas
+   rather than one. */
+.obelisk-chip.is-run {
+	align-items: center;
+	display: inline-flex;
+	gap: var(--size-4-1);
+	padding-inline-end: var(--size-4-1);
+}
+
+.obelisk-chip-dismiss {
+	border-radius: var(--radius-s);
+	color: var(--text-faint);
+	display: inline-flex;
+}
+
+.obelisk-chip-dismiss:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-error);
+}
+
+.obelisk-chip-dismiss .svg-icon {
+	height: var(--icon-xs);
+	width: var(--icon-xs);
+}
+
 .obelisk-list {
 	display: flex;
 	flex-direction: column;
@@ -244,6 +269,14 @@
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
 	padding: 0 var(--size-4-1);
+}
+
+/* Badged, not segregated: an agent's comments sit in document order with
+   everyone else's. */
+.obelisk-badge.is-agent {
+	background-color: transparent;
+	border: 1px solid var(--background-modifier-border);
+	color: var(--text-faint);
 }
 
 .obelisk-badge.is-applied {
