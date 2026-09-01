@@ -1,0 +1,51 @@
+name: refresh shots
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "styles.css"
+      - "test/vaults/**"
+      - "site/src/styles/tokens.css"
+      - ".github/workflows/refresh-shots.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install
+      - run: npm install
+        working-directory: site
+      - uses: coactions/setup-xvfb@v1
+        with:
+          run: npm run shots
+      - name: Open a pull request with the new captures
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- site/src/assets/shots; then
+            echo "The captures did not change."
+            exit 0
+          fi
+          branch=chore/refresh-product-shot
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add site/src/assets/shots
+          git commit -m "Recapture the landing page's product shot"
+          git push --force origin "$branch"
+          gh pr view "$branch" >/dev/null 2>&1 || gh pr create \
+            --base main --head "$branch" \
+            --title "Recapture the landing page's product shot" \
+            --body "The plugin moved under the captures. This is what the harness sees now."

@@ -1,486 +1,114 @@
 ---
+import { getImage } from "astro:assets";
+
+import dark1440 from "../assets/shots/obsidian-1440-dark.png";
+import dark1100 from "../assets/shots/obsidian-1100-dark.png";
+import dark760 from "../assets/shots/obsidian-760-dark.png";
+import light1440 from "../assets/shots/obsidian-1440-light.png";
+import light1100 from "../assets/shots/obsidian-1100-light.png";
+import light760 from "../assets/shots/obsidian-760-light.png";
+
 /**
- * The product shot: Obsidian with the Obelisk sidebar open, rebuilt in markup
- * rather than captured, so it stays sharp, follows the theme, and can be read
- * by a screen reader.
+ * The product shot: Obsidian with the Obelisk sidebar open, captured from a
+ * running app by the harness in `test/`.
+ *
+ * Width is art direction, so it is a `source`. The theme cannot be, because
+ * light is an attribute the reader toggles rather than a media query, so it is
+ * two pictures and a swap in CSS.
  */
+type Shot = typeof dark1440;
+
+const alt =
+	"Obsidian with the Obelisk sidebar open on a note called Chapter 3. Three " +
+	"passages in the prose are underlined and marked with a dagger. The sidebar " +
+	"lists them in document order: an agent's comment quoting one sentence and " +
+	"proposing a shorter one, with the replacement shown as a diff under an " +
+	"Apply button; a comment from a person with a reply beneath it; and a " +
+	"comment already resolved.";
+
+// The captures are retina, so each is served at half its pixel width.
+async function serve(shot: Shot) {
+	const width = Math.round(shot.width / 2);
+	const [single, double] = await Promise.all([
+		getImage({ src: shot, format: "webp", width }),
+		getImage({ src: shot, format: "webp", width: shot.width }),
+	]);
+	return {
+		src: single.src,
+		srcset: `${single.src} 1x, ${double.src} 2x`,
+		width,
+		height: Math.round(shot.height / 2),
+	};
+}
+
+const schemes = ["dark", "light"] as const;
+const shots = {
+	dark: await Promise.all([dark1440, dark1100, dark760].map(serve)),
+	light: await Promise.all([light1440, light1100, light760].map(serve)),
+};
 ---
 
-<figure class="shot ob-grain">
-	<div class="chrome">
-		<div class="lights"><i></i><i></i><i></i></div>
-		<div class="tab">Chapter 3.md</div>
-		<div class="chrome-right"><span>†</span></div>
-	</div>
-
-	<div class="panes">
-		<div class="note">
-			<h2>Chapter 3</h2>
-			<p>
-				The rain had been falling <mark class="hl resolved">since noon</mark>,
-				and by the time Marta reached the crossing{" "}
-				<mark class="hl">the road had given up being a road</mark>.{" "}
-				<mark class="hl active"
-					>The horse, which had been standing there, bolted.</mark
-				><span class="marker">†</span>
-			</p>
-			<p>
-				She did not run after it. There was nothing at the far end worth
-				arriving at in this weather, and the animal knew the way home better
-				than she did.
-			</p>
-			<p>
-				What she noticed, standing in the ruts with her boots filling, was how
-				quiet it had gone. The rain took the sound out of everything, and the
-				field on the other side of the wall had stopped being a field and
-				become a flat grey thing with a fence in it.
-			</p>
-			<p class="dim">
-				She counted to a hundred, which was what her mother had always done,
-				and then she started walking —
-			</p>
-		</div>
-
-		<aside class="sidebar">
-			<header class="side-head">
-				<div class="row">
-					<span class="count">3 comments · 2 open</span>
-					<span class="icons"><i>⌄</i><i>⋯</i></span>
-				</div>
-				<div class="chips">
-					<button class="chip active" type="button">All</button>
-					<button class="chip" type="button">Open</button>
-					<button class="chip run" type="button"
-						>claude-opus-5 <span class="x">×</span></button
-					>
-				</div>
-			</header>
-
-			<div class="cards">
-				<article class="card sel">
-					<div class="card-head">
-						<span class="author">claude</span>
-						<span class="badge">agent</span>
-						<span class="date">2m</span>
-					</div>
-					<blockquote class="quote"
-						>The horse, which had been standing there, bolted.</blockquote
-					>
-					<p class="body">
-						The relative clause is doing no work here. It tells us the
-						horse was where the horse was.
-					</p>
-					<div class="sugg">
-						<div class="sugg-head">
-							<span class="sugg-icon">±</span>
-							<span class="sugg-title">Suggested edit</span>
-							<span class="apply">Apply</span>
-						</div>
-						<div class="diff">
-							<div class="del"
-								>The horse<span class="w-del"
-									>, which had been standing there,</span
-								> bolted.</div
-							>
-							<div class="add">The horse bolted.</div>
-						</div>
-					</div>
-					<div class="actions"
-						><span>Reply</span><span>Resolve</span><span>Edit</span></div
-					>
-				</article>
-
-				<article class="card">
-					<div class="card-head">
-						<span class="author">zach</span>
-						<span class="date">Aug 29</span>
-					</div>
-					<blockquote class="quote">the road had given up being a road</blockquote>
-					<p class="body">Keep this one. Everything else in the paragraph can go.</p>
-					<div class="replies">
-						<div class="card-head">
-							<span class="author">claude</span>
-							<span class="badge">agent</span>
-							<span class="date">2m</span>
-						</div>
-						<p class="body">Left it alone. The cuts above are all in the next sentence.</p>
-					</div>
-				</article>
-
-				<article class="card done">
-					<div class="card-head">
-						<span class="author">zach</span>
-						<span class="date">Aug 29</span>
-					</div>
-					<blockquote class="quote">since noon</blockquote>
-					<p class="body">Timeline disagrees with chapter 2.</p>
-				</article>
-			</div>
-		</aside>
-	</div>
+<figure class="shot">
+	{
+		schemes.map((scheme) => {
+			const [wide, mid, narrow] = shots[scheme];
+			return (
+				<picture class={`frame frame-${scheme}`}>
+					<source
+						media="(max-width: 700px)"
+						srcset={narrow.srcset}
+						width={narrow.width}
+						height={narrow.height}
+					/>
+					<source
+						media="(max-width: 1080px)"
+						srcset={mid.srcset}
+						width={mid.width}
+						height={mid.height}
+					/>
+					<img
+						src={wide.src}
+						srcset={wide.srcset}
+						width={wide.width}
+						height={wide.height}
+						alt={alt}
+						decoding="async"
+						fetchpriority="high"
+					/>
+				</picture>
+			);
+		})
+	}
 </figure>
 
 <style>
 	.shot {
-		background-color: var(--ob-ink-2);
+		margin: 0;
+	}
+
+	.frame {
+		display: block;
+	}
+
+	.frame img {
 		border: 1px solid var(--ob-line);
 		border-radius: var(--ob-radius);
 		box-shadow: var(--ob-shadow);
-		margin: 0;
-		overflow: hidden;
-		position: relative;
+		display: block;
+		height: auto;
+		max-width: 100%;
+		width: 100%;
 	}
 
-	.shot::after {
-		border-radius: var(--ob-radius);
+	.frame-light {
+		display: none;
 	}
 
-	.chrome {
-		align-items: center;
-		background-color: var(--ob-raise);
-		border-bottom: 1px solid var(--ob-line-soft);
-		display: flex;
-		gap: 0.85rem;
-		padding: 0.5rem 0.75rem;
+	:global(:root[data-theme="light"]) .frame-dark {
+		display: none;
 	}
 
-	.lights {
-		display: flex;
-		gap: 0.35rem;
-	}
-
-	.lights i {
-		background-color: var(--ob-line);
-		border-radius: 50%;
-		height: 9px;
-		width: 9px;
-	}
-
-	.tab {
-		background-color: var(--ob-ink-2);
-		border: 1px solid var(--ob-line-soft);
-		border-radius: 6px;
-		color: var(--ob-text-2);
-		font-family: var(--ob-sans);
-		font-size: 0.72rem;
-		padding: 0.18rem 0.6rem;
-	}
-
-	.chrome-right {
-		color: var(--ob-amber);
-		font-family: var(--ob-display);
-		margin-inline-start: auto;
-		opacity: 0.7;
-	}
-
-	.panes {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) 19rem;
-		max-height: 34rem;
-		min-height: 22rem;
-		overflow: hidden;
-	}
-
-	/* ── Note ─────────────────────────────────────────────────────────────── */
-
-	.note {
-		border-inline-end: 1px solid var(--ob-line-soft);
-		color: var(--ob-text);
-		font-family: var(--ob-sans);
-		font-size: 0.86rem;
-		line-height: 1.75;
-		padding: 1.6rem 1.75rem;
-	}
-
-	.note h2 {
-		font-family: var(--ob-display);
-		font-size: 1.5rem;
-		font-weight: 400;
-		margin: 0 0 0.9rem;
-	}
-
-	.note p {
-		margin: 0 0 0.9rem;
-	}
-
-	.note .dim {
-		color: var(--ob-text-3);
-	}
-
-	.hl {
-		background-color: transparent;
-		border-bottom: 1px solid color-mix(in srgb, var(--ob-amber) 45%, transparent);
-		border-radius: 2px;
-		color: inherit;
-	}
-
-	.hl.active {
-		background-color: var(--ob-amber-wash);
-		border-bottom-color: var(--ob-amber);
-	}
-
-	.hl.resolved {
-		border-bottom-style: dotted;
-		border-bottom-color: color-mix(in srgb, var(--ob-amber) 30%, transparent);
-	}
-
-	.marker {
-		color: var(--ob-amber);
-		font-family: var(--ob-display);
-		font-size: 0.85em;
-		margin-inline-start: 2px;
-		vertical-align: super;
-	}
-
-	/* ── Sidebar ──────────────────────────────────────────────────────────── */
-
-	.sidebar {
-		background-color: var(--ob-ink);
-		display: flex;
-		flex-direction: column;
-		font-family: var(--ob-sans);
-		min-width: 0;
-	}
-
-	.side-head {
-		border-bottom: 1px solid var(--ob-line-soft);
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		padding: 0.6rem 0.7rem;
-	}
-
-	.row {
-		align-items: center;
-		display: flex;
-		justify-content: space-between;
-	}
-
-	.count {
-		color: var(--ob-text-3);
-		font-size: 0.68rem;
-	}
-
-	.icons {
-		display: flex;
-		gap: 0.4rem;
-	}
-
-	.icons i {
-		color: var(--ob-text-3);
-		font-size: 0.8rem;
-		font-style: normal;
-		line-height: 1;
-	}
-
-	.chips {
-		display: flex;
-		gap: 0.3rem;
-	}
-
-	.chip {
-		background: transparent;
-		border: 1px solid var(--ob-line);
-		border-radius: 999px;
-		color: var(--ob-text-3);
-		font: inherit;
-		font-size: 0.66rem;
-		padding: 0.08rem 0.5rem;
-	}
-
-	.chip.active {
-		border-color: var(--ob-amber);
-		color: var(--ob-text);
-	}
-
-	.chip.run .x {
-		color: var(--ob-text-3);
-		margin-inline-start: 0.25rem;
-	}
-
-	.cards {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		padding: 0.6rem;
-	}
-
-	.card {
-		background-color: var(--ob-raise);
-		border: 1px solid var(--ob-line-soft);
-		border-radius: 8px;
-		padding: 0.6rem;
-	}
-
-	.card.sel {
-		border-color: var(--ob-amber);
-		box-shadow: 0 0 0 1px var(--ob-amber);
-	}
-
-	.card.done {
-		opacity: 0.6;
-	}
-
-	.card-head {
-		align-items: center;
-		color: var(--ob-text-3);
-		display: flex;
-		font-size: 0.68rem;
-		gap: 0.35rem;
-	}
-
-	.author {
-		color: var(--ob-text);
-		font-weight: 600;
-	}
-
-	.date {
-		margin-inline-start: auto;
-	}
-
-	.badge {
-		border: 1px solid var(--ob-line);
-		border-radius: 4px;
-		color: var(--ob-text-3);
-		font-size: 0.62rem;
-		padding: 0 0.3rem;
-	}
-
-	.badge.ok {
-		background-color: var(--ob-green-wash);
-		border-color: transparent;
-		color: var(--ob-text);
-	}
-
-	.quote {
-		border-inline-start: 2px solid var(--ob-amber);
-		color: var(--ob-text-3);
-		font-size: 0.7rem;
-		line-height: 1.5;
-		margin: 0.5rem 0;
-		padding-inline-start: 0.5rem;
-	}
-
-	.body {
-		color: var(--ob-text-2);
-		font-size: 0.76rem;
-		line-height: 1.55;
-		margin: 0;
-	}
-
-	.replies {
-		border-inline-start: 1px solid var(--ob-line);
-		display: flex;
-		flex-direction: column;
-		gap: 0.3rem;
-		margin-block-start: 0.6rem;
-		padding-inline-start: 0.5rem;
-	}
-
-	.sugg {
-		border: 1px solid var(--ob-line);
-		border-radius: 6px;
-		margin-block-start: 0.6rem;
-		overflow: hidden;
-	}
-
-	.sugg-head {
-		align-items: center;
-		background-color: var(--ob-raise-2);
-		border-bottom: 1px solid var(--ob-line);
-		color: var(--ob-text-3);
-		display: flex;
-		font-size: 0.66rem;
-		gap: 0.35rem;
-		padding: 0.25rem 0.45rem;
-	}
-
-	.sugg-icon {
-		color: var(--ob-green);
-	}
-
-	.sugg-title {
-		font-weight: 600;
-	}
-
-	.apply {
-		background-color: var(--ob-raise);
-		border: 1px solid var(--ob-line);
-		border-radius: 4px;
-		color: var(--ob-text);
-		margin-inline-start: auto;
-		padding: 0.05rem 0.4rem;
-	}
-
-	.diff {
-		font-family: var(--ob-mono);
-		font-size: 0.66rem;
-		line-height: 1.6;
-	}
-
-	.del,
-	.add {
-		padding: 0.15rem 0.45rem;
-		white-space: pre-wrap;
-	}
-
-	.del {
-		background-color: var(--ob-red-wash);
-		border-inline-start: 2px solid var(--ob-red);
-		color: var(--ob-text-2);
-	}
-
-	.add {
-		background-color: var(--ob-green-wash);
-		border-inline-start: 2px solid var(--ob-green);
-		color: var(--ob-text-2);
-	}
-
-	.w-del {
-		background-color: color-mix(in srgb, var(--ob-red) 28%, transparent);
-		text-decoration: line-through;
-	}
-
-	.w-add {
-		background-color: color-mix(in srgb, var(--ob-green) 28%, transparent);
-	}
-
-	.actions {
-		color: var(--ob-text-3);
-		display: flex;
-		font-size: 0.68rem;
-		gap: 0.5rem;
-		margin-block-start: 0.6rem;
-	}
-
-	.actions span {
-		border: 1px solid var(--ob-line-soft);
-		border-radius: 4px;
-		padding: 0.1rem 0.4rem;
-	}
-
-	/* Stacked, the height cap would spend the whole window on the note and
-	   clip the sidebar off the bottom, so it lifts and the note gets shorter
-	   instead. */
-	@media (max-width: 60rem) {
-		.panes {
-			grid-template-columns: minmax(0, 1fr);
-			max-height: none;
-		}
-
-		.note {
-			border-block-end: 1px solid var(--ob-line-soft);
-			border-inline-end: 0;
-		}
-
-		.note p:nth-of-type(n + 3) {
-			display: none;
-		}
-	}
-
-	@media (max-width: 30rem) {
-		.note {
-			padding: 1.1rem;
-		}
+	:global(:root[data-theme="light"]) .frame-light {
+		display: block;
 	}
 </style>

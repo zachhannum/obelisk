@@ -17,6 +17,10 @@ wins and the quick fix waits for its own commit.
   `package.json`, its own `node_modules`, built by its own workflow. Nothing
   in it is imported by `src/`, and `npm run build` at the root does not touch
   it.
+- `test/` is the capture harness: Playwright driving a real Obsidian,
+  whose only output is the six PNGs under `site/src/assets/shots/`. It is
+  the one thing outside `site/` that reads `site/`, for the design tokens
+  and the font files.
 - The dependency runs one way: front ends import `core/`, `core/`
   imports nothing of theirs and nothing of Obsidian's. A `from
   "obsidian"` under `src/core/` breaks the CLI and the MCP server
@@ -52,12 +56,18 @@ wins and the quick fix waits for its own commit.
 
 ## Testing
 
-There is no test runner in this repo. Verification today is four
-things, and a change is not done until the ones it touches pass:
+Verification today is five things, and a change is not done until the
+ones it touches pass:
 
-- `npm run build` runs `tsc --noEmit` over `src/**`, then the bundles.
-  Strict mode is on; a change that only typechecks with a cast has not
-  been thought through yet.
+- `npm run build` runs `tsc --noEmit` over `src/**` and the harness,
+  then the bundles. Strict mode is on; a change that only typechecks
+  with a cast has not been thought through yet.
+- `npm run shots` builds, then launches Obsidian under Playwright,
+  opens the vault in `test/vaults/`, and rewrites the landing page's
+  captures. The captures are committed, so a change to the sidebar
+  shows up as a changed image. `obsidian-launcher` downloads Obsidian
+  on the first run, and the theming reads `site/`, so
+  `site/node_modules` has to exist.
 - The plugin, in a vault, reloaded. Symlink the repo into
   `.obsidian/plugins/obelisk`, rebuild, and run *Reload app without
   saving*. Anchoring, decoration and the composer have no other proof.
@@ -69,11 +79,10 @@ things, and a change is not done until the ones it touches pass:
   the same way for an agent, which sees only `CONNECTION_CLOSED` and no
   cause.
 
-If a runner lands, it goes over `core/`: the anchor arithmetic, the
-fence scanner, the schema fold and the four verbs are pure functions
-over strings, testable without Obsidian, and they are where the
-data-loss bugs would be. The plugin half needs the running app, so it
-stays manual.
+`core/` has no runner. The anchor arithmetic, the fence scanner, the
+schema fold and the four verbs are pure functions over strings,
+testable without Obsidian, and they are where the data-loss bugs would
+be.
 
 ## Commits, PRs, and CI
 
@@ -119,6 +128,15 @@ blocks nothing.
 deploys to GitHub Pages on push to main. It needs Pages enabled for the
 repo with GitHub Actions as the source, or the deploy step has nowhere
 to land.
+
+`.github/workflows/shots.yml` runs the capture harness on
+ubuntu-latest and macos-latest for any change to the plugin or the
+harness, and uploads Playwright traces when it fails. It is not a merge
+gate; only `npm run build` is.
+
+`.github/workflows/refresh-shots.yml` recaptures on push to main and
+opens a pull request with the result. It never pushes to main, and it
+merges nothing.
 
 ## Documentation rules
 

@@ -6,3 +6,5 @@ main.js
 data.json
 dist/
 site/.astro/
+test-results/
+playwright-report/
