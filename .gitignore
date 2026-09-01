@@ -5,3 +5,4 @@ main.js
 .obsidian/
 data.json
 dist/
+site/.astro/

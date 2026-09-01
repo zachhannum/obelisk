@@ -1,0 +1,370 @@
+---
+import Landing from "../layouts/Landing.astro";
+import Screenshot from "../components/Screenshot.astro";
+import Snippet from "../components/Snippet.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const yaml = `---
+title: Chapter 3
+obelisk_schema: 3
+obelisk:
+  - id: cq7fk2m9x
+    author: claude
+    origin: { kind: agent, model: claude-opus-5, run: r7k2mq }
+    created: 2026-08-29T14:02:11.000Z
+    body: |-
+      The relative clause is doing no work here.
+
+      \`\`\`suggestion
+      The horse bolted.
+      \`\`\`
+    anchor:
+      from: { line: 12, col: 0 }
+      to: { line: 12, col: 47 }
+      quote: The horse, which had been standing there, bolted.
+---`;
+
+const suggestionMd = `Two clauses fighting over one sentence, and the
+first one never earns its keep.
+
+\`\`\`suggestion
+The horse bolted.
+\`\`\`
+
+Happy to be talked out of it; see the note in ch. 2.`;
+
+const cli = `$ obelisk list chapter-3.md
+$ obelisk comment chapter-3.md \\
+    --quote "The horse, which had been standing there, bolted." \\
+    --body  "The relative clause is doing no work here." \\
+    --run   r7k2mq
+
+comment cq7fk2m9x written to chapter-3.md`;
+
+const mcp = `$ claude mcp add obelisk --scope user -- \\
+    node "$PWD/dist/mcp.mjs" --vault /path/to/vault
+
+obelisk_list      obelisk_comment
+obelisk_reply     obelisk_resolve`;
+---
+
+<Landing
+	title="Obelisk: inline comments and suggested edits for Obsidian"
+	description="Inline comments and GitHub-style suggested edits for Obsidian, stored in the note's own frontmatter. With a CLI and an MCP server so an agent can review a note into your sidebar."
+>
+	<section class="hero ob-grain">
+		<div class="wrap">
+			<p class="eyebrow">Obsidian plugin · CLI · MCP server</p>
+			<h1>
+				Inline comments and suggested edits, kept <span class="accent"
+					>inside the note</span
+				>.
+			</h1>
+			<p class="lede">
+				Select a passage, leave a comment on it, and propose a replacement that
+				applies in one click. Comments are stored in the note's own
+				frontmatter, so they travel with the file through sync, git and export.
+				There is no sidecar database to fall out of step with the vault.
+			</p>
+			<div class="cta">
+				<a class="btn btn-primary" href={`${base}/start/install/`}>Install it</a>
+				<a class="btn btn-ghost" href={`${base}/agents/overview/`}
+					>Comments from an agent</a
+				>
+				<span class="install"
+					><span class="prompt">$</span> git clone github.com/zachhannum/obelisk</span
+				>
+			</div>
+		</div>
+
+		<div class="wrap hero-shot">
+			<Screenshot />
+			<p class="shot-caption">
+				A note under review: an agent's proposal, a thread, and a passage
+				already settled
+			</p>
+		</div>
+	</section>
+
+	<section class="marginalia">
+		<div class="wrap">
+			<div class="glyph">†</div>
+			<div>
+				<blockquote>
+					An <em>obelus</em> was the mark an ancient editor drew in the margin of
+					a manuscript to say: this passage is disputed.
+				</blockquote>
+				<cite>Which is the whole plugin</cite>
+			</div>
+		</div>
+	</section>
+
+	<section class="section">
+		<div class="wrap">
+			<div class="section-head">
+				<p class="kicker">Three front ends</p>
+				<h2>One format. Read it from anywhere.</h2>
+				<p>
+					The storage format is the interface. Anything that can edit a file can
+					leave a comment the plugin will render, so the same comments are
+					reachable from inside Obsidian, from a shell, and from a model.
+				</p>
+			</div>
+
+			<div class="grid-3">
+				<article class="card">
+					<span class="surface-line"></span>
+					<span class="tag">Plugin</span>
+					<h3>Obsidian</h3>
+					<p>
+						Highlights in the editor, a sidebar in document order, threaded
+						replies, and a composer that is Obsidian's own markdown editor,
+						Cmd+B and <code>[[</code> autocompletion included.
+					</p>
+				</article>
+				<article class="card green">
+					<span class="surface-line"></span>
+					<span class="tag">Command line</span>
+					<h3>obelisk</h3>
+					<p>
+						Four verbs (list, comment, reply, resolve) over the same core.
+						Writes touch frontmatter only and leave the body byte-identical, so
+						they are safe while the note is open.
+					</p>
+				</article>
+				<article class="card violet">
+					<span class="surface-line"></span>
+					<span class="tag">Model Context Protocol</span>
+					<h3>obelisk-mcp</h3>
+					<p>
+						The same four verbs as MCP tools. Ask the agent you already have
+						open to review a note, and its remarks appear in the sidebar of the
+						note you are already reading.
+					</p>
+				</article>
+			</div>
+		</div>
+	</section>
+
+	<section class="section">
+		<div class="wrap">
+			<div class="grid-2">
+				<div>
+					<p class="kicker">Storage</p>
+					<h2>Plain YAML, in the file it is about.</h2>
+					<p style="margin-block-start:1rem">
+						Everything lives under one frontmatter key. It is readable,
+						diffable, and it survives a rename, a sync, and a git merge with no
+						extra machinery. Unknown keys are put back on a round-trip, so a
+						newer version's fields are never stripped by an older one.
+					</p>
+					<p style="margin-block-start:1rem">
+						Migration is a read-time fold rather than a sweep, so a vault that
+						is only ever read is never dirtied.
+					</p>
+				</div>
+				<Snippet code={yaml} lang="yaml" title="chapter-3.md" />
+			</div>
+		</div>
+	</section>
+
+	<section class="section">
+		<div class="wrap">
+			<div class="section-head">
+				<p class="kicker">Anchoring</p>
+				<h2>The quote is the anchor.</h2>
+				<p>
+					A comment attaches by searching the note for the exact text it was
+					written on. Nothing fuzzy-matches, re-finds, or scores a near miss. An
+					edit anywhere else in the note leaves it attached, whether that edit
+					happens in Obsidian, in another editor, or in a git merge, because the
+					quote is still the quote.
+				</p>
+			</div>
+
+			<div class="anchor-demo">
+				<div class="state attached">
+					<p class="state-label"><span class="dot"></span> Quote found</p>
+					<p class="line">
+						…and by the time Marta reached the crossing, <u
+							>the horse, which had been standing there, bolted</u
+						>.
+					</p>
+					<div class="mini">
+						<p class="who">zach</p>
+						<p class="said">Two clauses fighting over one sentence.</p>
+					</div>
+				</div>
+
+				<div class="state detached">
+					<p class="state-label"><span class="dot"></span> Quote gone</p>
+					<p class="line">
+						…and by the time Marta reached the crossing, the horse bolted.
+					</p>
+					<div class="mini">
+						<p class="who">zach</p>
+						<p class="said">Two clauses fighting over one sentence.</p>
+						<p class="warn">† Detached. The quoted passage is no longer here</p>
+					</div>
+				</div>
+			</div>
+
+			<p style="margin-block-start:1.5rem;max-width:58ch">
+				A comment whose passage is gone says so, in the sidebar, highlighting
+				nothing. It never guesses at a new home and it never quietly
+				disappears. Restore the text and it reattaches on its own, because
+				detachment is derived on every read and never written down.
+			</p>
+		</div>
+	</section>
+
+	<section class="section">
+		<div class="wrap">
+			<div class="grid-2">
+				<Snippet code={suggestionMd} lang="markdown" title="comment body" tone="green" />
+				<div>
+					<p class="kicker">Suggested edits</p>
+					<h2>A proposal is markdown, not a field.</h2>
+					<p style="margin-block-start:1rem">
+						A suggested edit is a fenced <code>suggestion</code> block inside an
+						ordinary comment, the way GitHub does it. It renders as a word-level
+						diff against the quoted passage with an Apply button, so one comment
+						can explain itself and propose the change at once, and a reply can
+						offer a counter-proposal.
+					</p>
+					<p style="margin-block-start:1rem">
+						Applying refuses if the underlying text has changed since the
+						proposal was written. That condition is the same one that decides
+						whether the comment is attached at all, so a splice always lands on
+						exactly the characters the commenter read.
+					</p>
+					<a class="btn btn-ghost" style="margin-block-start:1.5rem" href={`${base}/using/suggestions/`}
+						>How suggestions work</a
+					>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="section">
+		<div class="wrap">
+			<div class="section-head">
+				<p class="kicker">Agents</p>
+				<h2>A review pass that lands in your sidebar.</h2>
+				<p>
+					A model reviews a note and its remarks appear as comments on the
+					passages they are about, badged, with the whole pass behind one filter
+					chip and one dismissal. Or you leave the comments and ask a model to
+					read them, make the edits, and resolve them.
+				</p>
+			</div>
+
+			<div class="grid-2">
+				<Snippet code={cli} lang="bash" title="the CLI" />
+				<Snippet code={mcp} lang="bash" title="the MCP server" tone="violet" />
+			</div>
+
+			<p style="margin-block-start:1.5rem;max-width:58ch">
+				There is no way to pass a line or a column. A model asked for one will
+				produce a plausible wrong number, and a plausible wrong number attaches
+				a comment to the wrong paragraph without ever looking like an error. The
+				quote has to appear in the note character for character; if it does not,
+				nothing is written and the tool says why.
+			</p>
+		</div>
+	</section>
+
+	<section class="section">
+		<div class="wrap">
+			<div class="section-head">
+				<p class="kicker">The rest of it</p>
+				<h2>Everything else it does.</h2>
+			</div>
+
+			<div class="features">
+				<div class="feature">
+					<h3>Markdown everywhere</h3>
+					<p>
+						Comments and replies render as real markdown: links, lists,
+						callouts, embeds and math, exactly as they would in a note.
+					</p>
+				</div>
+				<div class="feature">
+					<h3>The editor you already use</h3>
+					<p>
+						Comments are written in Obsidian's own embedded editor, so
+						shortcuts, list continuation and live preview behave as they do
+						anywhere else.
+					</p>
+				</div>
+				<div class="feature">
+					<h3>Threaded replies</h3>
+					<p>
+						On any comment, stored alongside it, and markdown all the way down,
+						suggestion blocks included.
+					</p>
+				</div>
+				<div class="feature">
+					<h3>Highlighting in the text</h3>
+					<p>
+						Commented passages carry an underline and a † that opens the comment
+						in the sidebar. Overlapping comments nest.
+					</p>
+				</div>
+				<div class="feature">
+					<h3>Resolved, not hidden</h3>
+					<p>
+						A settled comment stays in the list, greyed, because it still marks
+						its passage in the note. The Open filter is one chip away.
+					</p>
+				</div>
+				<div class="feature">
+					<h3>Undo instead of confirm</h3>
+					<p>
+						Deleting a comment, a single reply, or a whole agent pass offers an
+						undo rather than a dialog asking whether you meant it.
+					</p>
+				</div>
+				<div class="feature">
+					<h3>Editable</h3>
+					<p>
+						Rewrite a comment in the composer that wrote it. The anchor is left
+						alone: changing what you said never changes what you said it about.
+					</p>
+				</div>
+				<div class="feature">
+					<h3>Safe from outside</h3>
+					<p>
+						An external write re-reads the file first and refuses if it changed
+						underneath, so a pass cannot lose an edit you were making.
+					</p>
+				</div>
+				<div class="feature">
+					<h3>Forward-compatible</h3>
+					<p>
+						A schema version sits beside the comments, and a malformed entry is
+						dropped with a warning rather than taking the sidebar down.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="section closer ob-grain">
+		<div class="wrap">
+			<h2>Put the argument next to the sentence.</h2>
+			<p>
+				Obelisk is pre-release: not yet in the Obsidian community plugin
+				directory, and not yet published to npm. Building it from source is a
+				clone, <code>npm install</code>, and <code>npm run build</code>.
+			</p>
+			<div class="cta">
+				<a class="btn btn-primary" href={`${base}/start/install/`}>Install it</a>
+				<a class="btn btn-ghost" href="https://github.com/zachhannum/obelisk" rel="noopener"
+					>Read the source</a
+				>
+			</div>
+		</div>
+	</section>
+</Landing>

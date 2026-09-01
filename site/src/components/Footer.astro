@@ -1,0 +1,49 @@
+---
+import Default from "@astrojs/starlight/components/Footer.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+
+<Default />
+
+<div class="ob-foot">
+	<span class="ob-foot-mark">†</span>
+	<p>
+		Obelisk is MIT licensed. An <em>obelus</em> was the mark an editor drew in the
+		margin of a manuscript to say: this passage is disputed.
+	</p>
+	<a href={`${base}/`}>Home</a>
+</div>
+
+<style>
+	.ob-foot {
+		align-items: baseline;
+		border-top: 1px solid var(--ob-line-soft);
+		color: var(--ob-text-3);
+		display: flex;
+		flex-wrap: wrap;
+		font-size: 0.8rem;
+		gap: 0.75rem;
+		margin-block-start: 2.5rem;
+		padding-block-start: 1.25rem;
+	}
+
+	.ob-foot p {
+		flex: 1 1 20rem;
+		margin: 0;
+	}
+
+	.ob-foot-mark {
+		color: var(--ob-amber);
+		font-family: var(--ob-display);
+	}
+
+	.ob-foot a {
+		color: var(--ob-text-2);
+		text-decoration: none;
+	}
+
+	.ob-foot a:hover {
+		color: var(--ob-amber);
+	}
+</style>

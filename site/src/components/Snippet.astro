@@ -1,0 +1,82 @@
+---
+import { Code } from "astro:components";
+
+interface Props {
+	code: string;
+	lang?: string;
+	title?: string;
+	tone?: "amber" | "green" | "violet";
+}
+
+const { code, lang = "bash", title, tone = "amber" } = Astro.props;
+---
+
+<div class:list={["snip", `tone-${tone}`]}>
+	{
+		title && (
+			<div class="snip-head">
+				<span class="snip-dot" />
+				<span class="snip-title">{title}</span>
+			</div>
+		)
+	}
+	<Code
+		code={code.trim()}
+		lang={lang as any}
+		themes={{ light: "github-light", dark: "github-dark-default" }}
+		defaultColor={false}
+	/>
+</div>
+
+<style>
+	.snip {
+		background-color: var(--ob-raise);
+		border: 1px solid var(--ob-line-soft);
+		border-radius: var(--ob-radius-s);
+		overflow: hidden;
+	}
+
+	.snip-head {
+		align-items: center;
+		background-color: var(--ob-raise-2);
+		border-bottom: 1px solid var(--ob-line-soft);
+		color: var(--ob-text-3);
+		display: flex;
+		font-family: var(--ob-mono);
+		font-size: 0.68rem;
+		gap: 0.5rem;
+		letter-spacing: 0.08em;
+		padding: 0.4rem 0.75rem;
+		text-transform: uppercase;
+	}
+
+	.snip-dot {
+		border-radius: 50%;
+		height: 6px;
+		width: 6px;
+	}
+
+	.tone-amber .snip-dot {
+		background-color: var(--ob-amber);
+	}
+	.tone-green .snip-dot {
+		background-color: var(--ob-green);
+	}
+	.tone-violet .snip-dot {
+		background-color: var(--ob-violet);
+	}
+
+	.snip :global(pre) {
+		background-color: transparent !important;
+		font-family: var(--ob-mono);
+		font-size: 0.78rem;
+		line-height: 1.7;
+		margin: 0;
+		overflow-x: auto;
+		padding: 0.85rem 0.95rem;
+	}
+
+	.snip :global(code) {
+		font-family: inherit;
+	}
+</style>
