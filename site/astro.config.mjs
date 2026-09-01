@@ -29,14 +29,14 @@ export default defineConfig({
 				Footer: "./src/components/Footer.astro",
 			},
 			customCss: [
-				"@fontsource/instrument-serif/400.css",
-				"@fontsource-variable/inter",
+				"@fontsource-variable/bricolage-grotesque",
+				"@fontsource-variable/space-grotesk",
 				"@fontsource-variable/jetbrains-mono",
 				"./src/styles/tokens.css",
 				"./src/styles/starlight.css",
 			],
 			expressiveCode: {
-				themes: ["github-dark-default", "github-light"],
+				themes: ["gruvbox-dark-medium", "gruvbox-light-medium"],
 				styleOverrides: {
 					borderRadius: "0.5rem",
 					borderColor: "var(--ob-line)",

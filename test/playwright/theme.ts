@@ -20,14 +20,14 @@ const TOKENS = path.join(SITE, "src", "styles", "tokens.css");
  */
 const FACES = [
 	{
-		family: "Inter Variable",
-		weight: "100 900",
-		file: "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2",
+		family: "Space Grotesk Variable",
+		weight: "300 700",
+		file: "@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2",
 	},
 	{
-		family: "Instrument Serif",
-		weight: "400",
-		file: "@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2",
+		family: "Bricolage Grotesque Variable",
+		weight: "200 800",
+		file: "@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2",
 	},
 	{
 		family: "JetBrains Mono Variable",
@@ -109,15 +109,15 @@ body.theme-dark, body.theme-light {
 	--font-interface: ${t("--ob-sans")};
 	--font-monospace: ${t("--ob-mono")};
 
-	--background-primary: ${t("--ob-ink-2")};
-	--background-primary-alt: ${t("--ob-raise")};
-	--background-secondary: ${t("--ob-ink")};
-	--background-secondary-alt: ${t("--ob-raise-2")};
+	--background-primary: ${t("--ob-raise")};
+	--background-primary-alt: ${t("--ob-raise-2")};
+	--background-secondary: ${t("--ob-raise-2")};
+	--background-secondary-alt: ${t("--ob-raise")};
 	--background-modifier-border: ${t("--ob-line")};
 	--background-modifier-border-hover: ${t("--ob-line")};
-	--background-modifier-border-focus: ${t("--ob-amber")};
+	--background-modifier-border-focus: ${t("--ob-accent")};
 	--background-modifier-hover: ${t("--ob-raise-2")};
-	--background-modifier-active-hover: ${t("--ob-amber-wash")};
+	--background-modifier-active-hover: ${t("--ob-accent-wash")};
 	--background-modifier-form-field: ${t("--ob-raise")};
 	--background-modifier-error: ${t("--ob-red-wash")};
 	--background-modifier-error-hover: ${t("--ob-red-wash")};
@@ -127,28 +127,28 @@ body.theme-dark, body.theme-light {
 	--text-normal: ${t("--ob-text")};
 	--text-muted: ${t("--ob-text-2")};
 	--text-faint: ${t("--ob-text-3")};
-	--text-accent: ${t("--ob-amber")};
-	--text-accent-hover: ${t("--ob-amber-dim")};
+	--text-accent: ${t("--ob-accent")};
+	--text-accent-hover: ${t("--ob-accent-dim")};
 	--text-error: ${t("--ob-red")};
 	--text-success: ${t("--ob-green")};
 	--text-on-accent: ${t("--ob-ink")};
-	--text-selection: ${t("--ob-amber-wash")};
-	--text-highlight-bg: ${t("--ob-amber-wash")};
+	--text-selection: ${t("--ob-accent-wash")};
+	--text-highlight-bg: ${t("--ob-accent-wash")};
 
-	--color-accent: ${t("--ob-amber")};
-	--color-accent-1: ${t("--ob-amber")};
-	--color-accent-2: ${t("--ob-amber-dim")};
-	--interactive-accent: ${t("--ob-amber")};
-	--interactive-accent-hover: ${t("--ob-amber-dim")};
+	--color-accent: ${t("--ob-accent")};
+	--color-accent-1: ${t("--ob-accent")};
+	--color-accent-2: ${t("--ob-accent-dim")};
+	--interactive-accent: ${t("--ob-accent")};
+	--interactive-accent-hover: ${t("--ob-accent-dim")};
 	--interactive-normal: ${t("--ob-raise")};
 	--interactive-hover: ${t("--ob-raise-2")};
 
-	--color-yellow-rgb: ${channels(t("--ob-amber"))};
+	--color-yellow-rgb: ${channels(t("--ob-accent"))};
 	--color-green-rgb: ${channels(t("--ob-green"))};
 	--color-red-rgb: ${channels(t("--ob-red"))};
 	--color-green: ${t("--ob-green")};
 	--color-red: ${t("--ob-red")};
-	--color-purple: ${t("--ob-violet")};
+	--color-purple: ${t("--ob-support")};
 
 	--titlebar-background: ${t("--ob-ink")};
 	--titlebar-background-focused: ${t("--ob-ink")};
@@ -165,17 +165,15 @@ button.mod-warning {
 	color: ${t("--ob-red")};
 }
 
-/* Instrument Serif ships one weight, and Obsidian's heading weight would ask
-   the renderer to fake the rest. Obsidian sets the title from a longer
-   selector, so this one has to shout. */
+/* Obsidian sets the title from a longer selector, so this one has to shout. */
 .inline-title,
 .markdown-rendered h1,
 .markdown-rendered h2,
 .cm-header-1,
 .cm-header-2 {
 	font-family: ${t("--ob-display")} !important;
-	font-weight: 400 !important;
-	letter-spacing: 0.01em;
+	font-weight: 700 !important;
+	letter-spacing: -0.02em;
 }
 `;
 }

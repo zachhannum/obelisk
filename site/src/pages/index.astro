@@ -53,13 +53,14 @@ obelisk_reply     obelisk_resolve`;
 	title="Obelisk: inline comments and suggested edits for Obsidian"
 	description="Inline comments and GitHub-style suggested edits for Obsidian, stored in the note's own frontmatter. With a CLI and an MCP server so an agent can review a note into your sidebar."
 >
-	<section class="hero ob-grain">
+	<section class="hero ob-ground">
+		<div class="matrix"></div>
 		<div class="wrap">
 			<p class="eyebrow">Obsidian plugin · CLI · MCP server</p>
 			<h1>
-				Inline comments and suggested edits, kept <span class="accent"
-					>inside the note</span
-				>.
+				Inline comments and suggested edits, kept <span class="chroma-text"
+					>inside the note.</span
+				>
 			</h1>
 			<p class="lede">
 				Select a passage, leave a comment on it, and propose a replacement that
@@ -87,9 +88,10 @@ obelisk_reply     obelisk_resolve`;
 		</div>
 	</section>
 
-	<section class="marginalia">
+	<section class="marginalia ob-ground">
+		<div class="matrix"></div>
 		<div class="wrap">
-			<div class="glyph">†</div>
+			<div class="glyph" role="presentation"></div>
 			<div>
 				<blockquote>
 					An <em>obelus</em> was the mark an ancient editor drew in the margin of
@@ -123,7 +125,7 @@ obelisk_reply     obelisk_resolve`;
 						Cmd+B and <code>[[</code> autocompletion included.
 					</p>
 				</article>
-				<article class="card green">
+				<article class="card support">
 					<span class="surface-line"></span>
 					<span class="tag">Command line</span>
 					<h3>obelisk</h3>
@@ -133,7 +135,7 @@ obelisk_reply     obelisk_resolve`;
 						they are safe while the note is open.
 					</p>
 				</article>
-				<article class="card violet">
+				<article class="card muted">
 					<span class="surface-line"></span>
 					<span class="tag">Model Context Protocol</span>
 					<h3>obelisk-mcp</h3>
@@ -262,7 +264,7 @@ obelisk_reply     obelisk_resolve`;
 
 			<div class="grid-2">
 				<Snippet code={cli} lang="bash" title="the CLI" />
-				<Snippet code={mcp} lang="bash" title="the MCP server" tone="violet" />
+				<Snippet code={mcp} lang="bash" title="the MCP server" tone="support" />
 			</div>
 
 			<p style="margin-block-start:1.5rem;max-width:58ch">
@@ -351,7 +353,8 @@ obelisk_reply     obelisk_resolve`;
 		</div>
 	</section>
 
-	<section class="section closer ob-grain">
+	<section class="section closer ob-ground">
+		<div class="matrix"></div>
 		<div class="wrap">
 			<h2>Put the argument next to the sentence.</h2>
 			<p>

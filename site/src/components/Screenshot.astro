@@ -91,9 +91,10 @@ const shots = {
 	}
 
 	.frame img {
-		border: 1px solid var(--ob-line);
+		border: 1px solid color-mix(in srgb, var(--ob-text-3) 40%, var(--ob-line));
 		border-radius: var(--ob-radius);
-		box-shadow: var(--ob-shadow);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3),
+			0 40px 80px -44px rgba(0, 0, 0, 0.85);
 		display: block;
 		height: auto;
 		max-width: 100%;
