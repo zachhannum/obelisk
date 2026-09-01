@@ -1,0 +1,53 @@
+name: shots
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "test/**"
+      - "styles.css"
+      - "manifest.json"
+      - "playwright.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - "site/src/styles/tokens.css"
+      - ".github/workflows/shots.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    name: capture (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install
+      # The harness dresses Obsidian in the site's tokens and embeds the site's
+      # font files, so it needs site/node_modules.
+      - run: npm install
+        working-directory: site
+      - name: Capture on Linux
+        if: runner.os == 'Linux'
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: npm run shots
+      - name: Capture on macOS
+        if: runner.os == 'macOS'
+        run: npm run shots
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces-${{ matrix.os }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7

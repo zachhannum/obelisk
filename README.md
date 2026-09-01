@@ -201,6 +201,9 @@ npm run build    # typecheck, then main.js plus dist/cli.mjs and dist/mcp.mjs
 arithmetic, the YAML and the four verbs. The plugin, the CLI and the MCP server
 are three front ends over it.
 
+`site/` is the documentation site, an Astro project of its own with its own
+`npm install`. It is not part of `npm run build`.
+
 Symlink the repo into a test vault to try it:
 
 ```bash

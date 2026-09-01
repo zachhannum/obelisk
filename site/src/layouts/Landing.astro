@@ -1,0 +1,113 @@
+---
+import "@fontsource/instrument-serif/400.css";
+import "@fontsource-variable/inter";
+import "@fontsource-variable/jetbrains-mono";
+import "../styles/tokens.css";
+import "../styles/landing.css";
+
+interface Props {
+	title: string;
+	description: string;
+}
+
+const { title, description } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonical} />
+		<link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonical} />
+		<meta name="twitter:card" content="summary_large_image" />
+		<script is:inline>
+			(() => {
+				const stored = (() => {
+					try {
+						return localStorage.getItem("starlight-theme");
+					} catch {
+						return null;
+					}
+				})();
+				const theme =
+					stored === "light" || stored === "dark"
+						? stored
+						: matchMedia("(prefers-color-scheme: light)").matches
+							? "light"
+							: "dark";
+				document.documentElement.dataset.theme = theme;
+			})();
+		</script>
+	</head>
+	<body>
+		<a class="skip" href="#main">Skip to content</a>
+
+		<header class="nav">
+			<a class="brand" href={`${base}/`}>
+				<span class="brand-mark">†</span>
+				<span class="brand-name">Obelisk</span>
+			</a>
+			<nav class="nav-links">
+				<a href={`${base}/start/what-it-is/`}>Docs</a>
+				<a href={`${base}/agents/overview/`}>Agents</a>
+				<a href={`${base}/reference/format/`}>Format</a>
+				<a
+					href="https://github.com/zachhannum/obelisk"
+					rel="noopener"
+					class="nav-gh">GitHub</a
+				>
+				<button
+					class="theme-toggle"
+					type="button"
+					aria-label="Toggle colour theme"
+					data-theme-toggle
+				>
+					<span aria-hidden="true">◐</span>
+				</button>
+			</nav>
+		</header>
+
+		<main id="main">
+			<slot />
+		</main>
+
+		<footer class="foot">
+			<div class="foot-inner">
+				<div class="foot-brand">
+					<span class="brand-mark">†</span>
+					<span>Obelisk</span>
+				</div>
+				<p class="foot-note">
+					MIT licensed. An <em>obelus</em> was the mark an editor drew in the margin
+					of a manuscript to say: this passage is disputed.
+				</p>
+				<nav class="foot-links">
+					<a href={`${base}/start/install/`}>Install</a>
+					<a href={`${base}/agents/mcp/`}>MCP server</a>
+					<a href={`${base}/reference/design/`}>Design notes</a>
+					<a href="https://github.com/zachhannum/obelisk" rel="noopener">GitHub</a>
+				</nav>
+			</div>
+		</footer>
+
+		<script is:inline>
+			document.querySelector("[data-theme-toggle]")?.addEventListener("click", () => {
+				const next =
+					document.documentElement.dataset.theme === "light" ? "dark" : "light";
+				document.documentElement.dataset.theme = next;
+				try {
+					localStorage.setItem("starlight-theme", next);
+				} catch {}
+			});
+		</script>
+	</body>
+</html>

@@ -5,3 +5,6 @@ main.js
 .obsidian/
 data.json
 dist/
+site/.astro/
+test-results/
+playwright-report/

@@ -1,0 +1,114 @@
+---
+import { getImage } from "astro:assets";
+
+import dark1440 from "../assets/shots/obsidian-1440-dark.png";
+import dark1100 from "../assets/shots/obsidian-1100-dark.png";
+import dark760 from "../assets/shots/obsidian-760-dark.png";
+import light1440 from "../assets/shots/obsidian-1440-light.png";
+import light1100 from "../assets/shots/obsidian-1100-light.png";
+import light760 from "../assets/shots/obsidian-760-light.png";
+
+/**
+ * The product shot: Obsidian with the Obelisk sidebar open, captured from a
+ * running app by the harness in `test/`.
+ *
+ * Width is art direction, so it is a `source`. The theme cannot be, because
+ * light is an attribute the reader toggles rather than a media query, so it is
+ * two pictures and a swap in CSS.
+ */
+type Shot = typeof dark1440;
+
+const alt =
+	"Obsidian with the Obelisk sidebar open on a note called Chapter 3. Three " +
+	"passages in the prose are underlined and marked with a dagger. The sidebar " +
+	"lists them in document order: an agent's comment quoting one sentence and " +
+	"proposing a shorter one, with the replacement shown as a diff under an " +
+	"Apply button; a comment from a person with a reply beneath it; and a " +
+	"comment already resolved.";
+
+// The captures are retina, so each is served at half its pixel width.
+async function serve(shot: Shot) {
+	const width = Math.round(shot.width / 2);
+	const [single, double] = await Promise.all([
+		getImage({ src: shot, format: "webp", width }),
+		getImage({ src: shot, format: "webp", width: shot.width }),
+	]);
+	return {
+		src: single.src,
+		srcset: `${single.src} 1x, ${double.src} 2x`,
+		width,
+		height: Math.round(shot.height / 2),
+	};
+}
+
+const schemes = ["dark", "light"] as const;
+const shots = {
+	dark: await Promise.all([dark1440, dark1100, dark760].map(serve)),
+	light: await Promise.all([light1440, light1100, light760].map(serve)),
+};
+---
+
+<figure class="shot">
+	{
+		schemes.map((scheme) => {
+			const [wide, mid, narrow] = shots[scheme];
+			return (
+				<picture class={`frame frame-${scheme}`}>
+					<source
+						media="(max-width: 700px)"
+						srcset={narrow.srcset}
+						width={narrow.width}
+						height={narrow.height}
+					/>
+					<source
+						media="(max-width: 1080px)"
+						srcset={mid.srcset}
+						width={mid.width}
+						height={mid.height}
+					/>
+					<img
+						src={wide.src}
+						srcset={wide.srcset}
+						width={wide.width}
+						height={wide.height}
+						alt={alt}
+						decoding="async"
+						fetchpriority="high"
+					/>
+				</picture>
+			);
+		})
+	}
+</figure>
+
+<style>
+	.shot {
+		margin: 0;
+	}
+
+	.frame {
+		display: block;
+	}
+
+	.frame img {
+		border: 1px solid var(--ob-line);
+		border-radius: var(--ob-radius);
+		box-shadow: var(--ob-shadow);
+		display: block;
+		height: auto;
+		max-width: 100%;
+		width: 100%;
+	}
+
+	.frame-light {
+		display: none;
+	}
+
+	:global(:root[data-theme="light"]) .frame-dark {
+		display: none;
+	}
+
+	:global(:root[data-theme="light"]) .frame-light {
+		display: block;
+	}
+</style>

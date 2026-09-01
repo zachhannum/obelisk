@@ -1,0 +1,108 @@
+/* Obelisk — design tokens.
+   Dark is the default; the light theme is parchment rather than plain white,
+   because every surface here is standing in for a page. */
+
+:root {
+	--ob-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+	--ob-sans: "Inter Variable", "Inter", system-ui, -apple-system, sans-serif;
+	--ob-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular,
+		"SF Mono", Menlo, monospace;
+
+	--ob-ink: #08080a;
+	--ob-ink-2: #0d0d11;
+	--ob-raise: #131319;
+	--ob-raise-2: #191921;
+	--ob-line: #262630;
+	--ob-line-soft: #1b1b23;
+	--ob-text: #ece8e0;
+	--ob-text-2: #a29d95;
+	--ob-text-3: #6b6760;
+
+	--ob-amber: #e0b944;
+	--ob-amber-dim: #b8952f;
+	--ob-amber-wash: rgba(224, 185, 68, 0.13);
+	--ob-green: #4cbf7d;
+	--ob-green-wash: rgba(68, 179, 115, 0.15);
+	--ob-red: #e0655c;
+	--ob-red-wash: rgba(224, 91, 82, 0.15);
+	--ob-violet: #7b6ce8;
+	--ob-violet-wash: rgba(123, 108, 232, 0.16);
+
+	--ob-dot: rgba(236, 232, 224, 0.075);
+	--ob-glow-a: rgba(224, 185, 68, 0.2);
+	--ob-glow-b: rgba(123, 108, 232, 0.22);
+	--ob-glow-c: rgba(76, 191, 125, 0.1);
+	--ob-grain-opacity: 0.5;
+	--ob-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 24px 60px -30px rgba(0, 0, 0, 0.9);
+
+	--ob-radius: 12px;
+	--ob-radius-s: 7px;
+	--ob-max: 1140px;
+
+	color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+	--ob-ink: #faf7f0;
+	--ob-ink-2: #f4f0e7;
+	--ob-raise: #fffdf8;
+	--ob-raise-2: #f6f2e9;
+	--ob-line: #e0d9cb;
+	--ob-line-soft: #ebe5d9;
+	--ob-text: #1a1a1f;
+	--ob-text-2: #5d5951;
+	--ob-text-3: #8b867d;
+
+	--ob-amber: #9a6f05;
+	--ob-amber-dim: #b7891c;
+	--ob-amber-wash: rgba(184, 149, 47, 0.16);
+	--ob-green: #1f8d51;
+	--ob-green-wash: rgba(31, 141, 81, 0.13);
+	--ob-red: #c2382e;
+	--ob-red-wash: rgba(194, 56, 46, 0.12);
+	--ob-violet: #5344c4;
+	--ob-violet-wash: rgba(83, 68, 196, 0.12);
+
+	--ob-dot: rgba(26, 26, 31, 0.09);
+	--ob-glow-a: rgba(224, 185, 68, 0.3);
+	--ob-glow-b: rgba(123, 108, 232, 0.18);
+	--ob-glow-c: rgba(76, 191, 125, 0.14);
+	--ob-grain-opacity: 0.32;
+	--ob-shadow: 0 1px 2px rgba(60, 50, 30, 0.06),
+		0 24px 50px -28px rgba(60, 50, 30, 0.35);
+
+	color-scheme: light;
+}
+
+/* Grain. One fractal-noise tile, blended over whatever gradient is beneath —
+   the gradient alone bands on wide viewports and on cheap panels. */
+.ob-grain::after {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+	content: "";
+	inset: 0;
+	mix-blend-mode: overlay;
+	opacity: var(--ob-grain-opacity);
+	pointer-events: none;
+	position: absolute;
+	z-index: 1;
+}
+
+.ob-dots {
+	background-image: radial-gradient(var(--ob-dot) 1px, transparent 1px);
+	background-position: 0 0;
+	background-size: 22px 22px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto !important;
+	}
+
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.001ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.001ms !important;
+	}
+}
