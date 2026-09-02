@@ -36,8 +36,8 @@ server registered for the repo rather than for the vault you want to comment
 on. `--scope user` registers it everywhere; `--scope project` writes a
 `.mcp.json` in the vault instead.
 
-**`npx obelisk-mcp` only works inside the repo.** The package is `private` and
-unpublished, and inside the repo npx resolves the bin out of the local
+**`npx obelisk-mcp` only works inside the repo.** The package is not on npm
+yet, and inside the repo npx resolves the bin out of the local
 `package.json`. Anywhere else it goes to the registry and 404s. Use the
 absolute path, or `npm link` first and register `obelisk-mcp`.
 :::
