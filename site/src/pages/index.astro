@@ -43,7 +43,7 @@ $ obelisk comment chapter-3.md \\
 comment cq7fk2m9x written to chapter-3.md`;
 
 const mcp = `$ claude mcp add obelisk --scope user -- \\
-    node "$PWD/dist/mcp.mjs" --vault /path/to/vault
+    npx -y obelisk-mcp --vault /path/to/vault
 
 obelisk_list      obelisk_comment
 obelisk_reply     obelisk_resolve`;
@@ -352,9 +352,10 @@ obelisk_reply     obelisk_resolve`;
 		<div class="wrap">
 			<h2>Put the argument next to the sentence.</h2>
 			<p>
-				Obelisk is pre-release: not yet in the Obsidian community plugin
-				directory, and not yet published to npm. Building it from source is a
-				clone, <code>npm install</code>, and <code>npm run build</code>.
+				Obelisk is pre-release. The CLI and the MCP server are on npm as
+				<code>obelisk-mcp</code>; the plugin is not yet in the Obsidian
+				community plugin directory, so installing it is a clone,
+				<code>npm install</code>, and <code>npm run build</code>.
 			</p>
 			<div class="cta">
 				<a class="btn btn-primary" href={`${base}/start/install/`}>Install it</a>

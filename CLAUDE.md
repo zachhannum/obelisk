@@ -76,10 +76,11 @@ ones it touches pass:
 - The CLI, against a scratch note: `obelisk list`, then a `comment`
   that lands and one whose `--quote` is off by a character, which must
   write nothing and say why.
-- The MCP handshake, with no agent in the way: the `printf | node
-  dist/mcp.mjs` smoke test in the README. A server that fails it fails
-  the same way for an agent, which sees only `CONNECTION_CLOSED` and no
-  cause.
+- The MCP handshake, with no agent in the way: the README's smoke test,
+  piped into `node dist/mcp.mjs` rather than the `npx` the README
+  prints, so it answers for the build in front of you. A server that
+  fails it fails the same way for an agent, which sees only
+  `CONNECTION_CLOSED` and no cause.
 
 `core/` has no runner. The anchor arithmetic, the fence scanner, the
 schema fold and the four verbs are pure functions over strings,

@@ -6,14 +6,14 @@ server instead, which carries the same rules in its tool descriptions:
 
 ```
 claude mcp add obelisk --scope user -- \
-  node "$PWD/dist/mcp.mjs" --vault /path/to/your/vault
+  npx -y obelisk-mcp --vault /path/to/your/vault
 ```
 
-See the *Agents* section of [`../README.md`](../README.md) for why that command
-is spelled out the long way, and for how to tell whether it took.
+See the *Agents* section of [`../README.md`](../README.md) for what each flag
+in that command is doing, and for how to tell whether it took.
 
-The fragment below assumes `obelisk` is on the reader's PATH: `npm run build`
-and `npm link` in this repo, until the package is published.
+The fragment below assumes `obelisk` is on the reader's PATH, which is what
+`npm install -g obelisk-mcp` does.
 
 This file is the only copy. The documentation site generates its own page from
 it at build time, so edit it here.

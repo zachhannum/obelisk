@@ -48,6 +48,6 @@ scope, because a comment is stored in the note's own frontmatter.
 ## Status
 
 Pre-release. Anchoring, decoration, the sidebar, suggested edits and the agent
-integration are implemented. It has not been submitted to the Obsidian
-community plugin directory, nothing is published to npm, and it has not been
-exercised against a large vault.
+integration are implemented. The CLI and the MCP server are on npm as
+`obelisk-mcp`. The plugin has not been submitted to the Obsidian community
+plugin directory, and none of it has been exercised against a large vault.
