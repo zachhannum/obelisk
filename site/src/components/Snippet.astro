@@ -5,10 +5,10 @@ interface Props {
 	code: string;
 	lang?: string;
 	title?: string;
-	tone?: "amber" | "green" | "violet";
+	tone?: "accent" | "green" | "violet";
 }
 
-const { code, lang = "bash", title, tone = "amber" } = Astro.props;
+const { code, lang = "bash", title, tone = "accent" } = Astro.props;
 ---
 
 <div class:list={["snip", `tone-${tone}`]}>
@@ -56,14 +56,14 @@ const { code, lang = "bash", title, tone = "amber" } = Astro.props;
 		width: 6px;
 	}
 
-	.tone-amber .snip-dot {
-		background-color: var(--ob-amber);
+	.tone-accent .snip-dot {
+		background-color: var(--ob-accent);
 	}
 	.tone-green .snip-dot {
 		background-color: var(--ob-green);
 	}
-	.tone-violet .snip-dot {
-		background-color: var(--ob-violet);
+	.tone-support .snip-dot {
+		background-color: var(--ob-support);
 	}
 
 	.snip :global(pre) {

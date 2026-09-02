@@ -5,9 +5,9 @@
 	--sl-font: var(--ob-sans);
 	--sl-font-mono: var(--ob-mono);
 
-	--sl-color-accent-low: var(--ob-amber-wash);
-	--sl-color-accent: var(--ob-amber);
-	--sl-color-accent-high: var(--ob-amber);
+	--sl-color-accent-low: var(--ob-accent-wash);
+	--sl-color-accent: var(--ob-accent);
+	--sl-color-accent-high: var(--ob-accent);
 	--sl-color-white: var(--ob-text);
 	--sl-color-gray-1: var(--ob-text);
 	--sl-color-gray-2: var(--ob-text-2);
@@ -25,54 +25,66 @@
 	--sl-color-hairline-light: var(--ob-line);
 	--sl-color-hairline-shade: var(--ob-line-soft);
 	--sl-color-text: var(--ob-text-2);
-	--sl-color-text-accent: var(--ob-amber);
+	--sl-color-text-accent: var(--ob-accent);
 	--sl-color-text-invert: var(--ob-ink);
 
 	--sl-content-width: 47rem;
 	--sl-sidebar-width: 17.5rem;
 	--sl-nav-height: 3.75rem;
-	--sl-text-h1: clamp(2.1rem, 1.4rem + 2.4vw, 3rem);
-	--sl-text-h2: 1.6rem;
-	--sl-text-h3: 1.25rem;
+	--sl-text-h1: clamp(2.2rem, 1.4rem + 2.6vw, 3.2rem);
+	--sl-text-h2: 1.7rem;
+	--sl-text-h3: 1.3rem;
+}
+
+/* The docs stand on the same ground as the landing page. */
+html {
+	background-color: var(--ob-ink);
 }
 
 body {
-	background-color: var(--ob-ink);
-	background-image: radial-gradient(
-			70rem 40rem at 85% -10%,
-			var(--ob-glow-b),
-			transparent 65%
-		),
-		radial-gradient(50rem 34rem at -5% 0%, var(--ob-glow-a), transparent 60%);
-	background-repeat: no-repeat;
 	-webkit-font-smoothing: antialiased;
+}
+
+body::before {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+	content: "";
+	inset: 0;
+	mix-blend-mode: var(--ob-grain-blend);
+	opacity: calc(var(--ob-grain-opacity) * 0.6);
+	pointer-events: none;
+	position: fixed;
+	z-index: -1;
 }
 
 /* ── Chrome ───────────────────────────────────────────────────────────────── */
 
-.header {
-	backdrop-filter: blur(14px) saturate(140%);
+/* `header.header`, not `.header`: Starlight's own Header component is a
+   `div.header` inside it, and an unqualified selector rules a second hairline
+   across the middle of the bar, under the search field. */
+header.header {
+	backdrop-filter: blur(16px) saturate(160%);
 	border-bottom: 1px solid var(--ob-line-soft);
 }
 
 .site-title {
 	color: var(--ob-text);
 	font-family: var(--ob-display);
-	font-size: 1.4rem;
-	letter-spacing: 0.01em;
+	font-size: 1.35rem;
+	font-weight: 800;
+	letter-spacing: -0.03em;
 }
 
 /* The search field is the one control on the page that is not ours by
    default, so it gets the same surface as everything else. */
 site-search button[data-open-modal] {
-	background-color: var(--ob-raise);
+	background-color: color-mix(in srgb, var(--ob-raise) 80%, transparent);
 	border: 1px solid var(--ob-line-soft);
-	border-radius: var(--ob-radius-s);
+	border-radius: 999px;
 	color: var(--ob-text-3);
 }
 
 site-search button[data-open-modal]:hover {
-	border-color: var(--ob-amber);
+	border-color: var(--ob-accent);
 }
 
 site-search kbd {
@@ -132,14 +144,14 @@ site-search kbd {
 }
 
 .sidebar-content a[aria-current="page"] {
-	background-color: var(--ob-amber-wash);
+	background-color: var(--ob-accent-wash);
 	color: var(--ob-text);
 	font-weight: 500;
 	position: relative;
 }
 
 .sidebar-content a[aria-current="page"]::before {
-	background-color: var(--ob-amber);
+	background-image: linear-gradient(180deg, var(--ob-accent), var(--ob-ember));
 	border-radius: 2px;
 	content: "";
 	inset-block: 0.3rem;
@@ -163,9 +175,24 @@ site-search kbd {
 .content-panel h3 {
 	color: var(--ob-text);
 	font-family: var(--ob-display);
-	font-weight: 400;
-	letter-spacing: -0.01em;
-	line-height: 1.15;
+	font-weight: 800;
+	letter-spacing: -0.03em;
+	line-height: 1.08;
+}
+
+/* The page title carries the palette; the rest of the prose does not need to. */
+.content-panel h1 {
+	background-image: linear-gradient(
+		96deg,
+		var(--ob-text),
+		var(--ob-text) 30%,
+		var(--ob-accent) 78%,
+		var(--ob-ember)
+	);
+	background-clip: text;
+	-webkit-background-clip: text;
+	color: transparent;
+	width: fit-content;
 }
 
 .content-panel h4,
@@ -178,6 +205,11 @@ site-search kbd {
 .content-panel h2 {
 	border-top: 1px solid var(--ob-line-soft);
 	padding-top: 1.6rem;
+}
+
+.content-panel h3,
+.content-panel h4 {
+	letter-spacing: -0.02em;
 }
 
 .sl-markdown-content {
@@ -193,13 +225,13 @@ site-search kbd {
 
 .sl-markdown-content a:not(:where(.not-content *)) {
 	color: var(--ob-text);
-	text-decoration-color: var(--ob-amber);
-	text-decoration-thickness: 1px;
+	text-decoration-color: var(--ob-accent);
+	text-decoration-thickness: 2px;
 	text-underline-offset: 3px;
 }
 
 .sl-markdown-content a:hover:not(:where(.not-content *)) {
-	color: var(--ob-amber);
+	color: var(--ob-accent);
 }
 
 .sl-markdown-content code:not(:where(.not-content *)) {
@@ -221,10 +253,11 @@ site-search kbd {
 }
 
 .sl-markdown-content blockquote:not(:where(.not-content *))::before {
-	color: var(--ob-amber);
+	color: var(--ob-accent);
 	content: "†";
-	font-family: var(--ob-display);
-	inset-inline-start: -0.55rem;
+	font-family: var(--ob-mono);
+	font-size: 0.85em;
+	inset-inline-start: -0.5rem;
 	line-height: 1;
 	position: absolute;
 	top: 0.15em;
@@ -232,17 +265,23 @@ site-search kbd {
 	padding-block: 0.1rem;
 }
 
+/* A table is its own scroller. `width: max-content` keeps the rows as wide as
+   the border around them: at `100%` the cells stop where the text does and
+   the frame runs on past them. */
 .sl-markdown-content table:not(:where(.not-content *)) {
 	border: 1px solid var(--ob-line-soft);
-	border-radius: var(--ob-radius-s);
 	border-collapse: separate;
+	border-radius: var(--ob-radius-s);
 	border-spacing: 0;
+	display: block;
 	font-size: 0.9rem;
-	overflow: hidden;
+	max-width: 100%;
+	overflow-x: auto;
+	width: max-content;
 }
 
 .sl-markdown-content th:not(:where(.not-content *)) {
-	background-color: var(--ob-raise);
+	background-color: var(--ob-raise-2);
 	color: var(--ob-text);
 	font-family: var(--ob-mono);
 	font-size: 0.72rem;
@@ -280,13 +319,13 @@ site-search kbd {
 }
 
 .starlight-aside--note {
-	--sl-color-asides-text-accent: var(--ob-violet);
+	--sl-color-asides-text-accent: var(--ob-support);
 }
 .starlight-aside--tip {
 	--sl-color-asides-text-accent: var(--ob-green);
 }
 .starlight-aside--caution {
-	--sl-color-asides-text-accent: var(--ob-amber);
+	--sl-color-asides-text-accent: var(--ob-accent);
 }
 .starlight-aside--danger {
 	--sl-color-asides-text-accent: var(--ob-red);
@@ -298,7 +337,9 @@ site-search kbd {
 	color: var(--ob-text);
 	font-family: var(--ob-display);
 	font-size: 1.3rem;
-	line-height: 1.45;
+	font-weight: 500;
+	letter-spacing: -0.015em;
+	line-height: 1.4;
 	margin-block-end: 2rem;
 }
 
@@ -313,5 +354,5 @@ site-search kbd {
 }
 
 .pagination-links a:hover {
-	border-color: var(--ob-amber);
+	border-color: var(--ob-accent);
 }
