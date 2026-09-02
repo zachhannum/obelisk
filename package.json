@@ -1,17 +1,20 @@
 {
-  "name": "obelisk",
+  "name": "obelisk-mcp",
   "version": "0.1.0",
-  "description": "Inline comments and GitHub-style suggested edits for Obsidian, stored in note frontmatter.",
-  "main": "main.js",
+  "description": "The Obelisk CLI and MCP server: comment on a passage of an Obsidian note, and propose suggested edits, from outside the app.",
   "bin": {
     "obelisk": "dist/cli.mjs",
     "obelisk-mcp": "dist/mcp.mjs"
   },
   "license": "MIT",
-  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zachhannum/obelisk.git"
+  },
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc --noEmit --skipLibCheck && node esbuild.config.mjs production",
+    "prepublishOnly": "npm run build",
     "shots": "npm run build && playwright test",
     "typecheck": "tsc --noEmit --skipLibCheck",
     "version": "node version-bump.mjs"
@@ -33,9 +36,6 @@
     "zod": "^4.5.4"
   },
   "files": [
-    "main.js",
-    "manifest.json",
-    "styles.css",
     "dist/"
   ]
 }
