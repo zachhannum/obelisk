@@ -50,8 +50,8 @@ obelisk comment chapter-3.md \
   --run   r7k2mq
 ```
 
-A quote that is off by a character writes nothing and says why. A quote that
-appears twice is refused until `--near-line` says which one.
+A quote that is off by a character writes nothing, and the command prints the
+reason. A quote that appears twice is refused until `--near-line` picks one.
 
 For a body with a suggestion block in it, read from stdin so the fences survive
 the shell:
@@ -74,14 +74,15 @@ obelisk resolve chapter-3.md cq7fk2m9x
 obelisk resolve chapter-3.md cq7fk2m9x --reopen
 ```
 
-Resolving says the thing the comment asked for has been done. It is a verb an
-agent can call on a comment a person wrote, which is the point of asking it to
-address one.
+Resolving records that what the comment asked for has been done. It is a verb
+an agent can call on a comment a person wrote, which is the point of asking it
+to address one, though nothing on the comment records that an agent was the one
+that closed it.
 
 ## Attribution defaults to agent
 
-`obelisk` writes agent comments unless `--human` says otherwise, because
-attribution must not depend on a model remembering to declare itself. A person
+`obelisk` writes agent comments unless `--human` is passed, because attribution
+must not depend on a model remembering to declare itself. A person
 driving the CLI by hand is an agent until they say they are not.
 
 ## Exit codes

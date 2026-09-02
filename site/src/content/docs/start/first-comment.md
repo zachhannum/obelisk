@@ -41,9 +41,9 @@ composer under the comment; a reply can carry a suggestion block of its own, so
 a counter-proposal is an ordinary reply.
 
 **Resolve** greys the card out and drops the comment from the open count. It
-stays in the list, and its passage stays underlined. Resolving is not hiding.
+stays in the list, and its passage stays underlined.
 
 ## Where it went
 
 Open the note's frontmatter in source mode and it is all there, under one
-`obelisk` key. That file is the whole database.
+`obelisk` key. Nothing is stored anywhere else.

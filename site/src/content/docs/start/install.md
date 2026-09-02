@@ -15,8 +15,8 @@ npm install
 npm run build
 ```
 
-`npm run build` typechecks `src/`, then produces three things: `main.js` for
-the plugin, and `dist/cli.mjs` and `dist/mcp.mjs` for the two bins.
+`npm run build` typechecks the source, then produces three things: `main.js`
+for the plugin, and `dist/cli.mjs` and `dist/mcp.mjs` for the two bins.
 
 ## Load the plugin
 
@@ -53,4 +53,4 @@ obelisk list /path/to/vault/some-note.md
 ```
 
 That prints the note's comments, then its body with line numbers. An empty note
-prints no comments and its body, which is the answer, not an error.
+prints no comments, then its body.

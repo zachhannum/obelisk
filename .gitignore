@@ -6,5 +6,7 @@ main.js
 data.json
 dist/
 site/.astro/
+# Generated from docs/agents-fragment.md by site/scripts/fragment-page.mjs
+site/src/content/docs/agents/fragment.md
 test-results/
 playwright-report/

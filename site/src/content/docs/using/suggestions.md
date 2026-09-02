@@ -23,21 +23,19 @@ a counter-proposal without any new field.
 
 ## How it renders
 
-The body is rendered with Obsidian's own markdown renderer, and each
-`suggestion` code block in the output is then swapped for a diff and an Apply
-button. Post-processing the output rather than registering a global code block
-processor keeps the treatment inside comment bodies, so a ` ```suggestion `
-block typed into a *note* stays an ordinary code block.
+The card shows the proposal as a diff against the quoted passage, word by word,
+with an Apply button in its header. The diff is a picture of the change:
+editing it does nothing, and the Preview tab of the composer draws the same
+picture, so what you see while writing is what the reader gets.
 
-The diff is word-level, against `anchor.quote`, and display-only. The compose
-preview diffs against the same text, so what you see while writing is what the
-reader gets.
+The treatment only happens inside a comment. A ` ```suggestion ` block typed
+into a note stays an ordinary code block.
 
 ## Applying
 
-Apply is refused unless the quoted text is still intact. That is the same
-condition as being attached, so there is no separate staleness check: if the
-comment is attached, the splice lands on exactly the characters the commenter
+Apply is refused unless the quoted passage is still intact, which is the same
+thing as the comment still being attached. So a card offering an Apply button
+is a card whose change will land on exactly the characters the commenter
 read.
 
 When the quote occurs more than once, the occurrence that was highlighted is
@@ -53,14 +51,15 @@ Applying does three things:
 Resolving on apply is deliberate: taking the edit is the strongest answer a
 proposal can get, and once it is taken no other block in the thread can be
 applied anyway. **Reopen** is one click away if the comment also asked
-something the edit did not settle. The `removeCommentOnApply` setting takes the
-same gesture further and throws the record away.
+something the edit did not answer. **Remove comment after applying its
+suggestion**, in the settings tab, takes the same gesture further and throws
+the record away.
 
 Every other comment in the note is unaffected by the splice, because comments
 are found by their quoted text and the splice did not touch theirs.
 
 ## Writes and open notes
 
-Applying is the one write that touches the note body, so it goes through
-Obsidian's `vault.process` rather than the editor, and works on notes that are
-not open.
+Applying is the one thing Obelisk does that changes the prose of a note rather
+than its frontmatter. It does not need the note open: applying from the sidebar
+of a note you have closed since works the same way.

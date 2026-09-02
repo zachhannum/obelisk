@@ -14,10 +14,10 @@ import { ResolvedComment } from "../core/types";
  *
  * A thin wrapper with no logic of its own: every rule is in `core/ops.ts`, and
  * the only thing this file decides is what to say to a model. That matters
- * more here than in the CLI — a refusal is the main channel through which the
- * anchor contract gets taught — so the descriptions carry the verbatim-quote
- * rule and the comment budget, and the failure messages come straight back as
- * text the caller can act on.
+ * more here than in the CLI, because a refusal is the main channel through
+ * which an agent learns the anchor contract, so the descriptions carry the
+ * verbatim-quote rule and the comment budget, and the failure messages come
+ * straight back as text the caller can act on.
  *
  *   claude mcp add obelisk --scope user -- \
  *     node "$PWD/dist/mcp.mjs" --vault /path/to/your/vault
@@ -25,8 +25,7 @@ import { ResolvedComment } from "../core/types";
  * Stdio: the agent spawns one process per session and kills it at the end, so
  * there is nothing to start by hand, and RUN below is per session as a result.
  * Both paths are absolute because the process gets no shell and inherits the
- * agent's cwd, not the vault's. See docs/AGENT-INTEGRATION.md § 6 and the
- * Agents section of README.md.
+ * agent's cwd, not the vault's. See the Agents section of README.md.
  */
 
 const { values } = parseArgs({
@@ -40,7 +39,8 @@ const VAULT = values.vault ?? process.env.OBELISK_VAULT ?? process.cwd();
 /**
  * One run id for the life of the server process, so a review pass leaves one
  * chip in the sidebar rather than twenty. A caller that knows better can pass
- * its own; § 9 leaves parallel agents on one note deliberately unmodelled.
+ * its own. Two agents working the same note in parallel is deliberately not
+ * modelled.
  */
 const RUN = newCommentId();
 

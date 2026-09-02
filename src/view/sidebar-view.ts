@@ -258,11 +258,10 @@ export class ObeliskSidebarView extends ItemView {
 	/**
 	 * One chip per agent pass, beside the fixed filters.
 	 *
-	 * A model does not leave a comment, it leaves twenty, and the gesture a
-	 * reader wants afterwards is *all of these, gone* — so the chip that
-	 * isolates a pass is also where it is dismissed. Without it, undoing a
-	 * review is twenty deletions and no way to tell one pass from the next.
-	 * See docs/AGENT-INTEGRATION.md § 3.
+	 * A review pass is twenty comments arriving at once, and the reader wants to
+	 * act on all twenty together, so the chip that isolates a pass is also where
+	 * it is dismissed. Without it, undoing a review is twenty deletions and no
+	 * way to tell one pass from the next.
 	 */
 	private renderRunChip(chips: HTMLElement, run: Run): void {
 		const chip = chips.createEl("button", { cls: "obelisk-chip is-run" });

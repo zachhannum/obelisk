@@ -9,17 +9,17 @@ import { Comment, Origin, Reply, ResolvedComment } from "./types";
  *
  * Every one of them takes the file's contents and returns new contents, so the
  * CLI and the MCP server are I/O and argument parsing with no rules of their
- * own — and the rules live somewhere they can be reasoned about without a
- * vault. See docs/AGENT-INTEGRATION.md § 5.
+ * own, and the rules live somewhere they can be reasoned about without a
+ * vault.
  *
  * The one rule that matters is the anchor contract: **a caller never supplies
  * a line or a column.** It supplies the quote, and `locate` does the
  * arithmetic by mirroring `resolve()` exactly. A model asked for a line number
  * will produce a plausible one, and a plausible wrong one writes a
- * structurally valid anchor that points somewhere else — invisible until the
- * quote turns out to be ambiguous and the comment silently attaches to the
- * wrong twin. Refusing the field is the only version of this that cannot go
- * quietly wrong. See § 4.
+ * structurally valid anchor that points somewhere else, invisible until the
+ * quote turns out to be ambiguous and the comment attaches to the wrong twin.
+ * Refusing the field is the only version of this that cannot go quietly
+ * wrong.
  */
 
 /**
@@ -34,8 +34,9 @@ export const MAX_COMMENTS_PER_RUN = 20;
 
 /**
  * The budget the tool description quotes. Deliberately below the enforced cap:
- * forty comments is not a review, and neither is twenty. § 9 leaves both
- * numbers open; these are the starting positions.
+ * forty comments is not a review, and neither is twenty. Whether either number
+ * is right is a question for a vault with real passes in it; these are the
+ * starting positions.
  */
 export const SUGGESTED_BUDGET = 8;
 
@@ -192,11 +193,12 @@ export function reply(
 }
 
 /**
- * Mark a thread settled, or reopen it.
+ * Mark a thread resolved, or reopen it.
  *
  * Deliberately callable on a comment a person wrote: an agent asked to address
- * a comment and then close it is doing the job it was asked to do. That it
- * leaves no record of *who* closed it is an open question — see § 9.
+ * a comment and then close it is doing the job it was asked to do. Nothing on
+ * the comment records that an agent was the one that closed it, which is still
+ * an open question.
  */
 export function resolve(
 	text: string,
@@ -297,7 +299,7 @@ function occurrences(frame: DocFrame, quote: string): number[] {
  * loosened search finds the passage anyway, it hands back the note's own
  * wording to copy. What it does not do is *accept* that wording on the
  * caller's behalf. Storing a near-miss writes a comment that is born detached;
- * the exact text has to come from the note. See § 9.
+ * the exact text has to come from the note.
  */
 function notFound(frame: DocFrame, quote: string): Failure {
 	const body = frame.text.slice(frame.bodyStart);

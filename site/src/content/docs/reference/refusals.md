@@ -16,7 +16,7 @@ to be read by whoever asked.
 | `budget` | This run has used its allowance on this note. | 20 per run per note. Start a new run, or say less. |
 | `not-found` | No comment or reply with that id. | Ids come from `list`. |
 | `conflict` | The note changed underneath the write. | Nothing was saved. Run it again. |
-| `empty-body` | A comment with nothing in it. | |
+| `empty-body` | A comment or reply with nothing in it. | Send a body with something in it. |
 
 ## On a quote that is not found
 

@@ -65,8 +65,9 @@ obelisk_reply     obelisk_resolve`;
 			<p class="lede">
 				Select a passage, leave a comment on it, and propose a replacement that
 				applies in one click. Comments are stored in the note's own
-				frontmatter, so they travel with the file through sync, git and export.
-				There is no sidecar database to fall out of step with the vault.
+					frontmatter, so they travel with the file through sync, git, export
+					and rename. There is no sidecar database to fall out of step with the
+					vault.
 			</p>
 			<div class="cta">
 				<a class="btn btn-primary" href={`${base}/start/install/`}>Install it</a>
@@ -74,17 +75,13 @@ obelisk_reply     obelisk_resolve`;
 					>Comments from an agent</a
 				>
 				<span class="install"
-					><span class="prompt">$</span> git clone github.com/zachhannum/obelisk</span
+					><span class="prompt">$</span> git clone https://github.com/zachhannum/obelisk</span
 				>
 			</div>
 		</div>
 
 		<div class="wrap hero-shot">
 			<Screenshot />
-			<p class="shot-caption">
-				A note under review: an agent's proposal, a thread, and a passage
-				already settled
-			</p>
 		</div>
 	</section>
 
@@ -97,7 +94,6 @@ obelisk_reply     obelisk_resolve`;
 					An <em>obelus</em> was the mark an ancient editor drew in the margin of
 					a manuscript to say: this passage is disputed.
 				</blockquote>
-				<cite>Which is the whole plugin</cite>
 			</div>
 		</div>
 	</section>
@@ -121,8 +117,7 @@ obelisk_reply     obelisk_resolve`;
 					<h3>Obsidian</h3>
 					<p>
 						Highlights in the editor, a sidebar in document order, threaded
-						replies, and a composer that is Obsidian's own markdown editor,
-						Cmd+B and <code>[[</code> autocompletion included.
+						replies, and a composer that is Obsidian's own markdown editor.
 					</p>
 				</article>
 				<article class="card support">
@@ -130,9 +125,9 @@ obelisk_reply     obelisk_resolve`;
 					<span class="tag">Command line</span>
 					<h3>obelisk</h3>
 					<p>
-						Four verbs (list, comment, reply, resolve) over the same core.
-						Writes touch frontmatter only and leave the body byte-identical, so
-						they are safe while the note is open.
+						Four verbs (list, comment, reply, resolve) over the same core. A
+						write touches only the frontmatter, so a comment can land on a note
+						you have open in Obsidian without disturbing what you are typing.
 					</p>
 				</article>
 				<article class="card muted">
@@ -154,16 +149,13 @@ obelisk_reply     obelisk_resolve`;
 			<div class="grid-2">
 				<div>
 					<p class="kicker">Storage</p>
-					<h2>Plain YAML, in the file it is about.</h2>
+					<h2>Comments live in the file they are about.</h2>
 					<p style="margin-block-start:1rem">
-						Everything lives under one frontmatter key. It is readable,
-						diffable, and it survives a rename, a sync, and a git merge with no
-						extra machinery. Unknown keys are put back on a round-trip, so a
-						newer version's fields are never stripped by an older one.
-					</p>
-					<p style="margin-block-start:1rem">
-						Migration is a read-time fold rather than a sweep, so a vault that
-						is only ever read is never dirtied.
+						Everything sits under one frontmatter key, in plain YAML that reads
+						and diffs like the rest of the note and moves with it through a
+						rename, a sync or a git merge. Unknown keys are put back on a
+						round-trip, so a newer version's fields are never stripped by an
+						older one.
 					</p>
 				</div>
 				<Snippet code={yaml} lang="yaml" title="chapter-3.md" />
@@ -213,10 +205,11 @@ obelisk_reply     obelisk_resolve`;
 			</div>
 
 			<p style="margin-block-start:1.5rem;max-width:58ch">
-				A comment whose passage is gone says so, in the sidebar, highlighting
-				nothing. It never guesses at a new home and it never quietly
-				disappears. Restore the text and it reattaches on its own, because
-				detachment is derived on every read and never written down.
+				When the quoted passage is gone, the sidebar flags the comment as
+				detached and it highlights nothing. It is never moved onto a different
+				passage and it is never dropped. Restore the text and it reattaches on
+				its own, because nothing about where a comment sits is ever written
+				down.
 			</p>
 		</div>
 	</section>
@@ -227,13 +220,13 @@ obelisk_reply     obelisk_resolve`;
 				<Snippet code={suggestionMd} lang="markdown" title="comment body" tone="green" />
 				<div>
 					<p class="kicker">Suggested edits</p>
-					<h2>A proposal is markdown, not a field.</h2>
+					<h2>One comment can argue and propose at once.</h2>
 					<p style="margin-block-start:1rem">
 						A suggested edit is a fenced <code>suggestion</code> block inside an
-						ordinary comment, the way GitHub does it. It renders as a word-level
-						diff against the quoted passage with an Apply button, so one comment
-						can explain itself and propose the change at once, and a reply can
-						offer a counter-proposal.
+						ordinary comment, the way GitHub does it, rendered as a word-level
+						diff against the quoted passage with an Apply button. The reasoning
+						and the rewrite sit in one body, and a reply can offer a
+						counter-proposal.
 					</p>
 					<p style="margin-block-start:1rem">
 						Applying refuses if the underlying text has changed since the
@@ -268,11 +261,12 @@ obelisk_reply     obelisk_resolve`;
 			</div>
 
 			<p style="margin-block-start:1.5rem;max-width:58ch">
-				There is no way to pass a line or a column. A model asked for one will
-				produce a plausible wrong number, and a plausible wrong number attaches
-				a comment to the wrong paragraph without ever looking like an error. The
-				quote has to appear in the note character for character; if it does not,
-				nothing is written and the tool says why.
+			A line number is never an anchor. A model asked for one will produce a
+			plausible wrong number, and a plausible wrong number attaches a comment
+			to the wrong paragraph without ever looking like an error, so a line is
+			only ever a tiebreak between two identical quotes. The quote itself has
+			to appear in the note character for character; if it does not, nothing
+			is written and the tool says why.
 			</p>
 		</div>
 	</section>
@@ -295,9 +289,9 @@ obelisk_reply     obelisk_resolve`;
 				<div class="feature">
 					<h3>The editor you already use</h3>
 					<p>
-						Comments are written in Obsidian's own embedded editor, so
-						shortcuts, list continuation and live preview behave as they do
-						anywhere else.
+						Comments are written in Obsidian's own markdown editor, so Cmd+B,
+						list continuation, <code>[[</code> autocompletion and live preview
+						behave as they do anywhere else.
 					</p>
 				</div>
 				<div class="feature">
@@ -317,7 +311,7 @@ obelisk_reply     obelisk_resolve`;
 				<div class="feature">
 					<h3>Resolved, not hidden</h3>
 					<p>
-						A settled comment stays in the list, greyed, because it still marks
+						A resolved comment stays in the list, greyed, because it still marks
 						its passage in the note. The Open filter is one chip away.
 					</p>
 				</div>

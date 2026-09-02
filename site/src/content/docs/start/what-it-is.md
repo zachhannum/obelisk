@@ -9,9 +9,6 @@ Comments are stored in the note's own frontmatter, so they travel with the file
 through sync, git, export and rename. There is no sidecar database and nothing
 to keep in step with the vault.
 
-> An *obelus* (†) was the mark ancient editors drew in the margin of a
-> manuscript to say: this passage is disputed.
-
 ## Three front ends over one format
 
 | | What it is | Where it runs |
@@ -44,6 +41,9 @@ the agent is one the reader already has open in another window.
 There is no sidecar store for machine comments either. An agent's comment is
 the same object as a person's, in the same file, under the same anchoring
 rules.
+
+Comments go on markdown notes. Canvas, PDF and other file types are out of
+scope, because a comment is stored in the note's own frontmatter.
 
 ## Status
 

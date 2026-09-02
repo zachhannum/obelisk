@@ -13,9 +13,9 @@ verb, no logic of its own.
 | `obelisk_reply` | Reply to a comment. |
 | `obelisk_resolve` | Resolve or reopen a comment. |
 
-The descriptions are the point. A refusal is the main channel through which the
-anchor contract gets taught, so the rules are stated up front and every refusal
-comes back as a tool error carrying the message that fixes the call.
+The tool descriptions carry the anchor rules, and every refusal comes back as a
+tool error with the message that fixes the call. Between them, that is how an
+agent learns what a usable quote looks like.
 
 ## Register it
 
@@ -26,15 +26,15 @@ claude mcp add obelisk --scope user -- \
   node "$PWD/dist/mcp.mjs" --vault /path/to/your/vault
 ```
 
-`$PWD` fills in the repo's half, so the vault is the only path you supply, and
+`$PWD` fills in the repo's path, so the vault is the only one you supply, and
 it has to be a real one.
 
 :::caution[Two things bite here, both silently]
 **Scope.** `claude mcp add` defaults to `local`, which files the server under
 the directory you happened to run it in. Run it in the repo and you get a
-server that exists only while you are in the repo, which is the one place with
-no notes to comment on. `--scope user` registers it everywhere; `--scope
-project` writes a `.mcp.json` in the vault instead.
+server registered for the repo rather than for the vault you want to comment
+on. `--scope user` registers it everywhere; `--scope project` writes a
+`.mcp.json` in the vault instead.
 
 **`npx obelisk-mcp` only works inside the repo.** The package is `private` and
 unpublished, and inside the repo npx resolves the bin out of the local
@@ -72,6 +72,5 @@ printf '%s\n' \
   | node dist/mcp.mjs --vault /abs/path/to/vault
 ```
 
-That prints the handshake and then the four tools. A server that fails this
-fails the same way for an agent, which is worth knowing before you go looking
-at the agent's end of it.
+That prints the handshake and then the four tools. If it fails here, the fault
+is on this side, and there is no point looking at the agent's end of it.

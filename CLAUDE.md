@@ -16,7 +16,9 @@ wins and the quick fix waits for its own commit.
 - `site/` is the documentation site: Astro and Starlight, its own
   `package.json`, its own `node_modules`, built by its own workflow. Nothing
   in it is imported by `src/`, and `npm run build` at the root does not touch
-  it.
+  it. Its *Agents without MCP* page is generated from
+  `docs/agents-fragment.md` before every site build, so the fragment a reader
+  pastes into a vault has one source; the generated page is gitignored.
 - `test/` is the capture harness: Playwright driving a real Obsidian,
   whose only output is the six PNGs under `site/src/assets/shots/`. It is
   the one thing outside `site/` that reads `site/`, for the design tokens
@@ -44,10 +46,10 @@ wins and the quick fix waits for its own commit.
   the trust boundary: a malformed entry is dropped with a console
   warning, never thrown, or one bad comment takes the sidebar down for
   the whole note.
-- The decisions that are expensive to change live in
-  [`docs/DESIGN.md`](docs/DESIGN.md) and
-  [`docs/AGENT-INTEGRATION.md`](docs/AGENT-INTEGRATION.md). A change
-  that contradicts one of them updates it in the same commit.
+- The decisions that are expensive to change are the ones in this
+  section, and the reasoning for each lives in the doc comment at the top
+  of the file that implements it. A change that contradicts one of them
+  rewrites that comment, and this section, in the same commit.
 - Work is tracked in GitHub issues. `publishing` covers the two
   official channels, the Obsidian directory and npm; `obsidian` and
   `mcp` mark which of them an issue serves. An issue's acceptance
