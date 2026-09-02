@@ -87,10 +87,9 @@ obelisk:
 ---
 ```
 
-A comment is markdown and nothing else. A proposed edit is a ` ```suggestion `
-fenced block inside that markdown, whose content replaces exactly the anchored
-range when applied. There is no second, poorer text format beside the body, and
-a comment can hold prose, a link and a proposal at once.
+A comment is one piece of markdown. A proposed edit is a ` ```suggestion `
+fenced block inside it, whose content replaces exactly the anchored range when
+applied, so one comment can hold prose, a link and a proposal at once.
 
 The `quote` is what a comment is anchored by. The line/column range records
 where the passage was when the comment was written. It orders the sidebar and

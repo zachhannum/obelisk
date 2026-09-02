@@ -92,9 +92,9 @@ decorating nothing. There is no partial match, no fuzzy re-find, no scoring of
 prefix or suffix context. If the text a comment was written on is edited or
 deleted, the comment says so instead of guessing where it went.
 
-The strictness is the point. A search that scores near misses is confident and
-sometimes wrong: it moves a highlight to whichever other paragraph scored best
-when you delete a sentence, and it does that silently. A detached comment is a
+A search that scores near misses is confident and sometimes wrong: it moves a
+highlight to whichever other paragraph scored best when you delete a sentence,
+and it does that silently. A detached comment is a
 correct answer that asks the reader for help, which costs less than a
 confident wrong one.
 
@@ -146,11 +146,11 @@ edit it reads as lag rather than as an answer.
 
 ## 4. Suggested edits
 
-**A suggestion is markdown, not a field.** A proposal is a fenced block tagged
-`suggestion` inside the comment body, exactly as on GitHub; its content
-replaces the anchored range. Schema 1 kept it in a `suggestion.replacement`
-key beside the body, and that shape is folded into the body on read
-(`store/frontmatter.ts`, `foldLegacySuggestion`) and dropped on the next write.
+**A proposal is part of the body.** It is a fenced block tagged `suggestion`
+inside the comment, exactly as on GitHub, and its content replaces the anchored
+range. Schema 1 kept it in a `suggestion.replacement` key beside the body, and
+that shape is folded into the body on read (`store/frontmatter.ts`,
+`foldLegacySuggestion`) and dropped on the next write.
 
 A field beside the body makes "a comment" two things: a prose part that is
 markdown and a proposal part that is a bare string with its own textarea, its

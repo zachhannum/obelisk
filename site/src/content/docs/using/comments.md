@@ -3,9 +3,9 @@ title: Comments and replies
 description: Writing, editing, deleting and threading comments.
 ---
 
-A comment is markdown and nothing else. There is no title field, no plain-text
-body, and no separate suggestion field. Anything that wants to sit next to a
-proposal is written as markdown beside it.
+A comment is one piece of markdown. Whatever you would write in a note goes in
+the body, a proposed rewrite included, so there is nothing else to fill in and
+nothing that has to sit in a field of its own.
 
 ## Writing
 

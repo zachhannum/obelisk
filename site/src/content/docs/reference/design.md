@@ -19,7 +19,7 @@ one import worth checking by eye.
 
 ## Decisions
 
-**Frontmatter, not a sidecar.** Comments travel with the note through sync,
+**Comments live in the note's frontmatter.** They travel with it through sync,
 git, export and rename with no extra machinery.
 
 **The quote is the anchor.** Nothing fuzzy-matches or re-finds. A quote that is
@@ -28,9 +28,9 @@ not found detaches the comment and says so.
 **Detachment is derived, never stored.** Nothing about where a comment sits is
 written back to disk.
 
-**A suggestion is markdown.** A fenced block inside an ordinary body rather
-than a field beside it, so a proposal composes with prose, alternatives and
-counter-proposals without any new storage.
+**A suggestion is a fenced block in the comment body.** A proposal composes
+with prose, with alternatives, and with a counter-proposal in a reply, and none
+of that needs new storage.
 
 **Errors are returned, not thrown.** `Outcome<T>` with a failure code, so a
 front end renders a refusal.
