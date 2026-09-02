@@ -1,0 +1,95 @@
+name: release
+
+# The Obsidian directory installs a plugin from a release's assets, and
+# `main.js` is gitignored, so the three files it wants exist only as build
+# output. This is the one job that builds them for anyone but the author.
+on:
+  push:
+    tags: ["[0-9]+.[0-9]+.[0-9]+"]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Which part of the version to raise"
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+permissions:
+  contents: write
+  # Trusted publishing: npm authenticates the workflow over OIDC, so there is
+  # no token in the repository's secrets.
+  id-token: write
+
+jobs:
+  # A tag pushed with `GITHUB_TOKEN` starts no workflow run of its own, so a
+  # dispatched release cannot hand off to the push trigger. It cuts the tag
+  # here and `release` carries on with it.
+  #
+  # Separate from `release` so that re-running the failed half of a dispatched
+  # release does not raise the version a second time.
+  tag:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.bump.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      # `npm version` rewrites four files through version-bump.mjs, which
+      # wants nothing installed.
+      - id: bump
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          npm version "$BUMP" -m "Release %s"
+          git push --follow-tags
+          node -p "'tag=' + require('./package.json').version" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: tag
+    # `tag` is skipped for a tag push, which is not a failure.
+    if: ${{ !cancelled() && !failure() }}
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ needs.tag.outputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.tag.outputs.tag || github.ref_name }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+      - run: npm ci
+
+      # `npm version` writes every version number from one place, so a tag
+      # that disagrees with either file was typed by hand. The directory
+      # matches the tag against the manifest, and npm will not take a version
+      # twice, so both are worth catching before the build.
+      - name: Check the tag against the versions
+        run: |
+          for file in manifest.json package.json; do
+            version=$(node -p "require('./$file').version")
+            if [ "$version" != "$TAG" ]; then
+              echo "$file says $version, the tag says $TAG" >&2
+              exit 1
+            fi
+          done
+
+      - run: npm run build
+
+      - name: Attach the plugin to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 ||
+            gh release create "$TAG" --title "$TAG" --generate-notes
+          gh release upload "$TAG" main.js manifest.json styles.css --clobber
+
+      # Last, because a release can be edited afterwards and a published
+      # version cannot.
+      - run: npm publish
