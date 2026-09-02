@@ -43,8 +43,9 @@ npm link
 That puts `obelisk` and `obelisk-mcp` on your PATH, pointing at the built files
 in the repo. Rebuild and the linked commands follow.
 
-The package is not on npm yet, so `npx obelisk-mcp` resolves only inside this
-repo. Anywhere else npm goes to the registry and 404s.
+For the commands without the source, `npm install -g obelisk-mcp` is the
+published package, and `npx -y obelisk-mcp` runs it without installing
+anything.
 
 ## Check it
 
