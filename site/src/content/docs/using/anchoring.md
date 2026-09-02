@@ -7,8 +7,9 @@ description: How a comment finds its passage, and what happens when it cannot.
 
 Found → the comment attaches there. Not found → the comment is **detached**:
 listed in the sidebar, flagged, decorating nothing. There is no partial match
-and no fuzzy re-find. If the text a comment was written on is edited or
-deleted, the comment says so instead of guessing where it went.
+and no fuzzy re-find. Edit or delete the text a comment was written on and the
+sidebar flags it, rather than moving the highlight to whichever passage looks
+closest.
 
 ## Bring the text back and the comment comes back
 

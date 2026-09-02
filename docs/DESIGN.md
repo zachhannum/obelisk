@@ -89,14 +89,14 @@ broken. It is now one rule.
 `resolve()` searches the body for `anchor.quote`. Found → the comment attaches
 there. Not found → the comment is **detached**: listed in the sidebar, flagged,
 decorating nothing. There is no partial match, no fuzzy re-find, no scoring of
-prefix or suffix context. If the text a comment was written on is edited or
-deleted, the comment says so instead of guessing where it went.
+prefix or suffix context. Edit or delete the text a comment was written on and
+the comment is flagged, rather than moved to wherever the text most looks like
+it went.
 
 A search that scores near misses is confident and sometimes wrong: it moves a
 highlight to whichever other paragraph scored best when you delete a sentence,
-and it does that silently. A detached comment is a
-correct answer that asks the reader for help, which costs less than a
-confident wrong one.
+and it does that silently. A detached flag is a correct answer the reader can
+act on, and it costs less than a confident wrong one.
 
 **Detachment is derived, never stored.** It is recomputed on every resolve, so
 undoing a deletion reattaches the comment on its own.
@@ -228,8 +228,8 @@ the one the sidebar and the editor were highlighting. The user applies what
 they were looking at, rather than being refused for an ambiguity that was never
 visible to them.
 
-The splice moves every comment after it, and none of them care: they are found
-by their quoted text, which the splice did not touch. The applied comment is
+The splice moves every comment after it, and none of them are disturbed: they
+are found by their quoted text, which the splice did not touch. The applied comment is
 the one exception. It is re-anchored onto its replacement, so it stays attached
 to the passage it just changed instead of detaching on text that no longer
 exists.
@@ -252,8 +252,8 @@ one renderer, so what you see while writing is what the reader gets.
 highlight, a widget decoration for the trailing marker. This is the primary
 path and the only one where highlights track edits in real time.
 
-**Reading view** shows nothing. Anchoring against rendered HTML loses to any
-quote spanning markup, a baked-in highlight has to be re-rendered rather than
+**Reading view** shows nothing. Anchoring against rendered HTML fails on any
+quote that spans markup, a baked-in highlight has to be re-rendered rather than
 dispatched to whenever a comment changes, and what survives all that is a
 hairline underline nobody notices. Comments live in the editor; Reading view is
 for reading.
@@ -306,7 +306,7 @@ is a chip in front of the reader rather than a preference two menus away.
   from its stored hint. A resolve runs 250ms after typing stops rather than per
   keystroke, and the highlights hold their place in between by mapping ranges
   inside CodeMirror, so the cost is bounded in practice. A note with a thousand
-  comments would still want a cache keyed on document version.
+  comments would still need a cache keyed on document version.
 
 ---
 

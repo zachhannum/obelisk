@@ -50,7 +50,7 @@ not retype it, tidy it, or straighten its quotation marks. If the quote is not
 found, or is found more than once, nothing is written and you are told which.
 
 **A line is never the anchor.** Do not count lines, and do not pass a number
-you worked out yourself. `--near-line` does one thing: it says which of two
+you worked out yourself. `--near-line` does one thing: it picks which of two
 identical quotes you meant, and the number for it is copied from what `list`
 printed. If a quote is ambiguous, quoting more of the passage is the better
 answer.
@@ -82,5 +82,5 @@ run, but that is a backstop, not a target.)
 **Answering a comment someone left you.** `obelisk list --open` gives you the
 open comments with the passage each one is about. Make the edit in the note
 yourself, since there is no apply verb and you do not need one, then
-`obelisk resolve <note> <id>`. Resolving says the thing the comment asked for
-has been done, so only say it when it has.
+`obelisk resolve <note> <id>`. Resolving records that what the comment asked
+for has been done, so resolve only once it has been.

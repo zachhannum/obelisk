@@ -43,8 +43,8 @@ parts that run outside Obsidian.
 - **Survives editing.** A comment is anchored to the text it quotes, so it
   keeps up with edits anywhere else in the note, including ones made outside
   Obsidian. Edit or delete the quoted passage itself and the comment detaches:
-  flagged in the sidebar, highlighting nothing, never guessing at a new home
-  and never quietly disappearing. Restore the text and it reattaches. Resolved
+  flagged in the sidebar, highlighting nothing, never moved onto a different
+  passage and never dropped. Restore the text and it reattaches. Resolved
   comments are exempt from the flag, because a resolved comment usually
   detaches when the edit it asked for is made.
 - **The editor you already use.** Comments are written in Obsidian's own

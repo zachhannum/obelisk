@@ -29,9 +29,9 @@ The write path mirrors resolution exactly:
 
 The third case fires constantly, because a model asked to quote a passage will
 paraphrase it, normalize its whitespace, or straighten its quotation marks.
-Refusing there is what keeps a review honest. Accepting a near miss would write
-a comment that is born detached, which reads as the plugin losing their
-comment.
+Refusing there is what keeps a bad anchor out of the note. Accepting a near
+miss would write a comment that is born detached, which reads to the reader as
+the plugin losing their comment.
 
 Matching is strict. A looser search runs only *after* a failure: if
 straightening the punctuation and collapsing the whitespace finds exactly one

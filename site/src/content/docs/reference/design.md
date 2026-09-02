@@ -23,7 +23,7 @@ one import worth checking by eye.
 git, export and rename with no extra machinery.
 
 **The quote is the anchor.** Nothing fuzzy-matches or re-finds. A quote that is
-not found detaches the comment and says so.
+not found detaches the comment, and the sidebar flags it.
 
 **Detachment is derived, never stored.** Nothing about where a comment sits is
 written back to disk.
@@ -40,9 +40,9 @@ note* button. It would buy key storage, provider drift, streaming UI, cost
 display, retries and a mobile story, all to duplicate an agent already open in
 another window.
 
-**Reading view shows nothing.** Anchoring against rendered HTML loses to any
-quote spanning markup, and what survived the compromises was a hairline nobody
-noticed. Comments live in the editor.
+**Reading view shows nothing.** Anchoring against rendered HTML fails on any
+quote that spans markup, and what survived the compromises was a hairline
+nobody noticed. Comments live in the editor.
 
 ## Open questions
 
@@ -65,7 +65,7 @@ resolve, which is the bookkeeping this design deleted on purpose.
 
 **Performance ceiling.** Quote search is O(document × comments) per resolve,
 with each comment's scan stopping as soon as occurrences start getting further
-from its hint. A note with a thousand comments would want a cache keyed on
+from its hint. A note with a thousand comments would need a cache keyed on
 document version.
 
 **Canvas, PDF, and non-markdown files.** Out of scope. The store assumes a

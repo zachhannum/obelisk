@@ -106,9 +106,9 @@ So the write path takes `--quote` and mirrors `resolve()` exactly:
 
 The third case fires constantly, because a model asked to quote a passage will
 paraphrase it, normalize its whitespace, or straighten its quotation marks.
-Refusing there is what keeps the format honest: accepting a near miss stores a
-comment that is born detached, which reads to the user as the plugin losing
-their comment.
+Refusing there is what keeps a bad anchor out of the file. Accepting a near
+miss stores a comment that is born detached, which reads to the user as the
+plugin losing their comment.
 
 Matching is strict, and the loosened search runs only *after* a failure. If
 straightening the punctuation and collapsing the whitespace finds exactly one
@@ -129,13 +129,13 @@ arithmetic, the suggestion parser, id generation, and `normalize`/`serialize`
 in `core/schema.ts`. `CommentStore` stays behind in
 `store/` as the eighty lines that actually need Obsidian. `src/types.ts` is a
 facade over `core/types.ts` plus the settings and view ids that only mean
-something inside the app, so no plugin file has to know about the split.
+something inside the app, so the split does not reach any plugin file.
 
 The code that only the bins need is `core/note.ts`, the frontmatter block over
-a string, and `core/ops.ts`, the four verbs. `note.ts` asks `frameFrom` where
-the body begins rather than deciding for itself, because that boundary is what
-every anchor in the file is measured from, and two answers to it would shift
-all of them at once.
+a string, and `core/ops.ts`, the four verbs. `note.ts` takes the start of the body
+from `frameFrom` rather than working it out again, because that boundary is
+what every anchor in the file is measured from, and two answers to it would
+shift all of them at once.
 
 ```
 obelisk list <note> [--open] [--json]
@@ -189,7 +189,8 @@ not name its own, so a session's pass leaves one chip in the sidebar rather
 than twenty. Stdio means one process per session, spawned and killed by the
 agent, so there is no server to start and nothing to keep running.
 
-Registering it is where the sharp edges are, and neither announces itself.
+Registering it is where the sharp edges are, and neither one produces an
+error.
 `claude mcp add` defaults to `--scope local`, which files the server under the
 directory it was run in, so running it here registers a server that only exists
 while you are in this repo. And `npx obelisk-mcp` resolves only *inside* this
@@ -222,8 +223,8 @@ write splices a new frontmatter block in front of *unchanged* body text, so a
 note Obsidian has open keeps its editor state and every one of its anchors.
 
 The stronger version is a desktop-only localhost socket in the plugin, which
-the CLI would prefer when it answers, so writes go through `processFrontMatter`
-whenever Obsidian is up. It is meaningfully more code, and mobile-safe by
+the CLI would use whenever it is listening, so writes go through
+`processFrontMatter` whenever Obsidian is up. It is meaningfully more code, and mobile-safe by
 construction because the socket never opens there and `isDesktopOnly` stays
 `false`. It changes no format and no command, so it stays available as an
 upgrade for whenever the guard turns out not to be enough.
