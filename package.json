@@ -1,6 +1,6 @@
 {
   "name": "obelisk-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The Obelisk CLI and MCP server: comment on a passage of an Obsidian note, and propose suggested edits, from outside the app.",
   "bin": {
     "obelisk": "dist/cli.mjs",
