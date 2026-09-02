@@ -19,24 +19,29 @@ agent learns what a usable quote looks like.
 
 ## Register it
 
+From the vault:
+
 ```bash
-claude mcp add obelisk --scope user -- \
-  npx -y obelisk-mcp --vault /path/to/your/vault
+cd /path/to/vault
+claude mcp add obelisk -- npx -y obelisk-mcp --vault "$PWD"
 ```
 
 `-y` because the agent gives npx no terminal to ask in, so the first run has to
 install the package rather than stop to ask whether it may.
 
-:::caution[The one that bites silently]
-`claude mcp add` defaults to `--scope local`, which files the server under the
-directory you happened to run it in, rarely the vault. `--scope user`
-registers it everywhere; `--scope project` writes a `.mcp.json` in the vault
-instead.
+:::caution[Scope is the one that bites silently]
+`claude mcp add` defaults to `--scope local`, which registers the server for
+sessions started in that one directory: run from the vault, that is the vault.
+`--scope user` registers it in every project on the machine, all of them
+pointed at the one vault `--vault` names, which is a surprise unless that is
+what you wanted. `--scope project` writes a `.mcp.json` in the vault instead.
 :::
 
 The vault path has to be absolute and has to exist. The server is spawned
 without a shell, so a `~` in a config file stays a literal tilde, and the
 process inherits the agent's working directory rather than the vault's.
+Expanding `$PWD` in the shell that registers it is the short way to an absolute
+path.
 
 ## There is nothing to start
 

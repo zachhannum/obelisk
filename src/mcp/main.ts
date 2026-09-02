@@ -20,8 +20,8 @@ import { ResolvedComment } from "../core/types";
  * verbatim-quote rule, and the failure messages come straight back as text the
  * caller can act on.
  *
- *   claude mcp add obelisk --scope user -- \
- *     npx -y obelisk-mcp --vault /path/to/your/vault
+ *   cd /path/to/vault
+ *   claude mcp add obelisk -- npx -y obelisk-mcp --vault "$PWD"
  *
  * Stdio: the agent spawns one process per session and kills it at the end, so
  * there is nothing to start by hand, and RUN below is per session as a result.

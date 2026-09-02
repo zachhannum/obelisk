@@ -1,12 +1,15 @@
 ---
 title: Install
-description: Build Obelisk from source and load it into a vault.
+description: The plugin, the CLI, and the MCP server.
 ---
+
+Obelisk is three pieces that install separately. The plugin is the one a reader
+needs; the CLI and the MCP server are how an agent reaches the same comments.
+
+## The plugin
 
 Obelisk is not in the community plugin directory yet, so installing it means
 building it and symlinking the repo into a vault.
-
-## Build it
 
 ```bash
 git clone https://github.com/zachhannum/obelisk
@@ -17,8 +20,6 @@ npm run build
 
 `npm run build` typechecks the source, then produces three things: `main.js`
 for the plugin, and `dist/cli.mjs` and `dist/mcp.mjs` for the two bins.
-
-## Load the plugin
 
 Symlink the repo into the vault's plugin folder:
 
@@ -34,20 +35,14 @@ Community plugins have to be turned on for the vault before anything appears in
 the list. On mobile, the plugin loads but has not been tested there.
 :::
 
-## Put the CLI on your PATH
+## The CLI
 
 ```bash
-npm link
+npm install -g obelisk-mcp
 ```
 
-That puts `obelisk` and `obelisk-mcp` on your PATH, pointing at the built files
-in the repo. Rebuild and the linked commands follow.
-
-For the commands without the source, `npm install -g obelisk-mcp` is the
-published package, and `npx -y obelisk-mcp` runs it without installing
-anything.
-
-## Check it
+One package, two commands: `obelisk` is the CLI, `obelisk-mcp` is the MCP
+server. Check the install against a note:
 
 ```bash
 obelisk list /path/to/vault/some-note.md
@@ -55,3 +50,40 @@ obelisk list /path/to/vault/some-note.md
 
 That prints the note's comments, then its body with line numbers. An empty note
 prints no comments, then its body.
+
+From a clone, `npm link` puts the same two commands on PATH pointing at the
+built files in the repo, so a rebuild is picked up without reinstalling.
+
+## The MCP server
+
+There is nothing to install and nothing to start. The agent spawns a process
+per session over stdio, so all the server needs is a registration that names
+the vault. From the vault:
+
+```bash
+cd /path/to/vault
+claude mcp add obelisk -- npx -y obelisk-mcp --vault "$PWD"
+```
+
+The shell expands `$PWD` at registration, so an absolute path is what lands in
+the config. That matters: the server is spawned without a shell, so a `~` in a
+config file stays a literal tilde, and the process inherits the agent's working
+directory rather than the vault's.
+
+`-y` because the agent gives npx no terminal to ask in, so the first run has to
+install the package rather than stop to ask whether it may.
+
+### Which scope
+
+`claude mcp add` defaults to `--scope local`, which registers the server for
+sessions started in that one directory. Run from the vault, that is the vault.
+
+- `--scope user` registers it in every project on the machine, all of them
+  pointed at whichever vault `--vault` names. Use it for a vault you comment on
+  from elsewhere; it is a surprise otherwise.
+- `--scope project` writes a `.mcp.json` in the vault, for a vault that is a
+  repo everyone working in it should get the server from.
+
+A vault path that does not exist makes the server exit before it says anything,
+which reaches the agent as `CONNECTION_CLOSED` and names nothing. `claude mcp
+get obelisk` prints the path it was given.

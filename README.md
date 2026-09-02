@@ -114,11 +114,11 @@ obelisk comment note.md --quote "The horse, which had been standing there, bolte
   --body "Two clauses fighting over one sentence." --run r7k2mq
 ```
 
-For an agent that speaks MCP, register the server with it:
+For an agent that speaks MCP, register the server with it. From the vault:
 
 ```bash
-claude mcp add obelisk --scope user -- \
-  npx -y obelisk-mcp --vault /path/to/your/vault
+cd /path/to/vault
+claude mcp add obelisk -- npx -y obelisk-mcp --vault "$PWD"
 ```
 
 `-y` because the agent gives npx no terminal to ask in, so the first run has to
@@ -126,11 +126,13 @@ install the package rather than stop to ask whether it may.
 
 Two things bite here, both of them silent:
 
-- **Scope.** `claude mcp add` defaults to `local`, which files the server under
-  the directory you happened to run it in, rarely the vault. `--scope user`
-  registers it everywhere; `--scope project` writes a `.mcp.json` in the vault
-  instead, if the vault is a repo and everyone working in it should get the
-  server.
+- **Scope.** `claude mcp add` defaults to `local`, which registers the server
+  for sessions started in that one directory; run from the vault, that is the
+  vault. `--scope user` registers it in every project on the machine, all of
+  them pointed at the one vault `--vault` names, which is a surprise unless the
+  vault is one you comment on from elsewhere. `--scope project` writes a
+  `.mcp.json` in the vault, if the vault is a repo and everyone working in it
+  should get the server.
 - **The vault path.** A path that does not exist makes the server exit before
   it says anything, which reaches the agent as `CONNECTION_CLOSED` and names
   nothing; if you see that, the path in `claude mcp get obelisk` is the first
@@ -138,7 +140,8 @@ Two things bite here, both of them silent:
 
 The vault path has to be absolute. The server is spawned without a shell, so a
 `~` in a config file stays a literal tilde, and the process inherits the
-agent's working directory rather than the vault's.
+agent's working directory rather than the vault's. Expanding `$PWD` in the
+shell that registers it is the short way to an absolute path.
 
 **There is nothing to start.** It speaks MCP over stdio: the agent spawns a
 process when a session opens and kills it when the session ends, so
