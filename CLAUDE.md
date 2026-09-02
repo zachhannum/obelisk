@@ -114,9 +114,11 @@ be.
   rather than wait for a branch of its own.
 - Never commit `main.js`, `dist/`, or `data.json`. They are build
   output and local state, and `.gitignore` covers them for that reason.
-- `npm version` runs `version-bump.mjs`, which keeps `manifest.json`
-  and `versions.json` in step. Editing either by hand is how they
-  drift.
+- `npm version` is the only place a version number is typed. It runs
+  `version-bump.mjs`, which rewrites `manifest.json`, `versions.json`
+  and `server.json` and stages them; the MCP server reads its version
+  off `package.json`. The MCP registry and the Obsidian directory both
+  reject a version that disagrees with itself rather than warning.
 
 ## CI scaffolding
 
