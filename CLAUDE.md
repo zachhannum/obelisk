@@ -142,6 +142,23 @@ gate; only `npm run build` is.
 opens a pull request with the result. It never pushes to main, and it
 merges nothing.
 
+`.github/workflows/release.yml` runs on a version tag: it builds,
+attaches `main.js`, `manifest.json` and `styles.css` to the release,
+and publishes to npm. It refuses a tag that disagrees with
+`manifest.json` or `package.json`. The tag carries no `v`, which is
+what `.npmrc` is for.
+
+A release is `npm version <patch|minor|major>` and `git push
+--follow-tags`, or the same from the Actions tab, where the workflow
+raises the version and pushes the version commit to main itself. That
+push is the one thing any workflow here writes to main, and protecting
+the branch would block it.
+
+npm authenticates the publish through trusted publishing, so no token
+lives in the repository's secrets. The trusted publisher configured on
+npmjs.com names this file by filename, so renaming it stops the
+publish.
+
 ## Documentation rules
 
 Applies to code comments and all documentation, internal (CLAUDE.md,
