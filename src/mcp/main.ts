@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { version } from "../../package.json";
 import { newCommentId } from "../core/id";
 import * as ops from "../core/ops";
 import { Outcome } from "../core/ops";
@@ -44,7 +45,7 @@ const VAULT = values.vault ?? process.env.OBELISK_VAULT ?? process.cwd();
  */
 const RUN = newCommentId();
 
-const server = new McpServer({ name: "obelisk", version: "0.1.0" });
+const server = new McpServer({ name: "obelisk", version });
 
 const noteArg = z
 	.string()
