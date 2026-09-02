@@ -6,7 +6,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { newCommentId } from "../core/id";
 import * as ops from "../core/ops";
-import { Outcome, SUGGESTED_BUDGET } from "../core/ops";
+import { Outcome } from "../core/ops";
 import { ResolvedComment } from "../core/types";
 
 /**
@@ -16,8 +16,8 @@ import { ResolvedComment } from "../core/types";
  * the only thing this file decides is what to say to a model. That matters
  * more here than in the CLI, because a refusal is the main channel through
  * which an agent learns the anchor contract, so the descriptions carry the
- * verbatim-quote rule and the comment budget, and the failure messages come
- * straight back as text the caller can act on.
+ * verbatim-quote rule, and the failure messages come straight back as text the
+ * caller can act on.
  *
  *   claude mcp add obelisk --scope user -- \
  *     node "$PWD/dist/mcp.mjs" --vault /path/to/your/vault
@@ -118,10 +118,7 @@ server.registerTool(
 			"`body` is markdown. To propose a specific rewrite, put it in a " +
 			"```suggestion fenced block inside the body — its contents replace " +
 			"exactly the quoted passage when the reader clicks Apply, so a " +
-			"comment can explain itself and propose the change at once.\n\n" +
-			`Leave at most ${SUGGESTED_BUDGET} comments on a note. A review is ` +
-			"the few remarks worth reading, not every remark that could be " +
-			"made; a sidebar with forty cards in it does not get opened twice.",
+			"comment can explain itself and propose the change at once.",
 		inputSchema: {
 			note: noteArg,
 			quote: z

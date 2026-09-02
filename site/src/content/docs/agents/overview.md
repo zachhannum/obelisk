@@ -49,13 +49,6 @@ arriving at once, and the reader wants to be able to act on all twenty
 together: a shared id gives them one chip to filter the pass with and one × to
 dismiss it by, with an undo behind it.
 
-## A budget
-
-At most 20 comments per run per note, enforced, against 8 stated in the tool
-description, so the number a model plans against is lower than the number it
-can hit. A review is the few remarks worth reading, not every remark that could
-be made.
-
 ## Writing while Obsidian is open
 
 An external write re-reads the file and proceeds only if it is byte-for-byte

@@ -74,11 +74,6 @@ EOF
 so the reader can filter or dismiss the whole pass with one click. Make one up
 per review; it only has to be distinct from the last one.
 
-**Keep it short.** At most eight comments on a note. A review is the few
-remarks worth reading, not every remark that could be made: a sidebar with
-forty cards in it does not get opened twice. (The tool refuses past twenty per
-run, but that is a backstop, not a target.)
-
 **Answering a comment someone left you.** `obelisk list --open` gives you the
 open comments with the passage each one is about. Make the edit in the note
 yourself, since there is no apply verb and you do not need one, then

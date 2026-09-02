@@ -22,24 +22,6 @@ import { Comment, Origin, Reply, ResolvedComment } from "./types";
  * wrong.
  */
 
-/**
- * The most comments one run may leave on one note before the write is refused.
- *
- * Enforced here because a description is advice; a caller that ignores its
- * budget still cannot turn a note's sidebar into a wall. The number stated to
- * the model is lower — see `SUGGESTED_BUDGET` — so the enforced cap is a
- * backstop rather than a target.
- */
-export const MAX_COMMENTS_PER_RUN = 20;
-
-/**
- * The budget the tool description quotes. Deliberately below the enforced cap:
- * forty comments is not a review, and neither is twenty. Whether either number
- * is right is a question for a vault with real passes in it; these are the
- * starting positions.
- */
-export const SUGGESTED_BUDGET = 8;
-
 export type FailureCode =
 	/** The quote is nowhere in the body. */
 	| "quote-not-found"
@@ -49,8 +31,6 @@ export type FailureCode =
 	| "bad-suggestion"
 	/** A proposal that proposes the text it is replacing. */
 	| "no-op-suggestion"
-	/** This run has already left its allowance of comments on this note. */
-	| "budget"
 	/** No comment (or reply) with that id. */
 	| "not-found"
 	/** The note changed underneath the write, so nothing was saved. */
@@ -137,9 +117,6 @@ export function comment(
 
 	const bad = checkBody(request.body, request.quote);
 	if (bad) return bad;
-
-	const budget = checkBudget(note.comments, request.origin);
-	if (budget) return budget;
 
 	const at = locate(note.frame, request.quote, request.nearLine);
 	if (!at.ok) return at;
@@ -419,25 +396,6 @@ function checkBody(body: string, quote: string): Failure | null {
 
 /** Matches an opening fence whose info string is `suggestion`. */
 const SUGGESTION_OPEN = /^ {0,3}(?:`{3,}|~{3,})[ \t]*suggestion[ \t]*$/gim;
-
-function checkBudget(
-	existing: readonly Comment[],
-	origin: Origin | undefined,
-): Failure | null {
-	const run = origin?.run;
-	if (!run) return null;
-
-	const already = existing.filter((c) => c.origin?.run === run).length;
-	if (already < MAX_COMMENTS_PER_RUN) return null;
-
-	return fail(
-		"budget",
-		`Run ${run} has already left ${already} comments on this note, which is ` +
-			"the cap. A review is the few remarks worth reading, not every " +
-			"remark that could be made — leave the rest out, or resolve some " +
-			"first.",
-	);
-}
 
 function missing(id: string, comments: readonly Comment[]): Failure {
 	const known = comments.map((c) => c.id).join(", ");
