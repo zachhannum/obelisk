@@ -42,6 +42,9 @@ There is no sidecar store for machine comments either. An agent's comment is
 the same object as a person's, in the same file, under the same anchoring
 rules.
 
+Comments go on markdown notes. Canvas, PDF and other file types are out of
+scope, because a comment is stored in the note's own frontmatter.
+
 ## Status
 
 Pre-release. Anchoring, decoration, the sidebar, suggested edits and the agent

@@ -76,7 +76,8 @@ obelisk resolve chapter-3.md cq7fk2m9x --reopen
 
 Resolving records that what the comment asked for has been done. It is a verb
 an agent can call on a comment a person wrote, which is the point of asking it
-to address one.
+to address one, though nothing on the comment records that an agent was the one
+that closed it.
 
 ## Attribution defaults to agent
 

@@ -84,7 +84,6 @@ export default defineConfig({
 					items: [
 						{ label: "Data format", slug: "reference/format" },
 						{ label: "Refusals", slug: "reference/refusals" },
-						{ label: "Design notes", slug: "reference/design" },
 					],
 				},
 			],
