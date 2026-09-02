@@ -13,7 +13,6 @@ to be read by whoever asked.
 | `quote-ambiguous` | The quote appears more than once. | Quote more of the passage, or pass the line `list` printed. |
 | `bad-suggestion` | The body's suggestion fences do not parse as intended. | Usually a suggestion containing a code sample that closed the wrong fence. |
 | `no-op-suggestion` | The proposal is the text it replaces. | Propose something, or drop the block. |
-| `budget` | This run has used its allowance on this note. | 20 per run per note. Start a new run, or say less. |
 | `not-found` | No comment or reply with that id. | Ids come from `list`. |
 | `conflict` | The note changed underneath the write. | Nothing was saved. Run it again. |
 | `empty-body` | A comment or reply with nothing in it. | Send a body with something in it. |
