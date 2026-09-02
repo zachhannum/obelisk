@@ -23,8 +23,6 @@ import { Anchor, BodyPos, Comment, ResolvedComment } from "./types";
  * It is written when the comment is created and never updated, so it drifts as
  * the note is edited; that is fine, because it is only ever used to choose the
  * nearest of several identical candidates.
- *
- * See docs/DESIGN.md § Anchoring.
  */
 
 /**

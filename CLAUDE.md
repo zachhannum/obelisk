@@ -46,10 +46,10 @@ wins and the quick fix waits for its own commit.
   the trust boundary: a malformed entry is dropped with a console
   warning, never thrown, or one bad comment takes the sidebar down for
   the whole note.
-- The decisions that are expensive to change live in
-  [`docs/DESIGN.md`](docs/DESIGN.md) and
-  [`docs/AGENT-INTEGRATION.md`](docs/AGENT-INTEGRATION.md). A change
-  that contradicts one of them updates it in the same commit.
+- The decisions that are expensive to change are the ones in this
+  section, and the reasoning for each lives in the doc comment at the top
+  of the file that implements it. A change that contradicts one of them
+  rewrites that comment, and this section, in the same commit.
 - Work is tracked in GitHub issues. `publishing` covers the two
   official channels, the Obsidian directory and npm; `obsidian` and
   `mcp` mark which of them an issue serves. An issue's acceptance

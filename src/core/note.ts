@@ -14,15 +14,15 @@ import {
  *
  * This is what `processFrontMatter` does for the plugin, done over plain text
  * for everything that runs outside Obsidian. The two must agree on exactly one
- * thing — where the frontmatter ends and the body begins — so this file asks
- * `frameFrom` rather than deciding for itself. Every anchor in the note is
- * measured from that line, and a writer that drew the boundary somewhere else
- * would shift all of them at once.
+ * thing, where the frontmatter ends and the body begins, so this file takes
+ * that boundary from `frameFrom` rather than working it out again. Every
+ * anchor in the note is measured from that line, and a writer that drew the
+ * boundary somewhere else would shift all of them at once.
  *
  * The body is never touched. A write splices a new frontmatter block in front
  * of byte-identical body text, which is what makes it safe to do while
  * Obsidian has the note open: the editor's own text is unchanged, and every
- * anchor still resolves. See docs/AGENT-INTEGRATION.md § 7.
+ * anchor still resolves.
  */
 
 /** A note file, parsed far enough to comment on. */

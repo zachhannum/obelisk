@@ -23,7 +23,7 @@ import {
  * Keys we know how to read. Anything else on a comment is stashed on
  * `EXTRA_KEYS` at read time and written back out by `serialize`, so a note
  * edited by a newer version of Obelisk does not lose fields when an older
- * version writes to it. See docs/DESIGN.md § Storage, "Forward compatibility".
+ * version writes to it.
  */
 const KNOWN_COMMENT_KEYS = new Set([
 	"id",

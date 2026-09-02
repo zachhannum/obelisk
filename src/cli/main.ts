@@ -15,7 +15,7 @@ import { Comment, Origin, ResolvedComment } from "../core/types";
  *
  * Everything with a rule in it lives in `core/ops.ts`. This file is argument
  * parsing, file I/O, and the printing that makes a verbatim quote easy to copy
- * back in. See docs/AGENT-INTEGRATION.md § 5.
+ * back in.
  */
 
 const USAGE = `obelisk — read and write Obelisk comments on a note.
@@ -207,8 +207,8 @@ async function resolveCommand(flags: Flags, args: string[]): Promise<number> {
 /**
  * Run one operation and save the result, or refuse.
  *
- * The guard is the whole of § 7's option 1: read, work, re-read, and write
- * only if the file is byte-for-byte what it was. `processFrontMatter`
+ * The guard is read, work, re-read, and write only if the file is
+ * byte-for-byte what it was. `processFrontMatter`
  * serializes writes *within* Obsidian and promises an outside process nothing,
  * so this is what stands between a review pass and the sentence someone is
  * typing. It turns the bad case into a refusal rather than a lost edit.
@@ -394,8 +394,7 @@ function intArg(raw: string | undefined, name: string): number | undefined {
  * Who the comment is from.
  *
  * Agent by default, because that is what a headless writer is for, and because
- * § 3's point is that attribution must not depend on a model remembering to
- * declare itself. `--human` is there for the person driving the CLI by hand.
+ * attribution must not depend on a model remembering to declare itself. `--human` is there for the person driving the CLI by hand.
  */
 function identity(flags: Flags): { author?: string; origin?: Origin } {
 	if (flags.human) {

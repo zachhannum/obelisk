@@ -147,12 +147,13 @@ function renderHeader(card: HTMLElement, comment: ResolvedComment): void {
 }
 
 /**
- * A comment written by a model says so, next to whatever name it gave itself.
+ * The badge on a comment written by a model, next to whatever name it gave
+ * itself.
  *
  * Badged and nothing more: agent comments are not hidden by default and not
  * sorted apart, because a second list is a second inbox rather than a review.
  * The pass a comment belongs to is on the tooltip and, more usefully, on the
- * run chip in the header. See docs/AGENT-INTEGRATION.md § 3.
+ * run chip in the header.
  */
 function agentBadge(header: HTMLElement, origin: Origin | undefined): void {
 	if (origin?.kind !== "agent") return;

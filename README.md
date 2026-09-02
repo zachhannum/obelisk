@@ -14,10 +14,7 @@ There is no sidecar database to fall out of step with the vault.
 
 Pre-release. Anchoring, decoration, the sidebar, suggested edits and the agent
 integration are implemented. Not yet released or submitted to the community
-plugin list, and not yet exercised against a large vault. See
-[`docs/DESIGN.md`](docs/DESIGN.md) for the decisions behind it and what remains
-open, and [`docs/AGENT-INTEGRATION.md`](docs/AGENT-INTEGRATION.md) for the
-parts that run outside Obsidian.
+plugin list, and not yet exercised against a large vault.
 
 ## Features
 
@@ -186,8 +183,7 @@ the exact text is there to copy.
 
 Writes are frontmatter-only and leave the body byte-identical, so they are safe
 while the note is open in Obsidian; a write also re-reads the file first and
-refuses if it changed underneath. See
-[`docs/AGENT-INTEGRATION.md`](docs/AGENT-INTEGRATION.md).
+refuses if it changed underneath.
 
 ## Development
 

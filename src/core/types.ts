@@ -8,8 +8,7 @@
  *
  * Nothing under `core/` imports Obsidian. The plugin and the headless
  * `obelisk` CLI are two front ends over the same model, and a mismatch between
- * them is exactly what `SCHEMA_VERSION` exists to warn about. See
- * docs/AGENT-INTEGRATION.md § 5.
+ * them is exactly what `SCHEMA_VERSION` exists to warn about.
  */
 
 /**
@@ -26,7 +25,7 @@ export const SCHEMA_VERSION = 3;
  * IMPORTANT: `line` is 0-indexed and counted from the first line *after* the
  * closing `---` of the frontmatter block. Storing body-relative lines means
  * adding or editing a comment (which grows the frontmatter) does not
- * invalidate every anchor in the file. See docs/DESIGN.md § Anchoring.
+ * invalidate every anchor in the file.
  */
 export interface BodyPos {
 	/** 0-indexed line, relative to the start of the body. */
@@ -42,8 +41,7 @@ export interface BodyPos {
  * for this exact text, and it is never rewritten once the comment is created.
  * `from`/`to` record where the passage was at the time, which is what the
  * sidebar sorts by and what breaks the tie when a quote appears more than once
- * in the note. They are a hint, not a position — nothing keeps them current as
- * the note is edited. See docs/DESIGN.md § Anchoring.
+ * in the note. Nothing keeps them current as the note is edited.
  */
 export interface Anchor {
 	from: BodyPos;
@@ -70,10 +68,9 @@ export type AnchorState =
  * existed is already correct and no migration runs. Same read-time fold as
  * schema 1's separate suggestion key.
  *
- * `run` is the half that earns its place. A model does not leave a comment; it
- * leaves twenty in one pass, and the gesture a reader wants afterwards is *all
- * of these, gone*. A shared run id makes a pass an addressable thing: one
- * filter chip, one dismissal, one undo. See docs/AGENT-INTEGRATION.md § 3.
+ * `run` is what makes a pass usable. A review pass is twenty comments arriving
+ * at once, and the reader wants to act on all twenty together: a shared run id
+ * gives them one chip to filter the pass with and one × to dismiss it by.
  */
 export interface Origin {
 	kind: "human" | "agent";
