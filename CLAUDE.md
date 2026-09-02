@@ -16,7 +16,9 @@ wins and the quick fix waits for its own commit.
 - `site/` is the documentation site: Astro and Starlight, its own
   `package.json`, its own `node_modules`, built by its own workflow. Nothing
   in it is imported by `src/`, and `npm run build` at the root does not touch
-  it.
+  it. Its *Agents without MCP* page is generated from
+  `docs/agents-fragment.md` before every site build, so the fragment a reader
+  pastes into a vault has one source; the generated page is gitignored.
 - `test/` is the capture harness: Playwright driving a real Obsidian,
   whose only output is the six PNGs under `site/src/assets/shots/`. It is
   the one thing outside `site/` that reads `site/`, for the design tokens

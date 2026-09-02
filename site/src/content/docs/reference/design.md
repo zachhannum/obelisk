@@ -4,14 +4,14 @@ description: The decisions that are expensive to change, and the questions still
 ---
 
 The repo carries two design documents: `docs/DESIGN.md` for the plugin, and
-`docs/AGENT-INTEGRATION.md` for the half that runs outside Obsidian. This page
-is the short version of both.
+`docs/AGENT-INTEGRATION.md` for the CLI and the MCP server. This page is the
+short version of both.
 
 ## Shape
 
-One repo, one package, three front ends. `src/core/` is the half that does not
+One repo, one package, three front ends. `src/core/` is the part that does not
 import Obsidian: the model, the anchor arithmetic, the YAML, and the four
-verbs. The plugin, the CLI and the MCP server are three front ends over it.
+verbs. The plugin, the CLI and the MCP server are written against it.
 
 The dependency runs one way. A `from "obsidian"` under `core/` breaks the CLI
 and the MCP server without breaking the plugin build, which is why it is the
@@ -46,8 +46,9 @@ noticed. Comments live in the editor.
 
 ## Open questions
 
-**Multi-user attribution.** `author` is free text. Fine for one person across
-devices, weak for a shared vault.
+**Multi-user attribution.** `author` is free text, which is enough for one
+person working across devices and not enough for a vault several people
+share.
 
 **Replies from an agent.** A reply has no `origin`, so a machine reply in a
 human thread is unbadged. Adding the field is trivial; whether an agent should

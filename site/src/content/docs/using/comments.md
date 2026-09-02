@@ -17,9 +17,9 @@ Preview stays even though the editor previews live, because it is the only
 place a `suggestion` block renders as the diff the reader will get.
 
 :::note
-If the embedded editor is unavailable (an Obsidian release could move it), the
-composer falls back to a textarea. Tabs, the suggestion button and submit all
-still work; the editor shortcuts do not.
+If the embedded editor is unavailable, the composer falls back to a plain text
+box. Tabs, the suggestion button and submit all still work; the editor
+shortcuts do not.
 :::
 
 ## Replies
@@ -39,10 +39,6 @@ An edit rewrites the body and marks the card *edited*. The anchor is left
 alone: changing what you said about a passage is not a claim about a different
 passage.
 
-`edited` is separate from `modified`. The latter moves on any write at all,
-resolving included, so the *edited* marker means the text in front of you was
-rewritten rather than that something on the record changed.
-
 ## Deleting
 
 **Delete** removes a whole comment; the trash icon in a reply's header removes
@@ -52,9 +48,10 @@ conversation with it.
 
 ## Attribution
 
-`author` is a free-text setting. It is fine for one person across devices and
-weak for a shared vault.
+**Author name** in the settings tab is free text, attached to the comments you
+create. It is fine for one person across devices and weak for a shared vault.
 
-A comment written from outside Obsidian also carries an `origin`, recording
-that a model wrote it and which review pass it belonged to. Its absence means a
-person wrote it, so nothing already in a vault needs migrating.
+A comment written from outside Obsidian records the model that wrote it and the
+review pass it belonged to, which is what the badge and the run chip in the
+sidebar are drawn from. Nothing already in a vault needs migrating for that:
+a comment with no such record is a comment a person wrote.

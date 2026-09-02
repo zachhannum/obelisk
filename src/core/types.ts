@@ -126,7 +126,7 @@ export interface Comment {
 	 */
 	appliedAt?: string;
 	replies?: Reply[];
-	/** Free-form labels, surfaced as filter chips in the sidebar. */
+	/** Free-form labels. Stored and round-tripped; nothing reads them yet. */
 	tags?: string[];
 }
 

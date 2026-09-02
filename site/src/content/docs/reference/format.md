@@ -46,7 +46,7 @@ obelisk:
 | `anchor` | object | Where it attaches. |
 | `appliedAt` | string? | When a suggestion from this thread was applied. |
 | `replies` | list? | |
-| `tags` | list? | Free-form labels, surfaced as filter chips. |
+| `tags` | list? | Free-form labels. Stored and round-tripped; nothing reads them yet. |
 
 `appliedAt` sits on the comment rather than on a block, because applying
 re-anchors the whole comment onto its replacement, so every other proposal in

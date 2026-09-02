@@ -281,16 +281,6 @@ a {
 	z-index: 2;
 }
 
-.shot-caption {
-	color: var(--ob-text-3);
-	font-family: var(--ob-mono);
-	font-size: 0.68rem;
-	letter-spacing: 0.1em;
-	margin-block-start: 0.85rem;
-	text-align: center;
-	text-transform: uppercase;
-}
-
 /* ── Sections ─────────────────────────────────────────────────────────────── */
 
 .section {
@@ -365,17 +355,6 @@ a {
 	letter-spacing: -0.025em;
 	line-height: 1.22;
 	margin: 0;
-}
-
-.marginalia cite {
-	color: var(--ob-text-2);
-	display: block;
-	font-family: var(--ob-mono);
-	font-size: 0.72rem;
-	font-style: normal;
-	letter-spacing: 0.1em;
-	margin-block-start: 1rem;
-	text-transform: uppercase;
 }
 
 /* ── Cards ────────────────────────────────────────────────────────────────── */

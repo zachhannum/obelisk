@@ -4,63 +4,63 @@ Inline comments and GitHub-style suggested edits for [Obsidian](https://obsidian
 
 Select a passage, leave a comment on it, and optionally propose a replacement
 that can be applied with one click. Comments are stored in the note's own
-frontmatter, so they travel with the file through sync, git, and export — no
-sidecar database, nothing to lose.
+frontmatter, so they travel with the file through sync, git, export and rename.
+There is no sidecar database to fall out of step with the vault.
 
 > An *obelus* (†) was the mark ancient editors drew in the margin of a
 > manuscript to say: this passage is disputed.
 
 ## Status
 
-**Working.** Anchoring, decoration, the sidebar, suggested edits, and the agent
+Pre-release. Anchoring, decoration, the sidebar, suggested edits and the agent
 integration are implemented. Not yet released or submitted to the community
 plugin list, and not yet exercised against a large vault. See
 [`docs/DESIGN.md`](docs/DESIGN.md) for the decisions behind it and what remains
 open, and [`docs/AGENT-INTEGRATION.md`](docs/AGENT-INTEGRATION.md) for the
-half of it that runs outside Obsidian.
+parts that run outside Obsidian.
 
 ## Features
 
-- **Comment on any passage** — select text, right-click, *Add comment*.
-- **Markdown everywhere** — comments and replies are ordinary markdown, with a
-  Write/Preview pair while you type. Links, lists, embeds, callouts and math
+- **Comment on any passage.** Select text, right-click, *Add comment*.
+- **Markdown everywhere.** Comments and replies are ordinary markdown, with a
+  Write/Preview pair while you type. Links, lists, callouts, embeds and math
   render in the sidebar exactly as they would in a note.
-- **Suggested edits** — a proposal is a fenced ` ```suggestion ` block *inside*
+- **Suggested edits.** A proposal is a fenced ` ```suggestion ` block *inside*
   the comment, the way GitHub does it. It renders as a diff against the quoted
   passage with an Apply button, so one comment can explain itself and propose a
-  change, and a reply can offer a counter-proposal. Refuses to apply if the
-  underlying text has changed since. Applying resolves the comment — the
-  proposal got the only answer it was after — and *Reopen* is there if it also
-  asked something the edit did not settle.
-- **Sidebar** — all of a note's comments in document order; click one to scroll
-  the editor to it. Resolved ones stay in the list, greyed rather than hidden,
-  since they are still highlighted in the note; the *Open* filter is there when
-  you want only the working set.
-- **In-text highlighting** — commented passages are highlighted, with a †
+  change, and a reply can offer a counter-proposal. Applying is refused if the
+  underlying text has changed since. It also resolves the comment, and *Reopen*
+  is there if the comment asked something the edit did not answer.
+- **Sidebar.** All of a note's comments in document order, or newest first from
+  the sort toggle; click one to scroll the editor to it. Chips filter to open
+  comments, to comments carrying a suggestion, or to one agent's review pass.
+  Resolved comments stay in the list, greyed rather than hidden, since they are
+  still highlighted in the note.
+- **In-text highlighting.** Commented passages are highlighted, with a †
   marker that opens the comment in the sidebar.
-- **Stored in frontmatter** — plain YAML under an `obelisk` key. Readable,
+- **Stored in frontmatter.** Plain YAML under an `obelisk` key. Readable,
   diffable, portable.
-- **Survives editing** — a comment is anchored to the text it quotes, so it
+- **Survives editing.** A comment is anchored to the text it quotes, so it
   keeps up with edits anywhere else in the note, including ones made outside
   Obsidian. Edit or delete the quoted passage itself and the comment detaches:
   flagged in the sidebar, highlighting nothing, never guessing at a new home
   and never quietly disappearing. Restore the text and it reattaches. Resolved
-  comments are exempt from the flag — a settled comment usually comes loose
-  because the edit it asked for was made.
-- **The editor you already use** — comments are written in Obsidian's own
+  comments are exempt from the flag, because a resolved comment usually
+  detaches when the edit it asked for is made.
+- **The editor you already use.** Comments are written in Obsidian's own
   markdown editor, so Cmd+B, list continuation, `[[` autocompletion and live
   preview work in a comment exactly as they do in a note.
-- **Threaded replies** — on any comment, stored alongside it, and markdown all
+- **Threaded replies.** On any comment, stored alongside it, and markdown all
   the way down.
-- **Editable** — rewrite a comment or a reply in the same composer that wrote
+- **Editable.** Rewrite a comment or a reply in the same composer that wrote
   it, suggestion button and all, from the card's *Edit* button or by
   right-clicking the passage. Edited bodies are marked as such; the anchor is
   left alone, so changing what you said never changes what you said it about.
-- **Deletable** — a whole comment from the card's *Delete*, or a single reply
+- **Deletable.** A whole comment from the card's *Delete*, or a single reply
   from the trash icon in its header, so striking one remark out of a thread
   does not take the conversation with it. Both offer an undo rather than a
   confirmation dialog.
-- **Open to agents** — a command-line tool and an MCP server can read and write
+- **Open to agents.** A command-line tool and an MCP server can read and write
   the same comments from outside Obsidian, so a model can review a note into
   your sidebar, or answer the comments you left for it. Its comments are
   badged, and a whole review pass is one chip in the header with a *dismiss
@@ -88,12 +88,12 @@ obelisk:
 ```
 
 A comment is markdown and nothing else. A proposed edit is a ` ```suggestion `
-fenced block inside that markdown — the block's content replaces exactly the
-anchored range when applied — so there is no second, poorer text format beside
-the body, and a comment can hold prose, a link and a proposal at once.
+fenced block inside that markdown, whose content replaces exactly the anchored
+range when applied. There is no second, poorer text format beside the body, and
+a comment can hold prose, a link and a proposal at once.
 
 The `quote` is what a comment is anchored by. The line/column range records
-where the passage was when the comment was written — it orders the sidebar and
+where the passage was when the comment was written. It orders the sidebar and
 breaks ties when a quote appears twice, and is never rewritten. Lines are
 counted from the first line *after* the frontmatter block, so adding a comment
 never invalidates the others.
@@ -115,7 +115,7 @@ npm link                              # puts `obelisk` and `obelisk-mcp` on PATH
 
 obelisk list note.md
 obelisk comment note.md --quote "The horse, which had been standing there, bolted." \
-  --body "Two clauses fighting for one sentence." --run r7k2mq
+  --body "Two clauses fighting over one sentence." --run r7k2mq
 ```
 
 For an agent that speaks MCP, register the server with it. Nothing is published
@@ -127,8 +127,8 @@ claude mcp add obelisk --scope user -- \
   node "$PWD/dist/mcp.mjs" --vault /path/to/your/vault
 ```
 
-`$PWD` fills in this repo's half, so the vault is the only path you have to
-supply — and it has to be a real one. A path that does not exist makes `node`
+`$PWD` fills in this repo's path, so the vault is the only one you have to
+supply, and it has to be a real one. A path that does not exist makes `node`
 exit before it says anything, which reaches the agent as `CONNECTION_CLOSED`
 and names nothing; if you see that, the path in `claude mcp get obelisk` is the
 first thing to check.
@@ -137,13 +137,13 @@ Two things bite here, both of them silent:
 
 - **Scope.** `claude mcp add` defaults to `local`, which files the server under
   the directory you happened to run it in. Run it from this repo and you get a
-  server that exists only while you are in this repo — the one place you have
-  no notes to comment on. `--scope user` registers it everywhere; `--scope
+  server that exists only while you are in this repo, the one place you have no
+  notes to comment on. `--scope user` registers it everywhere; `--scope
   project` writes a `.mcp.json` in the vault instead, if the vault is a repo
   and everyone working in it should get the server.
 - **`npx obelisk-mcp` only works inside this repo.** The package is `private`
   and unpublished, and inside the repo npx resolves the bin out of the local
-  `package.json` — anywhere else it goes to the registry and 404s. Use the
+  `package.json`. Anywhere else it goes to the registry and 404s. Use the
   absolute path above, or `npm link` first and register `obelisk-mcp`.
 
 Both paths have to be absolute. The server is spawned without a shell, so a `~`
@@ -154,7 +154,7 @@ working directory rather than the vault's.
 process when a session opens and kills it when the session ends, so
 `obelisk-mcp` is never run by hand and there is no port and no daemon. One
 process per session is also what makes a session's comments share one run chip
-in the sidebar. Rebuild while a session is open and it keeps the old process —
+in the sidebar. Rebuild while a session is open and it keeps the old process;
 reconnect it from `/mcp`, or start a new session.
 
 To check the registration, `claude mcp list`, or `/mcp` inside a session. To
@@ -176,13 +176,14 @@ For an agent that does not speak MCP, paste
 [`docs/agents-fragment.md`](docs/agents-fragment.md) into the vault's
 `AGENTS.md` or `CLAUDE.md`.
 
-The one rule worth knowing: **the quote is the anchor.** There is no way to
-pass a line or a column, because a model asked for one will produce a plausible
-wrong number and a plausible wrong number attaches a comment to the wrong
-paragraph without ever looking like an error. `--quote` has to appear in the
-note character for character, and if it does not — or appears twice — nothing
-is written and the tool says so. `obelisk list` prints the body line-numbered
-so the exact text is there to copy.
+The one rule worth knowing: **the quote is the anchor.** A line number is never
+one. A model asked for a line will produce a plausible wrong number, and a
+plausible wrong number attaches a comment to the wrong paragraph without ever
+looking like an error, so `--near-line` only picks between identical quotes and
+takes a number copied out of `obelisk list`. `--quote` has to appear in the
+note character for character, and if it does not, or appears twice, nothing is
+written and the tool says so. `obelisk list` prints the body line-numbered so
+the exact text is there to copy.
 
 Writes are frontmatter-only and leave the body byte-identical, so they are safe
 while the note is open in Obsidian; a write also re-reads the file first and
@@ -197,7 +198,7 @@ npm run dev      # watch build, plugin only
 npm run build    # typecheck, then main.js plus dist/cli.mjs and dist/mcp.mjs
 ```
 
-`src/core/` is the half that does not import Obsidian — the model, the anchor
+`src/core/` is the half that does not import Obsidian: the model, the anchor
 arithmetic, the YAML and the four verbs. The plugin, the CLI and the MCP server
 are three front ends over it.
 

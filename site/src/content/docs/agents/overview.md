@@ -9,24 +9,6 @@ Or the other direction, which is the one that will get more use: you leave
 comments asking for things, a model reads them, makes the edits, and resolves
 them.
 
-## Why there was little to build
-
-The storage format is the interface. Comments are plain YAML under one
-frontmatter key, a suggested edit is a fenced block inside a markdown body, and
-unknown keys survive a round-trip. Any process that can edit a file can already
-leave a comment the plugin will render.
-
-So the question was not how to give a model a channel. It was what a model gets
-wrong when handed the format directly, and the answer is narrow:
-
-| What an agent needs | Already true | What was missing |
-|---|---|---|
-| Somewhere to write | frontmatter | nothing |
-| A body format | markdown, suggestion fences | nothing |
-| To be told apart from a person | `author` | attribution that survives a batch |
-| **An anchor** | `anchor.quote` plus a hint | a model cannot count lines |
-| Not to corrupt the note | in-app writes only | a safe path from outside |
-
 ## The anchor contract
 
 **An agent never supplies a line or a column.** It supplies the quote; the tool
@@ -47,29 +29,32 @@ The write path mirrors resolution exactly:
 
 The third case fires constantly, because a model asked to quote a passage will
 paraphrase it, normalize its whitespace, or straighten its quotation marks.
-That refusal is the feature. Accepting a near miss writes a comment that is
-born detached, which reads to the reader as the plugin losing their comment.
+Refusing there is what keeps a review honest. Accepting a near miss would write
+a comment that is born detached, which reads as the plugin losing their
+comment.
 
 Matching is strict. A looser search runs only *after* a failure: if
 straightening the punctuation and collapsing the whitespace finds exactly one
-match, the refusal quotes the note's own wording back and says to copy it.
-Nothing is stored that did not come out of the note.
+match, the refusal quotes the note's own wording back and says to copy it. The
+loose match is never what gets stored, because a writer more permissive than
+the resolver would create comments the plugin cannot then find.
 
 ## Attribution
 
 An agent's comment carries an `origin` with the model that wrote it and a run
 id shared by every comment in that pass.
 
-The run id is the half that earns its place. A model does not leave a comment;
-it leaves twenty, in one pass, and the gesture a reader wants afterwards is
-*all of these, gone*. A shared id makes a pass an addressable thing: one filter
-chip, one dismissal, one undo.
+The run id is what makes a pass usable. A review pass is twenty comments
+arriving at once, and the reader wants to be able to act on all twenty
+together: a shared id gives them one chip to filter the pass with and one × to
+dismiss it by, with an undo behind it.
 
 ## A budget
 
 At most 20 comments per run per note, enforced, against 8 stated in the tool
-description. A review is the few remarks worth reading, not every remark that
-could be made. A sidebar with forty cards in it does not get opened twice.
+description, so the number a model plans against is lower than the number it
+can hit. A review is the few remarks worth reading, not every remark that could
+be made.
 
 ## Writing while Obsidian is open
 

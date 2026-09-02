@@ -3,9 +3,9 @@ name: docs
 on:
   push:
     branches: [main]
-    paths: ["site/**", ".github/workflows/docs.yml"]
+    paths: ["site/**", "docs/agents-fragment.md", ".github/workflows/docs.yml"]
   pull_request:
-    paths: ["site/**", ".github/workflows/docs.yml"]
+    paths: ["site/**", "docs/agents-fragment.md", ".github/workflows/docs.yml"]
   workflow_dispatch:
 
 # Pages has to be enabled for the repo, with "GitHub Actions" as the source,

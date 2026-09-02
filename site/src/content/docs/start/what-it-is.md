@@ -9,9 +9,6 @@ Comments are stored in the note's own frontmatter, so they travel with the file
 through sync, git, export and rename. There is no sidecar database and nothing
 to keep in step with the vault.
 
-> An *obelus* (†) was the mark ancient editors drew in the margin of a
-> manuscript to say: this passage is disputed.
-
 ## Three front ends over one format
 
 | | What it is | Where it runs |
