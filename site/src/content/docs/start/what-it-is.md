@@ -38,7 +38,7 @@ from whichever client is already open. The plugin holds no API key.
 
 ## Status
 
-Pre-release. Anchoring, decoration, the sidebar, suggested edits and the agent
-integration are implemented. The CLI and the MCP server are on npm as
-`obelisk-mcp`. The plugin installs through BRAT, and none of it has been
-exercised against a large vault.
+Early. Anchoring, decoration, the sidebar, suggested edits and the agent
+integration are implemented. The plugin is in the Obsidian community plugin
+directory, and the CLI and the MCP server are on npm as `obelisk-mcp`. None of
+it has been exercised against a large vault.
