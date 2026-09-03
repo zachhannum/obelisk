@@ -12,9 +12,6 @@ description: Registering obelisk-mcp.
 | `obelisk_reply` | Reply to a comment. |
 | `obelisk_resolve` | Resolve or reopen a comment. |
 
-There is nothing to prompt an agent about. The anchor rules are in the tool
-descriptions, and a refusal comes back with the message that fixes the call.
-
 ## Register it
 
 ```bash
