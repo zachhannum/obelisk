@@ -9,8 +9,27 @@ comments.
 
 ## The plugin
 
-Obelisk is not in the community plugin directory yet, so installing it means
-building it and symlinking the repo into a vault.
+Obelisk is not in the community plugin directory yet. Until it is, BRAT
+installs it from this repository's releases.
+
+1. In *Settings → Community plugins → Browse*, find **BRAT**, install it, and
+   enable it.
+2. Open *Settings → BRAT* and choose *Add beta plugin*.
+3. Paste `zachhannum/obelisk`, leave the version on the latest release, and add
+   it.
+4. Enable **Obelisk** under *Settings → Community plugins*.
+
+BRAT checks for a newer release each time Obsidian starts. To take one sooner,
+use *Check for updates to all beta plugins* in its settings.
+
+:::caution
+Community plugins have to be turned on for the vault before any of this
+appears. On mobile, the plugin loads but has not been tested there.
+:::
+
+## The plugin, from source
+
+For a build of a branch rather than a release:
 
 ```bash
 git clone https://github.com/zachhannum/obelisk
@@ -30,11 +49,6 @@ ln -s "$PWD" /path/to/vault/.obsidian/plugins/obelisk
 
 Then enable **Obelisk** under *Settings → Community plugins*. After a rebuild,
 run *Reload app without saving* to pick up the new `main.js`.
-
-:::caution
-Community plugins have to be turned on for the vault before anything appears in
-the list. On mobile, the plugin loads but has not been tested there.
-:::
 
 ## The CLI
 
