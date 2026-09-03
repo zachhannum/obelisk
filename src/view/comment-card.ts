@@ -270,13 +270,15 @@ function renderActions(
 		.createEl("button", {
 			text: comment.resolved ? "Reopen" : "Resolve",
 		})
-		.addEventListener("click", () =>
-			plugin.toggleResolved(file, comment.id),
-		);
+		.addEventListener("click", () => {
+			void plugin.toggleResolved(file, comment.id);
+		});
 
 	actions
 		.createEl("button", { cls: "mod-warning", text: "Delete" })
-		.addEventListener("click", () => plugin.deleteComment(file, comment.id));
+		.addEventListener("click", () => {
+			void plugin.deleteComment(file, comment.id);
+		});
 }
 
 /**

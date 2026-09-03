@@ -1,6 +1,6 @@
 import esbuild from "esbuild";
 import process from "process";
-import builtins from "builtin-modules";
+import { builtinModules } from "node:module";
 
 const banner = `/*
 Obelisk — bundled by esbuild. Edit files under src/, not this file.
@@ -30,7 +30,7 @@ const context = await esbuild.context({
 		"@lezer/common",
 		"@lezer/highlight",
 		"@lezer/lr",
-		...builtins,
+		...builtinModules,
 	],
 	format: "cjs",
 	target: "es2020",
@@ -70,7 +70,9 @@ async function buildBins() {
 		format: "esm",
 		outdir: "dist",
 		outExtension: { ".js": ".mjs" },
-		external: builtins.map((name) => `node:${name}`).concat(builtins),
+		external: builtinModules
+			.map((name) => `node:${name}`)
+			.concat(builtinModules),
 		logLevel: "info",
 		treeShaking: true,
 		minify: false,

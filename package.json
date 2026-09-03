@@ -27,7 +27,6 @@
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@playwright/test": "^1.62.1",
     "@types/node": "^20.14.0",
-    "builtin-modules": "^3.3.0",
     "esbuild": "^0.21.5",
     "obsidian": "^1.7.2",
     "obsidian-launcher": "^3.2.0",
