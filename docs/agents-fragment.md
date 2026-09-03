@@ -5,8 +5,7 @@ vault, for agents that do not speak MCP. Agents that do should use the MCP
 server instead, which carries the same rules in its tool descriptions:
 
 ```
-cd /path/to/vault
-claude mcp add obelisk -- npx -y obelisk-mcp --vault "$PWD"
+claude mcp add obelisk --scope user -- npx -y obelisk-mcp
 ```
 
 See the *Agents* section of [`../README.md`](../README.md) for what each flag

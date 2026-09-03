@@ -10,6 +10,10 @@ obelisk reply <note> <id> --body "…"
 obelisk resolve <note> <id> [--reopen]
 ```
 
+`<note>` is resolved from the working directory and then from the root of the
+vault it is in, so a bare note name works from anywhere under the vault, and an
+absolute path reaches a note in another one. The `.md` is optional.
+
 There is no verb for applying a suggestion. An agent that wants the edit made
 can make it; Apply exists in the plugin because a *reader* needs one click to
 take a proposal they did not write.
@@ -18,7 +22,6 @@ take a proposal they did not write.
 
 | Flag | What it does |
 |---|---|
-| `--vault DIR` | Resolve `<note>` inside this vault, or `$OBELISK_VAULT`. |
 | `--body -` | Read the body from stdin, fences and all. |
 | `--quote "…"` | The passage to anchor to. Verbatim. |
 | `--near-line N` | Which occurrence of an ambiguous quote to take. |

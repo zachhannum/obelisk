@@ -10,9 +10,10 @@ wins and the quick fix waits for its own commit.
   that does not import Obsidian: the model, the anchor arithmetic, the
   YAML, and the four verbs. `src/main.ts` and everything under
   `src/view/`, `src/editor/`, `src/store/`, `src/suggestion/` is the
-  plugin; `src/cli/` is `obelisk`; `src/mcp/` is `obelisk-mcp`. The two
-  bins are esbuild bundles in `dist/`, one file each, built only by a
-  production build.
+  plugin; `src/cli/` is `obelisk`; `src/mcp/` is `obelisk-mcp`, and
+  `src/bin/` is what those two share and the plugin cannot have,
+  because it reaches for `node:fs`. The two bins are esbuild bundles in
+  `dist/`, one file each, built only by a production build.
 - `site/` is the documentation site: Astro and Starlight, its own
   `package.json`, its own `node_modules`, built by its own workflow. Nothing
   in it is imported by `src/`, and `npm run build` at the root does not touch
@@ -33,6 +34,12 @@ wins and the quick fix waits for its own commit.
   breaking ties when a quote appears twice, and is never rewritten.
   Nothing fuzzy-matches, re-finds, or scores a near miss. A quote that
   is not found detaches the comment and says so.
+- **The vault is found, not configured.** Both bins walk up from their
+  working directory to the `.obsidian/` that marks a vault root. A note
+  argument resolves from the working directory first and the vault root
+  second, so a bare name works from anywhere under the vault. There is
+  no flag and no environment variable for it: a path in a config file
+  is a second copy of where the vault is, and it goes stale silently.
 - Detachment is derived on every resolve, never stored. Nothing about
   where a comment sits is written back to disk.
 - Storage is one frontmatter key, `obelisk`, plus `obelisk_schema`.

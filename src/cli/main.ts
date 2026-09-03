@@ -1,6 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { basename, isAbsolute, join, resolve as resolvePath } from "node:path";
+import { basename } from "node:path";
 import { parseArgs } from "node:util";
+import { notePath as resolveNote } from "../bin/vault";
 import { NoteError } from "../core/note";
 import * as ops from "../core/ops";
 import { Listing, Outcome, proposals } from "../core/ops";
@@ -40,8 +41,12 @@ Attribution
   every comment in one review; --human writes an ordinary human comment
   instead.
 
+Note paths
+  <note> is resolved from the working directory, then from the root of the
+  vault it is in, so a bare note name works from anywhere under the vault.
+  The .md is optional.
+
 Options
-  --vault DIR     Resolve <note> inside this vault (or $OBELISK_VAULT).
   --body -        Read the comment body from stdin, fences and all.
   --author NAME   Written into \`author\`. Defaults to the model, or "agent".
   --model NAME    Recorded on the comment as the model that wrote it.
@@ -61,7 +66,6 @@ const OPTIONS = {
 	run: { type: "string" },
 	model: { type: "string" },
 	author: { type: "string" },
-	vault: { type: "string" },
 	open: { type: "boolean", default: false },
 	json: { type: "boolean", default: false },
 	"no-body": { type: "boolean", default: false },
@@ -126,7 +130,7 @@ async function main(argv: string[]): Promise<number> {
 // ── Verbs ────────────────────────────────────────────────────────────────────
 
 async function listCommand(flags: Flags, args: string[]): Promise<number> {
-	const path = notePath(flags, args[0]);
+	const path = notePath(args[0]);
 	const listing = ops.list(await read(path), basename(path));
 
 	const shown = flags.open
@@ -153,7 +157,7 @@ async function listCommand(flags: Flags, args: string[]): Promise<number> {
 }
 
 async function commentCommand(flags: Flags, args: string[]): Promise<number> {
-	const path = notePath(flags, args[0]);
+	const path = notePath(args[0]);
 	const quote = flags.quote;
 	if (!quote) throw new UsageError("comment needs --quote.");
 
@@ -175,7 +179,7 @@ async function commentCommand(flags: Flags, args: string[]): Promise<number> {
 }
 
 async function replyCommand(flags: Flags, args: string[]): Promise<number> {
-	const path = notePath(flags, args[0]);
+	const path = notePath(args[0]);
 	const id = args[1];
 	if (!id) throw new UsageError("reply needs the id of the comment to reply to.");
 
@@ -190,7 +194,7 @@ async function replyCommand(flags: Flags, args: string[]): Promise<number> {
 }
 
 async function resolveCommand(flags: Flags, args: string[]): Promise<number> {
-	const path = notePath(flags, args[0]);
+	const path = notePath(args[0]);
 	const id = args[1];
 	if (!id) throw new UsageError("resolve needs the id of a comment.");
 
@@ -354,19 +358,10 @@ function oneLine(text: string, max = 120): string {
 
 // ── Arguments ────────────────────────────────────────────────────────────────
 
-/**
- * Where the note is. A bare name is resolved inside the vault when there is
- * one, and `.md` is added if it was left off — an agent that has been told a
- * note's title should not have to know how it is stored.
- */
-function notePath(flags: Flags, arg: string | undefined): string {
+/** Where the note is, once there is one to look for. */
+function notePath(arg: string | undefined): string {
 	if (!arg) throw new UsageError("Which note? Pass a path.");
-
-	const vault = flags.vault ?? process.env.OBELISK_VAULT;
-	const path =
-		isAbsolute(arg) || !vault ? resolvePath(arg) : resolvePath(join(vault, arg));
-
-	return path.endsWith(".md") ? path : `${path}.md`;
+	return resolveNote(arg);
 }
 
 /** The body, from the flag or from stdin when it is `-`. */

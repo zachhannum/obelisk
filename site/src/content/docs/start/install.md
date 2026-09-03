@@ -56,34 +56,18 @@ built files in the repo, so a rebuild is picked up without reinstalling.
 
 ## The MCP server
 
-There is nothing to install and nothing to start. The agent spawns a process
-per session over stdio, so all the server needs is a registration that names
-the vault. From the vault:
+There is nothing to install, nothing to start, and nothing to configure. The
+agent spawns a process per session over stdio, and the server finds the vault
+by walking up from the directory the agent spawned it in, so one registration
+covers every vault on the machine:
 
 ```bash
-cd /path/to/vault
-claude mcp add obelisk -- npx -y obelisk-mcp --vault "$PWD"
+claude mcp add obelisk --scope user -- npx -y obelisk-mcp
 ```
-
-The shell expands `$PWD` at registration, so an absolute path is what lands in
-the config. That matters: the server is spawned without a shell, so a `~` in a
-config file stays a literal tilde, and the process inherits the agent's working
-directory rather than the vault's.
 
 `-y` because the agent gives npx no terminal to ask in, so the first run has to
 install the package rather than stop to ask whether it may.
 
-### Which scope
-
-`claude mcp add` defaults to `--scope local`, which registers the server for
-sessions started in that one directory. Run from the vault, that is the vault.
-
-- `--scope user` registers it in every project on the machine, all of them
-  pointed at the one vault `--vault` names. It buys you one thing: reaching
-  that vault from sessions that start somewhere else.
-- `--scope project` writes a `.mcp.json` in the vault, for a vault that is a
-  repo everyone working in it should get the server from.
-
-A vault path that does not exist makes the server exit before it says anything,
-which reaches the agent as `CONNECTION_CLOSED` and names nothing. `claude mcp
-get obelisk` prints the path it was given.
+A session started anywhere under a vault gets that vault, subdirectories
+included. A session started outside one can still reach a note by absolute
+path. To check the registration, `claude mcp list`, or `/mcp` inside a session.

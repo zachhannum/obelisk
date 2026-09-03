@@ -19,30 +19,19 @@ agent learns what a usable quote looks like.
 
 ## Register it
 
-From the vault:
-
 ```bash
-cd /path/to/vault
-claude mcp add obelisk -- npx -y obelisk-mcp --vault "$PWD"
+claude mcp add obelisk --scope user -- npx -y obelisk-mcp
 ```
 
 `-y` because the agent gives npx no terminal to ask in, so the first run has to
 install the package rather than stop to ask whether it may.
 
-:::caution[Scope is the one that bites silently]
-`claude mcp add` defaults to `--scope local`, which registers the server for
-sessions started in that one directory: run from the vault, that is the vault.
-`--scope user` registers it in every project on the machine, all of them
-pointed at the one vault `--vault` names, which buys you nothing unless you
-comment on that vault from sessions that start elsewhere. `--scope project`
-writes a `.mcp.json` in the vault instead.
-:::
-
-The vault path has to be absolute and has to exist. The server is spawned
-without a shell, so a `~` in a config file stays a literal tilde, and the
-process inherits the agent's working directory rather than the vault's.
-Expanding `$PWD` in the shell that registers it is the short way to an absolute
-path.
+There is no vault to name. The server walks up from the directory the agent
+spawned it in until it finds the `.obsidian/` that marks a vault root, so one
+registration serves every vault on the machine, and a session started deep in
+the note tree resolves a vault-relative path the same as one started at the
+root. A session that is not inside a vault at all can still reach a note by
+absolute path.
 
 ## There is nothing to start
 
@@ -57,19 +46,21 @@ sooner.
 
 ## When it will not connect
 
-A vault path that does not exist makes the server exit before it says anything,
-which reaches the agent as `CONNECTION_CLOSED` and names nothing. The path in
-`claude mcp get obelisk` is the first thing to check.
-
-To test the server with no agent in the way:
+A server that cannot start reaches the agent as `CONNECTION_CLOSED`, which
+names nothing. Run it yourself to find out why, with no agent in the way:
 
 ```bash
 printf '%s\n' \
   '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"smoke","version":"0"}}}' \
   '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
   '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
-  | npx -y obelisk-mcp --vault /abs/path/to/vault
+  | npx -y obelisk-mcp
 ```
 
 That prints the handshake and then the four tools. If it fails here, the fault
 is on this side, and there is no point looking at the agent's end of it.
+
+A note the tools cannot find is the other half of it. The server resolves a
+relative path from its own working directory and then from the vault root, and
+says which path it looked at, so an agent spawned outside any vault gets a
+refusal naming a path rather than silence.

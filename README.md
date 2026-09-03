@@ -114,34 +114,20 @@ obelisk comment note.md --quote "The horse, which had been standing there, bolte
   --body "Two clauses fighting over one sentence." --run r7k2mq
 ```
 
-For an agent that speaks MCP, register the server with it. From the vault:
+For an agent that speaks MCP, register the server with it:
 
 ```bash
-cd /path/to/vault
-claude mcp add obelisk -- npx -y obelisk-mcp --vault "$PWD"
+claude mcp add obelisk --scope user -- npx -y obelisk-mcp
 ```
 
 `-y` because the agent gives npx no terminal to ask in, so the first run has to
 install the package rather than stop to ask whether it may.
 
-Two things bite here, both of them silent:
-
-- **Scope.** `claude mcp add` defaults to `local`, which registers the server
-  for sessions started in that one directory; run from the vault, that is the
-  vault. `--scope user` registers it in every project on the machine, all of
-  them pointed at the one vault `--vault` names, which buys you nothing unless
-  you comment on that vault from sessions that start elsewhere. `--scope
-  project` writes a `.mcp.json` in the vault, if the vault is a repo and
-  everyone working in it should get the server.
-- **The vault path.** A path that does not exist makes the server exit before
-  it says anything, which reaches the agent as `CONNECTION_CLOSED` and names
-  nothing; if you see that, the path in `claude mcp get obelisk` is the first
-  thing to check.
-
-The vault path has to be absolute. The server is spawned without a shell, so a
-`~` in a config file stays a literal tilde, and the process inherits the
-agent's working directory rather than the vault's. Expanding `$PWD` in the
-shell that registers it is the short way to an absolute path.
+There is no vault to name. The server walks up from the directory the agent
+spawned it in until it finds the `.obsidian/` that marks a vault root, so one
+registration serves every vault on the machine, a session started deep in the
+note tree resolves a vault-relative path the same as one started at the root,
+and a session outside any vault can still reach a note by absolute path.
 
 **There is nothing to start.** It speaks MCP over stdio: the agent spawns a
 process when a session opens and kills it when the session ends, so
@@ -158,7 +144,7 @@ printf '%s\n' \
   '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"smoke","version":"0"}}}' \
   '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
   '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
-  | npx -y obelisk-mcp --vault /abs/path/to/vault
+  | npx -y obelisk-mcp
 ```
 
 That should print the handshake and then the four tools. A server that fails
