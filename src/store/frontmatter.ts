@@ -23,7 +23,8 @@ export class CommentStore {
 	 * call on every editor change. Returns [] for a file with no comments.
 	 */
 	read(file: TFile): Comment[] {
-		const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+		const fm: Record<string, unknown> | undefined =
+			this.app.metadataCache.getFileCache(file)?.frontmatter;
 		const raw = fm?.[FRONTMATTER_KEY];
 		if (!raw) return [];
 		return normalize(raw, file.path, fm?.[SCHEMA_KEY]);
@@ -39,21 +40,24 @@ export class CommentStore {
 		file: TFile,
 		mutate: (comments: Comment[]) => Comment[] | void,
 	): Promise<void> {
-		await this.app.fileManager.processFrontMatter(file, (fm) => {
-			const current = normalize(
-				fm[FRONTMATTER_KEY],
-				file.path,
-				fm[SCHEMA_KEY],
-			);
-			const next = mutate(current) ?? current;
-			if (next.length === 0) {
-				delete fm[FRONTMATTER_KEY];
-				delete fm[SCHEMA_KEY];
-			} else {
-				fm[FRONTMATTER_KEY] = next.map(serialize);
-				fm[SCHEMA_KEY] = SCHEMA_VERSION;
-			}
-		});
+		await this.app.fileManager.processFrontMatter(
+			file,
+			(fm: Record<string, unknown>) => {
+				const current = normalize(
+					fm[FRONTMATTER_KEY],
+					file.path,
+					fm[SCHEMA_KEY],
+				);
+				const next = mutate(current) ?? current;
+				if (next.length === 0) {
+					delete fm[FRONTMATTER_KEY];
+					delete fm[SCHEMA_KEY];
+				} else {
+					fm[FRONTMATTER_KEY] = next.map(serialize);
+					fm[SCHEMA_KEY] = SCHEMA_VERSION;
+				}
+			},
+		);
 	}
 
 	async add(file: TFile, comment: Comment): Promise<void> {

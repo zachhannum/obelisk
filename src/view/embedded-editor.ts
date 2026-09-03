@@ -26,6 +26,63 @@ export interface EmbeddedEditor {
 }
 
 /**
+ * The private editor, as far as the composer reaches into it. Every member
+ * here is undocumented and can move in any release.
+ */
+interface WidgetEditor {
+	app: App;
+	editor: { cm?: EditorView; focus(): void; getValue(): string };
+	activeCM?: EditorView;
+	cm?: EditorView;
+	/** Obsidian's Component flag, set while the component is loaded. */
+	_loaded?: boolean;
+	set(value: string, clear: boolean): void;
+	unload(): void;
+	destroy(): void;
+	onunload?(): void;
+	onUpdate?(update: unknown, changed: boolean): void;
+	buildLocalExtensions?(): Extension[];
+}
+
+/** The class `resolveBase` digs out, called the way its own constructor is. */
+type WidgetEditorBase = new (
+	app: App,
+	container: HTMLElement,
+	owner: EditorOwner,
+) => WidgetEditor;
+
+/** The subclass, which takes the composer's options in the owner's place. */
+type WidgetEditorClass = new (
+	app: App,
+	container: HTMLElement,
+	options: EmbeddedEditorOptions,
+) => WidgetEditor;
+
+/** What the widget editor expects of the view hosting it. */
+interface EditorOwner {
+	app: App;
+	file: TFile | null;
+	editor: unknown;
+	hoverPopover: null;
+	getMode: () => string;
+	onMarkdownScroll: () => void;
+}
+
+/** The markdown embed `embedRegistry` hands back, used only as a probe. */
+interface EmbedProbe {
+	editable: boolean;
+	showEditor(): void;
+	editMode?: object;
+	unload?(): void;
+}
+
+type MarkdownEmbed = (
+	context: { app: App; containerEl: HTMLElement },
+	file: TFile | null,
+	subpath: string,
+) => EmbedProbe;
+
+/**
  * The editor Obsidian uses inside Canvas cards and property fields, borrowed
  * for the comment box.
  *
@@ -52,7 +109,7 @@ export function createEmbeddedEditor(
 	container: HTMLElement,
 	options: EmbeddedEditorOptions,
 ): EmbeddedEditor | null {
-	let instance: any;
+	let instance: WidgetEditor;
 	try {
 		const Editor = editorClass(app);
 		if (!Editor) return null;
@@ -102,7 +159,7 @@ export function createEmbeddedEditor(
  * declared at module scope because its superclass has to be dug out of a live
  * app first.
  */
-let cached: (new (...args: any[]) => any) | null = null;
+let cached: WidgetEditorClass | null = null;
 
 /** Set once the dig has come up empty, so it is not repeated per comment. */
 let unavailable = false;
@@ -114,7 +171,7 @@ let unavailable = false;
  */
 let pending: EmbeddedEditorOptions | null = null;
 
-function editorClass(app: App): (new (...args: any[]) => any) | null {
+function editorClass(app: App): WidgetEditorClass | null {
 	if (cached) return cached;
 	if (unavailable) return null;
 
@@ -126,7 +183,7 @@ function editorClass(app: App): (new (...args: any[]) => any) | null {
 
 	cached = class extends Base {
 		options!: EmbeddedEditorOptions;
-		owner: any;
+		owner: EditorOwner;
 		scope: Scope;
 		private scoped = false;
 		private destroyed = false;
@@ -141,10 +198,10 @@ function editorClass(app: App): (new (...args: any[]) => any) | null {
 			// worth reporting and is always source-with-live-preview; the file
 			// is the note under discussion, which is what makes a link or an
 			// embed in a comment resolve the way it would in the note.
-			const owner = {
+			const owner: EditorOwner = {
 				app,
 				file: options.file,
-				editor: null as unknown,
+				editor: null,
 				hoverPopover: null,
 				getMode: () => "source",
 				onMarkdownScroll: () => {},
@@ -242,11 +299,12 @@ function editorClass(app: App): (new (...args: any[]) => any) | null {
 		destroy(): void {
 			if (this.destroyed) return;
 			this.destroyed = true;
-			if ((this as any)._loaded) this.unload();
+			if (this._loaded) this.unload();
 			this.popScope();
 			// Leaving a dead editor as the active one would point every
 			// editor command in the app at a box that no longer exists.
-			if (this.app.workspace.activeEditor === this.owner) {
+			const active: unknown = this.app.workspace.activeEditor;
+			if (active === this.owner) {
 				this.app.workspace.activeEditor = null;
 			}
 			super.destroy?.();
@@ -261,21 +319,29 @@ function editorClass(app: App): (new (...args: any[]) => any) | null {
  * chain: `editMode` is an instance of the markdown edit view, whose parent is
  * the general-purpose editable view we want to extend.
  */
-function resolveBase(app: App): (new (...args: any[]) => any) | null {
-	const embed = (app as any).embedRegistry?.embedByExtension?.md;
+function resolveBase(app: App): WidgetEditorBase | null {
+	const registry = (
+		app as App & {
+			embedRegistry?: {
+				embedByExtension?: Record<string, MarkdownEmbed | undefined>;
+			};
+		}
+	).embedRegistry;
+	const embed = registry?.embedByExtension?.md;
 	if (typeof embed !== "function") return null;
 
-	let probe: any;
+	let probe: EmbedProbe | undefined;
 	try {
 		probe = embed({ app, containerEl: createDiv() }, null, "");
 		probe.editable = true;
 		probe.showEditor();
 		const editMode = probe.editMode;
 		if (!editMode) return null;
-		const base = Object.getPrototypeOf(
+		const parent = Object.getPrototypeOf(
 			Object.getPrototypeOf(editMode),
-		)?.constructor;
-		return typeof base === "function" ? base : null;
+		) as { constructor?: unknown } | null;
+		const base = parent?.constructor;
+		return typeof base === "function" ? (base as WidgetEditorBase) : null;
 	} catch (err) {
 		console.error("Obelisk: could not resolve the embedded editor", err);
 		return null;
