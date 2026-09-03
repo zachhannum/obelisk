@@ -3,9 +3,8 @@ title: Refusals
 description: Every way Obelisk declines to write, and what to do about it.
 ---
 
-Errors in the core are returned rather than thrown, so a front end can render a
-refusal instead of a stack. Every refusal carries a code and a message written
-to be read by whoever asked.
+A refusal writes nothing. Every one of them carries a code and a message
+written to be read by whoever asked.
 
 | Code | What happened | What fixes it |
 |---|---|---|

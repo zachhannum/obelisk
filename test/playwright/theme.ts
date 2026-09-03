@@ -79,7 +79,7 @@ function fontFaces(): string {
 function channels(hex: string): string {
 	const m = /^#([0-9a-f]{6})$/i.exec(hex.trim());
 	if (!m) {
-		throw new Error(`expected a six-digit hex colour, got ${hex}`);
+		throw new Error(`expected a six-digit hex color, got ${hex}`);
 	}
 	const n = parseInt(m[1], 16);
 	return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;

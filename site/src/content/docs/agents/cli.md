@@ -14,9 +14,8 @@ obelisk resolve <note> <id> [--reopen]
 you are in, or an absolute path to a note in another vault. The `.md` is
 optional.
 
-There is no command for applying a suggestion. An agent that wants the edit made
-can make it. Apply exists in the plugin because a *reader* needs one click to
-take a proposal they did not write.
+There is no command for applying a suggestion. An agent that wants the edit
+made can make it.
 
 ## Options
 
@@ -77,16 +76,14 @@ obelisk resolve chapter-3.md cq7fk2m9x
 obelisk resolve chapter-3.md cq7fk2m9x --reopen
 ```
 
-Resolving records that what the comment asked for has been done. It is a
-command an agent can run on a comment a person wrote, which is the point of asking it
-to address one, though nothing on the comment records that an agent was the one
-that closed it.
+Resolving records that what the comment asked for has been done. An agent
+resolves a comment a person wrote, which is the point of asking it to address
+one. Nothing on the comment records who closed it.
 
 ## Attribution defaults to agent
 
 `obelisk` writes agent comments unless `--human` is passed, because attribution
-must not depend on a model remembering to declare itself. A person
-driving the CLI by hand is an agent until they say they are not.
+must not depend on a model remembering to declare itself.
 
 ## Exit codes
 

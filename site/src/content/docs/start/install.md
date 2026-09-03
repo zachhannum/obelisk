@@ -9,8 +9,8 @@ comments.
 
 ## The plugin
 
-Obelisk is not in the community plugin directory yet. Until it is, BRAT
-installs it from this repository's releases.
+The plugin installs with BRAT, from this repository's releases. It is not in
+the community plugin directory yet.
 
 1. In *Settings → Community plugins → Browse*, find **BRAT**, install it, and
    enable it.

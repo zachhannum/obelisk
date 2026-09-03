@@ -206,6 +206,9 @@ docs/) and external (README).
 Run it against its own rules. Nothing in this repo is a writing sample
 to match, so nothing overrides them, the em dash rule included.
 
+`STYLE.md` is the voice the documentation site, the README and the
+agents fragment are written in.
+
 ## Conventions
 
 - TypeScript strict, ES2020, `moduleResolution: bundler`. Tabs, four

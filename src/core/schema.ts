@@ -45,7 +45,7 @@ const KNOWN_COMMENT_KEYS = new Set([
 ]);
 
 // `prefix`/`suffix` are read so that context stored by an earlier version is
-// recognised and dropped on the next write, rather than preserved forever as
+// recognized and dropped on the next write, rather than preserved forever as
 // an unknown key. Nothing uses them: resolution matches on `quote` alone.
 const KNOWN_ANCHOR_KEYS = new Set(["from", "to", "quote", "prefix", "suffix"]);
 

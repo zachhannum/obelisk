@@ -39,7 +39,7 @@ plugin browser, then *Add beta plugin* in its settings, paste
 - **Sidebar.** All of a note's comments in document order, or newest first from
   the sort toggle. Click one to scroll the editor to it. Chips filter to open
   comments, to comments carrying a suggestion, or to one agent's review pass.
-  Resolved comments stay in the list, greyed rather than hidden, since they are
+  Resolved comments stay in the list, grayed rather than hidden, since they are
   still highlighted in the note.
 - **In-text highlighting.** Commented passages are highlighted, with a †
   marker that opens the comment in the sidebar.
@@ -65,9 +65,9 @@ plugin browser, then *Add beta plugin* in its settings, paste
   from the trash icon in its header, so striking one remark out of a thread
   does not take the conversation with it. Both offer an undo rather than a
   confirmation dialog.
-- **Open to agents.** A command-line tool and an MCP server can read and write
-  the same comments from outside Obsidian, so a model can review a note into
-  your sidebar, or answer the comments you left for it. Its comments are
+- **Open to agents.** A command-line tool and an MCP server read and write the
+  same comments from outside Obsidian, so a model can review a note into the
+  sidebar, or answer the comments left for it. Its comments are
   badged, and a whole review pass is one chip in the header with a *dismiss
   all* on it. See below.
 
@@ -132,12 +132,12 @@ agent is running in, and an absolute path reaches a note in one it is not. The
 server is listed in the official MCP registry as `io.github.zachhannum/obelisk`
 for a client that installs from there.
 
-**There is nothing to start.** It speaks MCP over stdio: the agent spawns a
-process when a session opens and kills it when the session ends, so
-`obelisk-mcp` is never run by hand and there is no port and no daemon. One
-process per session is also what makes a session's comments share one run chip
-in the sidebar. A session keeps the process it spawned, so a new version of the
-package arrives at the next one. To take it sooner, reconnect from `/mcp`.
+**The agent starts it.** It speaks MCP over stdio: the agent spawns a process
+when a session opens and kills it when the session ends, so there is no port
+and no daemon. One process per session is also what makes a session's comments
+share one run chip in the sidebar. A session keeps the process it spawned, so a
+new version of the package arrives at the next one. To take it sooner,
+reconnect from `/mcp`.
 
 To check the registration, `claude mcp list`, or `/mcp` inside a session. To
 check the server itself with no agent in the way:
@@ -150,22 +150,21 @@ printf '%s\n' \
   | npx -y obelisk-mcp
 ```
 
-That should print the handshake and then the four tools. A server that fails
-this fails the same way for an agent, which is worth knowing before you go
-looking at the agent's end of it.
+That prints the handshake and then the four tools. A server that fails this
+fails the same way for an agent.
 
 For an agent that does not speak MCP, paste
 [`docs/agents-fragment.md`](docs/agents-fragment.md) into the vault's
 `AGENTS.md` or `CLAUDE.md`.
 
 The one rule worth knowing: **the quote is the anchor.** A line number is never
-one. A model asked for a line will produce a plausible wrong number, and a
-plausible wrong number attaches a comment to the wrong paragraph without ever
-looking like an error, so `--near-line` only picks between identical quotes and
-takes a number copied out of `obelisk list`. `--quote` has to appear in the
-note character for character, and if it does not, or appears twice, nothing is
-written and the reason is printed. `obelisk list` prints the body numbered so
-the exact text is there to copy.
+one. A model asked for a line produces a plausible wrong number, which attaches
+a comment to the wrong paragraph without looking like an error, so
+`--near-line` only picks between identical quotes and takes a number copied out
+of `obelisk list`. `--quote` has to appear in the note character for character,
+and if it does not, or appears twice, nothing is written and the reason is
+printed. `obelisk list` prints the body numbered so the exact text is there to
+copy.
 
 Writes are frontmatter-only and leave the body byte-identical, so they are safe
 while the note is open in Obsidian. A write also re-reads the file first and

@@ -17,16 +17,16 @@ The horse bolted.
 Happy to be talked out of it.
 ````
 
-Because the proposal is part of the body, a comment can hold prose, a link and
-a rewrite at once. Two alternatives can sit side by side, and a reply can carry
-a counter-proposal without any new field.
+The proposal is part of the body, so a comment can hold prose, a link and a
+rewrite at once. Two alternatives can sit side by side, and a reply can carry a
+counter-proposal.
 
 ## How it renders
 
 The card shows the proposal as a diff against the quoted passage, word by word,
-with an Apply button in its header. The diff is a picture of the change:
-editing it does nothing, and the Preview tab of the composer draws the same
-picture, so what you see while writing is what the reader gets.
+with an Apply button in its header. The diff is display only. The composer's
+Preview tab draws the same diff, so what you see while writing is what the
+reader gets.
 
 The treatment only happens inside a comment. A ` ```suggestion ` block typed
 into a note stays an ordinary code block.
@@ -34,9 +34,8 @@ into a note stays an ordinary code block.
 ## Applying
 
 Apply is refused unless the quoted passage is still intact, which is the same
-thing as the comment still being attached. So a card offering an Apply button
-is a card whose change will land on exactly the characters the commenter
-read.
+thing as the comment still being attached. A card offering an Apply button
+lands its change on exactly the characters the commenter read.
 
 When the quote occurs more than once, the occurrence that was highlighted is
 the one spliced, so the reader applies what they were looking at.
@@ -48,15 +47,12 @@ Applying does three things:
    passage it just changed.
 3. Resolves the comment, marking the card *Applied*.
 
-Resolving on apply is deliberate: taking the edit is the strongest answer a
-proposal can get, and once it is taken no other block in the thread can be
-applied anyway. **Reopen** is one click away if the comment also asked
-something the edit did not answer. **Remove comment after applying its
-suggestion**, in the settings tab, takes the same gesture further and throws
-the record away.
+**Reopen** is one click away if the comment also asked something the edit did
+not answer. **Remove comment after applying its suggestion**, in the settings
+tab, throws the record away instead of keeping the resolved card.
 
-Every other comment in the note is unaffected by the splice, because comments
-are found by their quoted text and the splice did not touch theirs.
+The splice leaves every other comment attached, because each one is found by
+its own quoted text.
 
 ## Writes and open notes
 

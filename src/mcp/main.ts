@@ -32,7 +32,7 @@ import { ResolvedComment } from "../core/types";
  * One run id for the life of the server process, so a review pass leaves one
  * chip in the sidebar rather than twenty. A caller that knows better can pass
  * its own. Two agents working the same note in parallel is deliberately not
- * modelled.
+ * modeled.
  */
 const RUN = newCommentId();
 
@@ -105,7 +105,7 @@ server.registerTool(
 			"Leave a comment on one passage of a note. It appears in the " +
 			"reader's Obsidian sidebar, badged as coming from an agent.\n\n" +
 			"`quote` is the anchor and must appear in the note verbatim — the " +
-			"same characters, punctuation, capitalisation and spacing. Copy it " +
+			"same characters, punctuation, capitalization and spacing. Copy it " +
 			"from obelisk_list; do not retype it or tidy it up. There is no way " +
 			"to pass a line or column, and you should not try to count them: " +
 			"the quote is the anchor and the tool does the arithmetic. If the " +
@@ -208,7 +208,7 @@ server.registerTool(
 	{
 		title: "Resolve or reopen a comment",
 		description:
-			"Mark a comment settled — the reader's sidebar greys it out and " +
+			"Mark a comment settled — the reader's sidebar grays it out and " +
 			"drops it from the open count.\n\n" +
 			"This is what closes the loop on a comment a person left for you: " +
 			"read it, make the edit in the note yourself, then resolve it. " +

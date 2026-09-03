@@ -10,8 +10,7 @@ scrolls the editor to its passage and flashes the highlight.
 
 Comments are listed in document order, so the list mirrors the note, with open
 detached comments in a section at the bottom. The button beside the count
-switches to newest first, which is the order a review pass was written in
-rather than the order the note runs.
+switches to newest first, which is the order a review pass was written in.
 
 ## Chips
 
@@ -22,10 +21,8 @@ proposed rewrite. An agent's review pass adds a chip of its own beside them.
 ## Resolved comments stay
 
 There is no setting to hide them. A resolved comment still highlights its
-passage in the note, so hiding it from the sidebar only made the list disagree
-with the text, and it made resolving feel like deleting. **Open** is there when
-you want the unresolved ones, in front of the reader rather than two menus
-away.
+passage in the note, and a list that disagreed with the text would be the
+harder thing to read. **Open** is there for the unresolved ones.
 
 ## Highlighting
 
@@ -42,13 +39,12 @@ Reading view shows none of this. Comments live in the editor.
 ## Agent passes
 
 A comment written from outside Obsidian is badged. Every comment from one
-review pass shares a run id, and that pass shows up as one chip, labelled with
+review pass shares a run id, and that pass shows up as one chip, labeled with
 the model, with the run id and a count on its tooltip.
 
 The chip has an × on it that dismisses the whole pass, with an undo notice
-rather than a confirmation. Dismissing restores each comment at its old index
-if you undo, so the frontmatter does not get reordered. A filter pinned to a
-run that has just been dismissed falls back to *All*.
+rather than a confirmation. Undo puts each comment back where it was. A filter
+pinned to a run that has just been dismissed falls back to *All*.
 
-Agent comments are not hidden by default and not sorted apart. They sit in
-document order among everything else, on the passages they are about.
+Agent comments sit in document order among everything else, on the passages
+they are about.

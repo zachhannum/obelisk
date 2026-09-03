@@ -50,8 +50,7 @@ obelisk:
 
 `appliedAt` sits on the comment rather than on a block, because applying
 re-anchors the whole comment onto its replacement, so every other proposal in
-the thread is then measured against text that no longer exists. Applied is a
-fact about the thread.
+the thread is then measured against text that no longer exists.
 
 ## Anchor
 
@@ -88,19 +87,18 @@ stripped by an older one.
 
 **An older schema is understood on read, never swept.** Schema 1 kept a
 suggestion in its own key beside the body. That shape is read as a fence, and
-the note on disk is left alone until something writes to it anyway. A vault that is only ever read is never dirtied, and there is no
-upgrade pass that can half-finish.
+the note on disk is left alone until something writes to it anyway, so a vault
+that is only read is never dirtied.
 
 **A malformed entry is dropped with a console warning, never thrown.** The
 frontmatter is hand-editable, and one bad comment must not take the sidebar
 down for the whole note.
 
-## The costs, accepted knowingly
+## Costs
 
 - Comments are visible when the frontmatter is expanded in source mode. Noisy
   for a note under heavy review.
 - Every comment write dirties the file. Only deliberate actions write, so
   editing a note never touches its comments, but a burst of review activity is
   a burst of sync events.
-- Frontmatter is a poor fit for long threaded discussions. If replies grow past
-  a handful, the escape hatch is a sidecar for bodies with anchors kept inline.
+- Frontmatter is a poor fit for long threaded discussions.
