@@ -1,13 +1,9 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 
 const targetVersion = process.env.npm_package_version;
 
-/**
- * The files this run rewrote, staged so `npm version` commits the bump in one
- * go. Which files those are depends on what exists, so the list is built here
- * rather than spelled out in the `version` script.
- */
+/** The files this run rewrote, staged so `npm version` commits the bump in one go. */
 const staged = [];
 
 const readJson = (path) => JSON.parse(readFileSync(path, "utf8"));
@@ -25,17 +21,14 @@ const versions = readJson("versions.json");
 versions[targetVersion] = minAppVersion;
 writeJson("versions.json", versions);
 
-// server.json exists once the MCP server is listed in the registry, and carries
-// the version twice: once for the server, once for the npm package it points
-// at.
-if (existsSync("server.json")) {
-	const server = readJson("server.json");
-	server.version = targetVersion;
-	for (const pkg of server.packages ?? []) {
-		pkg.version = targetVersion;
-	}
-	writeJson("server.json", server);
+// server.json carries the version twice: once for the server the MCP registry
+// indexes, once for the npm package that listing points at.
+const server = readJson("server.json");
+server.version = targetVersion;
+for (const pkg of server.packages) {
+	pkg.version = targetVersion;
 }
+writeJson("server.json", server);
 
 execFileSync("git", ["add", ...staged], { stdio: "inherit" });
 console.log(`${targetVersion}: ${staged.join(", ")}`);

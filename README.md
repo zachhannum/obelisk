@@ -121,7 +121,9 @@ claude mcp add obelisk --scope user -- npx -y obelisk-mcp
 ```
 
 One registration covers every vault: the tools work on whichever vault the
-agent is running in, and an absolute path reaches a note in one it is not.
+agent is running in, and an absolute path reaches a note in one it is not. The
+server is listed in the official MCP registry as `io.github.zachhannum/obelisk`
+for a client that installs from there.
 
 **There is nothing to start.** It speaks MCP over stdio: the agent spawns a
 process when a session opens and kills it when the session ends, so

@@ -57,11 +57,12 @@ wins and the quick fix waits for its own commit.
   section, and the reasoning for each lives in the doc comment at the top
   of the file that implements it. A change that contradicts one of them
   rewrites that comment, and this section, in the same commit.
-- Work is tracked in GitHub issues. `publishing` covers the two
-  official channels, the Obsidian directory and npm; `obsidian` and
-  `mcp` mark which of them an issue serves. An issue's acceptance
-  checkboxes are its definition of done. An issue with none is a note
-  rather than a task, and needs breaking down before it is picked up.
+- Work is tracked in GitHub issues. `publishing` covers the three
+  official channels, the Obsidian directory, npm, and the MCP
+  registry, and `obsidian` and `mcp` mark which of them an issue
+  serves. An issue's acceptance checkboxes are its definition of
+  done. An issue with none is a note rather than a task, and needs
+  breaking down before it is picked up.
 
 ## Testing
 
@@ -152,9 +153,9 @@ merges nothing.
 
 `.github/workflows/release.yml` runs on a version tag: it builds,
 attaches `main.js`, `manifest.json` and `styles.css` to the release,
-and publishes to npm. It refuses a tag that does not match
-`manifest.json` or `package.json`. The tag carries no `v`, which is
-what `.npmrc` is for.
+publishes to npm, and lists the version in the MCP registry. It refuses
+a tag that does not match `manifest.json`, `package.json` or
+`server.json`. The tag carries no `v`, which is what `.npmrc` is for.
 
 A release is `npm version <patch|minor|major>` and `git push
 --follow-tags`, or the same from the Actions tab, where the workflow
@@ -162,10 +163,17 @@ raises the version and pushes the version commit to main itself. That
 push is the one thing any workflow here writes to main, and protecting
 the branch would block it.
 
-npm authenticates the publish through trusted publishing, so no token
-lives in the repository's secrets. The trusted publisher configured on
-npmjs.com names this file by filename, so renaming it stops the
-publish.
+npm authenticates the publish through trusted publishing, and the MCP
+registry authenticates over the same OIDC token, so no token lives in
+the repository's secrets. The trusted publisher configured on npmjs.com
+names this file by filename, so renaming it stops the publish.
+
+The registry checks its metadata against the published package, which
+is why `package.json` carries `mcpName` and why the registry step waits
+for npm to serve the new version before it runs. The namespace comes
+from the authenticating GitHub account and is fixed at the first
+publish. The listing declares no vault path, because there is none to
+declare: the server works on the vault it is started in.
 
 ## Documentation rules
 

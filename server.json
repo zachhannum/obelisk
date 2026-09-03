@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.zachhannum/obelisk",
+  "description": "Comment on a passage of an Obsidian note, and propose suggested edits.",
+  "version": "0.1.1",
+  "websiteUrl": "https://obelisk.typeworks.dev",
+  "repository": {
+    "url": "https://github.com/zachhannum/obelisk",
+    "source": "github",
+    "id": "1352462840"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "obelisk-mcp",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
