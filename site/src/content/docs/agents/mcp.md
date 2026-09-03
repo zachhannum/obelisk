@@ -21,3 +21,6 @@ claude mcp add obelisk --scope user -- npx -y obelisk-mcp
 One registration covers every vault: the tools work on whichever vault the
 agent is running in. To reach a note in a vault the agent is not running in,
 pass an absolute path.
+
+The server is listed in the official MCP registry as
+`io.github.zachhannum/obelisk`, for a client that installs from there.

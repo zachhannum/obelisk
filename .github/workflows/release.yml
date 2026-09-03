@@ -16,8 +16,8 @@ on:
 
 permissions:
   contents: write
-  # Trusted publishing: npm authenticates the workflow over OIDC, so there is
-  # no token in the repository's secrets.
+  # npm and the MCP registry both authenticate the workflow over OIDC, so
+  # neither needs a token in the repository's secrets.
   id-token: write
 
 jobs:
@@ -67,18 +67,23 @@ jobs:
       - run: npm ci
 
       # `npm version` writes every version number from one place, so a tag
-      # that disagrees with either file was typed by hand. The directory
-      # matches the tag against the manifest, and npm will not take a version
-      # twice, so both are worth catching before the build.
+      # that disagrees with one of these files was typed by hand. All three
+      # channels reject a mismatch rather than warning about one, and the
+      # registry rejects it after npm has already taken the version.
       - name: Check the tag against the versions
         run: |
-          for file in manifest.json package.json; do
+          for file in manifest.json package.json server.json; do
             version=$(node -p "require('./$file').version")
             if [ "$version" != "$TAG" ]; then
               echo "$file says $version, the tag says $TAG" >&2
               exit 1
             fi
           done
+          version=$(node -p "require('./server.json').packages[0].version")
+          if [ "$version" != "$TAG" ]; then
+            echo "server.json's package says $version, the tag says $TAG" >&2
+            exit 1
+          fi
 
       - run: npm run build
 
@@ -90,6 +95,19 @@ jobs:
             gh release create "$TAG" --title "$TAG" --generate-notes
           gh release upload "$TAG" main.js manifest.json styles.css --clobber
 
-      # Last, because a release can be edited afterwards and a published
-      # version cannot.
+      # Last of the two channels, because a release can be edited afterwards
+      # and a published version cannot.
       - run: npm publish
+
+      # The registry hosts metadata and checks it against the published
+      # package, so this goes after the publish and waits for npm to serve
+      # the new version.
+      - name: List the server in the MCP registry
+        run: |
+          for _ in $(seq 30); do
+            npm view "obelisk-mcp@$TAG" version >/dev/null 2>&1 && break
+            sleep 10
+          done
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish
