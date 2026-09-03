@@ -52,6 +52,22 @@ After:
 
 > A comment detaches when its quote is gone.
 
+### An instruction leads with the action
+
+A sentence that tells someone how to do something is about the action.
+A page, a panel or a button is where the action happens, and an
+inventory of what one holds leaves the reader to work out the rest.
+
+Before:
+
+> The directory listing has an *Add to Obsidian* button that does the
+> same from a browser.
+
+After:
+
+> The plugin can also be added via the *Add to Obsidian* button in its
+> directory listing.
+
 ### Plain beats clever, even when clever is shorter
 
 "can be used to" is fine. Compression is not the goal.
