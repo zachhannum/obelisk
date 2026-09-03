@@ -548,9 +548,8 @@
 	padding: 0;
 }
 
-/* The height is set inline as you type — see TextareaField.refresh — so the
-   box fits what it holds; these bound it at both ends. */
 .obelisk-compose-body {
+	field-sizing: content;
 	font-family: inherit;
 	max-height: 50vh;
 	min-height: 5em;
