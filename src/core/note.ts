@@ -41,9 +41,8 @@ export class NoteError extends Error {}
 export function readNote(text: string, source = "<note>"): Note {
 	const frame = frameFrom(text);
 	const doc = frontmatterOf(text, frame, source);
-	const fm = doc?.toJS();
-	const data: Record<string, unknown> =
-		fm && typeof fm === "object" && !Array.isArray(fm) ? fm : {};
+	const fm: unknown = doc?.toJS();
+	const data = isRecord(fm) ? fm : {};
 
 	return {
 		text,
@@ -135,6 +134,10 @@ function frontmatterOf(text: string, frame: DocFrame, source: string) {
 		);
 	}
 	return doc;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function isEmptyDoc(doc: { toJS(): unknown }): boolean {

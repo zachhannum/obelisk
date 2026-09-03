@@ -688,11 +688,9 @@ export default class ObeliskPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData(),
-		);
+		// `loadData` reads the plugin's own JSON back untyped.
+		const saved = (await this.loadData()) as Partial<ObeliskSettings> | null;
+		this.settings = { ...DEFAULT_SETTINGS, ...saved };
 	}
 
 	async saveSettings(): Promise<void> {
