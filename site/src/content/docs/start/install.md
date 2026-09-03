@@ -9,18 +9,13 @@ comments.
 
 ## The plugin
 
-The plugin installs with BRAT, from this repository's releases. It is not in
-the community plugin directory yet.
+Obelisk is in the community plugin directory.
 
-1. In *Settings → Community plugins → Browse*, find **BRAT**, install it, and
-   enable it.
-2. Open *Settings → BRAT* and choose *Add beta plugin*.
-3. Paste `zachhannum/obelisk`, leave the version on the latest release, and add
-   it.
-4. Enable **Obelisk** under *Settings → Community plugins*.
+1. In *Settings → Community plugins → Browse*, search for **Obelisk**.
+2. Install it.
+3. Enable **Obelisk** under *Settings → Community plugins*.
 
-BRAT checks for a newer release each time Obsidian starts. To take one sooner,
-use *Check for updates to all beta plugins* in its settings.
+Updates come from *Check for updates* in the same panel.
 
 :::caution
 Community plugins have to be turned on for the vault before any of this

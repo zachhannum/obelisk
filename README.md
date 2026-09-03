@@ -12,17 +12,15 @@ rename.
 
 ## Status
 
-Pre-release. Anchoring, decoration, the sidebar, suggested edits and the agent
-integration are implemented. The CLI and the MCP server are on npm as
-`obelisk-mcp`. The plugin is not in the community plugin directory yet, so it
-installs through BRAT, and none of it has been exercised against a large
-vault.
+Early. Anchoring, decoration, the sidebar, suggested edits and the agent
+integration are implemented. The plugin is in the Obsidian community plugin
+directory, and the CLI and the MCP server are on npm as `obelisk-mcp`. None of
+it has been exercised against a large vault.
 
 ## Install
 
-The plugin installs with BRAT: install and enable BRAT from the community
-plugin browser, then *Add beta plugin* in its settings, paste
-`zachhannum/obelisk`, and enable **Obelisk**. Updates come from there too.
+Search for **Obelisk** in *Settings → Community plugins → Browse*, install it,
+and enable it. Updates come from the same panel.
 
 ## Features
 
