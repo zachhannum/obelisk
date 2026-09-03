@@ -129,8 +129,9 @@ Two things bite here, both of them silent:
 - **Scope.** `claude mcp add` defaults to `local`, which registers the server
   for sessions started in that one directory; run from the vault, that is the
   vault. `--scope user` registers it in every project on the machine, all of
-  them pointed at the one vault `--vault` names, which is a surprise unless the
-  vault is one you comment on from elsewhere. `--scope project` writes a
+  them pointed at the one vault `--vault` names, which buys you nothing unless
+  you comment on that vault from sessions that start elsewhere. `--scope
+  project` writes a
   `.mcp.json` in the vault, if the vault is a repo and everyone working in it
   should get the server.
 - **The vault path.** A path that does not exist makes the server exit before

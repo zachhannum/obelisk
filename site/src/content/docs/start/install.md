@@ -79,8 +79,8 @@ install the package rather than stop to ask whether it may.
 sessions started in that one directory. Run from the vault, that is the vault.
 
 - `--scope user` registers it in every project on the machine, all of them
-  pointed at whichever vault `--vault` names. Use it for a vault you comment on
-  from elsewhere; it is a surprise otherwise.
+  pointed at the one vault `--vault` names. It buys you one thing: reaching
+  that vault from sessions that start somewhere else.
 - `--scope project` writes a `.mcp.json` in the vault, for a vault that is a
   repo everyone working in it should get the server from.
 
