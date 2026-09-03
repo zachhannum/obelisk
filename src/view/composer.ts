@@ -142,7 +142,7 @@ export class Composer extends Component {
 		const after = value.slice(to);
 		const block = suggestionFence(this.opts.quote);
 
-		// A fence has to start its own line, and wants a blank line above it
+		// A fence has to start its own line, and needs a blank line above it
 		// so it does not get swallowed by the paragraph it follows.
 		const lead = before.length === 0 || before.endsWith("\n\n")
 			? ""

@@ -213,7 +213,8 @@ async function resolveCommand(flags: Flags, args: string[]): Promise<number> {
  *
  * The guard is read, work, re-read, and write only if the file is
  * byte-for-byte what it was. `processFrontMatter`
- * serializes writes *within* Obsidian and promises an outside process nothing,
+ * serializes writes *within* Obsidian and guarantees an outside process
+ * nothing,
  * so this is what stands between a review pass and the sentence someone is
  * typing. It turns the bad case into a refusal rather than a lost edit.
  *

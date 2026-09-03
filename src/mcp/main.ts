@@ -14,7 +14,7 @@ import { ResolvedComment } from "../core/types";
  * The same four verbs, over MCP.
  *
  * A thin wrapper with no logic of its own: every rule is in `core/ops.ts`, and
- * the only thing this file decides is what to say to a model. That matters
+ * all that is left here is the wording a model reads. That matters
  * more here than in the CLI, because a refusal is the main channel through
  * which an agent learns the anchor contract, so the descriptions carry the
  * verbatim-quote rule, and the failure messages come straight back as text the
@@ -212,8 +212,9 @@ server.registerTool(
 			"drops it from the open count.\n\n" +
 			"This is what closes the loop on a comment a person left for you: " +
 			"read it, make the edit in the note yourself, then resolve it. " +
-			"Resolving a comment you did not write is allowed, but it says the " +
-			"thing it asked for has been done, so only say that when it has.",
+			"Resolving a comment you did not write is allowed, but it records " +
+			"that what the comment asked for has been done, so resolve only " +
+			"once it has.",
 		inputSchema: {
 			note: noteArg,
 			id: z.string().describe("The comment's id, from obelisk_list."),

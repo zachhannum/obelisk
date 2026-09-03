@@ -155,7 +155,7 @@ plausible wrong number attaches a comment to the wrong paragraph without ever
 looking like an error, so `--near-line` only picks between identical quotes and
 takes a number copied out of `obelisk list`. `--quote` has to appear in the
 note character for character, and if it does not, or appears twice, nothing is
-written and the tool says so. `obelisk list` prints the body line-numbered so
+written and the reason is printed. `obelisk list` prints the body numbered so
 the exact text is there to copy.
 
 Writes are frontmatter-only and leave the body byte-identical, so they are safe

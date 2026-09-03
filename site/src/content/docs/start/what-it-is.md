@@ -18,8 +18,7 @@ to keep in step with the vault.
 | **`obelisk-mcp`** | The same four verbs, as MCP tools | An agent |
 
 The storage format is the interface. Anything that can edit a file can leave a
-comment the plugin will render, which is why the agent integration needed a
-safe write path and an anchor rule rather than a new channel.
+comment the plugin will render.
 
 ## What it does
 

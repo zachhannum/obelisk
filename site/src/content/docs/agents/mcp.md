@@ -3,8 +3,7 @@ title: The MCP server
 description: Registering obelisk-mcp.
 ---
 
-`obelisk-mcp` is a thin wrapper over the same core as the CLI: one tool per
-verb, no logic of its own.
+`obelisk-mcp` gives an agent the same four verbs as the CLI, as tools.
 
 | Tool | What it does |
 |---|---|
@@ -13,9 +12,8 @@ verb, no logic of its own.
 | `obelisk_reply` | Reply to a comment. |
 | `obelisk_resolve` | Resolve or reopen a comment. |
 
-The tool descriptions carry the anchor rules, and every refusal comes back as a
-tool error with the message that fixes the call. Between them, that is how an
-agent learns what a usable quote looks like.
+There is nothing to prompt an agent about. The anchor rules are in the tool
+descriptions, and a refusal comes back with the message that fixes the call.
 
 ## Register it
 

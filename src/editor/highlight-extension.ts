@@ -40,7 +40,7 @@ export interface TrackedRange {
 /** Dispatched to hand a new set of resolved comments to the editor. */
 export const setComments = StateEffect.define<ResolvedComment[]>();
 
-/** Dispatched when the sidebar wants a comment visually emphasized. */
+/** Dispatched from the sidebar to emphasize a comment visually. */
 export const setActiveComment = StateEffect.define<string | null>();
 
 /** Dispatched to pulse a comment's highlight after jumping to it. */

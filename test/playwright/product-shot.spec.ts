@@ -35,7 +35,7 @@ const CHROME = [
 	".workspace-ribbon.mod-left { display: none !important; }",
 	// The caret blinks, so leaving it lit makes every capture a coin toss.
 	".cm-editor, .cm-scroller, .cm-content { caret-color: transparent !important; }",
-	// The run filter chip wants a little more than the default width.
+	// The run filter chip needs a little more than the default width.
 	".workspace-split.mod-right-split { width: 340px !important; }",
 ].join("\n");
 

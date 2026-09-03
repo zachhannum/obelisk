@@ -33,7 +33,7 @@ wins and the quick fix waits for its own commit.
   by; the line/column range is a hint used for sidebar order and for
   breaking ties when a quote appears twice, and is never rewritten.
   Nothing fuzzy-matches, re-finds, or scores a near miss. A quote that
-  is not found detaches the comment and says so.
+  is not found detaches the comment, with a reason.
 - **The vault is found, not configured.** Both bins walk up from their
   working directory to the `.obsidian/` that marks a vault root. A note
   argument resolves from the working directory first and the vault root
@@ -47,8 +47,8 @@ wins and the quick fix waits for its own commit.
   read-time fold in `core/schema.ts`, never a sweep, so a vault that is
   only read is never dirtied.
 - A suggested edit is a fenced ` ```suggestion ` block inside an
-  ordinary markdown body, not a field beside it. Anything that wants to
-  live next to a proposal is written as markdown.
+  ordinary markdown body, not a field beside it. Anything that belongs
+  next to a proposal is written as markdown.
 - `normalize()` is the only place YAML becomes `Comment[]`, and it is
   the trust boundary: a malformed entry is dropped with a console
   warning, never thrown, or one bad comment takes the sidebar down for
@@ -61,7 +61,7 @@ wins and the quick fix waits for its own commit.
   official channels, the Obsidian directory and npm; `obsidian` and
   `mcp` mark which of them an issue serves. An issue's acceptance
   checkboxes are its definition of done. An issue with none is a note
-  rather than a task, and wants breaking down before it is picked up.
+  rather than a task, and needs breaking down before it is picked up.
 
 ## Testing
 
@@ -82,11 +82,11 @@ ones it touches pass:
   saving*. Anchoring, decoration and the composer have no other proof.
 - The CLI, against a scratch note: `obelisk list`, then a `comment`
   that lands and one whose `--quote` is off by a character, which must
-  write nothing and say why.
+  write nothing and print why.
 - The MCP handshake, with no agent in the way: the README's smoke test,
   piped into `node dist/mcp.mjs` rather than the `npx` the README
   prints, so it answers for the build in front of you. A server that
-  fails it fails the same way for an agent, which sees only
+  fails it fails the same way for an agent, which gets only
   `CONNECTION_CLOSED` and no cause.
 
 `core/` has no runner. The anchor arithmetic, the fence scanner, the
@@ -109,8 +109,8 @@ be.
   as a line break, so prose wrapped to the width used for code comes
   out as a ragged column.
 - Before pushing, run `npm run build` and make it green. CI runs the
-  same command and nothing else, so a red push is a wasted cycle that
-  tells you what you already could have known.
+  same command and nothing else, so a red push is a wasted cycle for a
+  result you already could have had.
 - After opening the PR, watch it to green (`gh run watch`) before
   handing it to review.
 - **Claude does not merge.** CI green is the floor, not the finish
@@ -126,7 +126,7 @@ be.
   `version-bump.mjs`, which rewrites `manifest.json`, `versions.json`
   and `server.json` and stages them; the MCP server reads its version
   off `package.json`. The MCP registry and the Obsidian directory both
-  reject a version that disagrees with itself rather than warning.
+  reject a version that does not match itself rather than warning.
 
 ## CI scaffolding
 
@@ -152,7 +152,7 @@ merges nothing.
 
 `.github/workflows/release.yml` runs on a version tag: it builds,
 attaches `main.js`, `manifest.json` and `styles.css` to the release,
-and publishes to npm. It refuses a tag that disagrees with
+and publishes to npm. It refuses a tag that does not match
 `manifest.json` or `package.json`. The tag carries no `v`, which is
 what `.npmrc` is for.
 
