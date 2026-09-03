@@ -22,8 +22,8 @@ it has been exercised against a large vault.
 Search for **Obelisk** in *Settings → Community plugins → Browse*, install it,
 and enable it. Updates come from the same panel.
 
-The [directory listing](https://community.obsidian.md/plugins/obelisk) has an *Add to Obsidian*
-button that does the same from a browser.
+The plugin can also be added via the *Add to Obsidian* button in its
+[directory listing](https://community.obsidian.md/plugins/obelisk).
 
 ## Features
 

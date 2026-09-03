@@ -17,8 +17,8 @@ Obelisk is in the community plugin directory.
 
 Updates come from *Check for updates* in the same panel.
 
-The [directory listing](https://community.obsidian.md/plugins/obelisk) has an *Add to Obsidian* button
-that does the same from a browser.
+The plugin can also be added via the *Add to Obsidian* button in its
+[directory listing](https://community.obsidian.md/plugins/obelisk).
 
 :::caution
 Community plugins have to be turned on for the vault before any of this
