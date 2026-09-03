@@ -27,29 +27,6 @@ Community plugins have to be turned on for the vault before any of this
 appears. On mobile, the plugin loads but has not been tested there.
 :::
 
-## The plugin, from source
-
-For a build of a branch rather than a release:
-
-```bash
-git clone https://github.com/zachhannum/obelisk
-cd obelisk
-npm install
-npm run build
-```
-
-`npm run build` typechecks the source, then produces three things: `main.js`
-for the plugin, and `dist/cli.mjs` and `dist/mcp.mjs` for the two bins.
-
-Symlink the repo into the vault's plugin folder:
-
-```bash
-ln -s "$PWD" /path/to/vault/.obsidian/plugins/obelisk
-```
-
-Then enable **Obelisk** under *Settings → Community plugins*. After a rebuild,
-run *Reload app without saving* to pick up the new `main.js`.
-
 ## The CLI
 
 ```bash
