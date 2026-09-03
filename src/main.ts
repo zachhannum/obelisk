@@ -456,8 +456,8 @@ export default class ObeliskPlugin extends Plugin {
 		this.refresh();
 
 		const notice = new Notice("Reply deleted. Click to undo.", 8000);
-		notice.noticeEl.addClass("mod-clickable");
-		notice.noticeEl.addEventListener("click", () => {
+		notice.messageEl.addClass("mod-clickable");
+		notice.messageEl.addEventListener("click", () => {
 			notice.hide();
 			void this.restoreReply(file, commentId, reply, index);
 		});
@@ -500,8 +500,8 @@ export default class ObeliskPlugin extends Plugin {
 		// one-click action taken often, and a modal on each one would be worse
 		// than the occasional restore.
 		const notice = new Notice("Comment deleted. Click to undo.", 8000);
-		notice.noticeEl.addClass("mod-clickable");
-		notice.noticeEl.addEventListener("click", () => {
+		notice.messageEl.addClass("mod-clickable");
+		notice.messageEl.addEventListener("click", () => {
 			notice.hide();
 			void this.store.add(file, comment).then(() => this.refresh());
 		});
@@ -533,8 +533,8 @@ export default class ObeliskPlugin extends Plugin {
 				`run ${run} dismissed. Click to undo.`,
 			8000,
 		);
-		notice.noticeEl.addClass("mod-clickable");
-		notice.noticeEl.addEventListener("click", () => {
+		notice.messageEl.addClass("mod-clickable");
+		notice.messageEl.addEventListener("click", () => {
 			notice.hide();
 			void this.restoreRun(file, removed);
 		});

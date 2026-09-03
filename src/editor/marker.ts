@@ -25,8 +25,7 @@ export class MarkerWidget extends WidgetType {
 	}
 
 	toDOM(_view: EditorView): HTMLElement {
-		const el = document.createElement("span");
-		el.className = "obelisk-marker";
+		const el = createSpan({ cls: "obelisk-marker" });
 		el.dataset.obeliskId = this.commentId;
 		el.setAttribute("role", "button");
 		el.setAttribute("tabindex", "0");
