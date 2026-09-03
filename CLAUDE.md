@@ -66,12 +66,18 @@ wins and the quick fix waits for its own commit.
 
 ## Testing
 
-Verification today is five things, and a change is not done until the
+Verification today is six things, and a change is not done until the
 ones it touches pass:
 
 - `npm run build` runs `tsc --noEmit` over `src/**` and the harness,
   then the bundles. Strict mode is on. A change that only typechecks
   with a cast has not been thought through yet.
+- `npm run lint` runs the ruleset the community directory's scanner
+  grades a release with, and what it finds shows on the listing.
+  `eslint.config.mjs` copies the config the scanner builds, because the
+  scanner ignores the repository's own. Zero warnings is the bar. The
+  two rules that fire on the bins are off there, since no inline comment
+  may disable them and a bin without Node imports does nothing.
 - `npm run shots` builds, then launches Obsidian under Playwright,
   opens the vault in `test/vaults/`, and rewrites the landing page's
   captures. The captures are committed, so a change to the sidebar
@@ -109,9 +115,9 @@ be.
   list item, blank lines between them. GitHub renders a single newline
   as a line break, so prose wrapped to the width used for code comes
   out as a ragged column.
-- Before pushing, run `npm run build` and make it green. CI runs the
-  same command and nothing else, so a red push is a wasted cycle for a
-  result you already could have had.
+- Before pushing, run `npm run lint` and `npm run build` and make them
+  green. CI runs the same two commands and nothing else, so a red push
+  is a wasted cycle for a result you already could have had.
 - After opening the PR, watch it to green (`gh run watch`) before
   handing it to review.
 - **Claude does not merge.** CI green is the floor, not the finish
@@ -132,10 +138,11 @@ be.
 ## CI scaffolding
 
 `.github/workflows/build.yml` runs on every PR and on push to main:
-`npm install`, then `npm run build` on Node 22, covering the typecheck,
-the plugin bundle, and both bins. That is the whole gate. Anything that
-should block a merge has to be reachable from `npm run build` or it
-blocks nothing.
+`npm install`, then `npm run lint` and `npm run build` on Node 22,
+covering the scanner's ruleset, the typecheck, the plugin bundle, and
+both bins. That is the whole gate. Anything that should block a merge
+has to be reachable from one of those two commands or it blocks
+nothing.
 
 `.github/workflows/docs.yml` builds `site/` on any change under it, and
 deploys to GitHub Pages on push to main. It needs Pages enabled for the
