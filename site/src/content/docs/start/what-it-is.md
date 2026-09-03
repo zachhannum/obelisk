@@ -14,8 +14,8 @@ to keep in step with the vault.
 | | What it is | Where it runs |
 |---|---|---|
 | **Plugin** | Highlights, sidebar, composer, Apply button | Obsidian |
-| **`obelisk`** | Four verbs: list, comment, reply, resolve | A shell |
-| **`obelisk-mcp`** | The same four verbs, as MCP tools | An agent |
+| **`obelisk`** | Four commands: list, comment, reply, resolve | A shell |
+| **`obelisk-mcp`** | The same four, as MCP tools | An agent |
 
 The storage format is the interface. Anything that can edit a file can leave a
 comment the plugin will render.

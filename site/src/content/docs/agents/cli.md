@@ -1,6 +1,6 @@
 ---
 title: The CLI
-description: obelisk, four verbs over a note's comments.
+description: obelisk, four commands over a note's comments.
 ---
 
 ```
@@ -14,7 +14,7 @@ obelisk resolve <note> <id> [--reopen]
 you are in, or an absolute path to a note in another vault. The `.md` is
 optional.
 
-There is no verb for applying a suggestion. An agent that wants the edit made
+There is no command for applying a suggestion. An agent that wants the edit made
 can make it; Apply exists in the plugin because a *reader* needs one click to
 take a proposal they did not write.
 
@@ -77,8 +77,8 @@ obelisk resolve chapter-3.md cq7fk2m9x
 obelisk resolve chapter-3.md cq7fk2m9x --reopen
 ```
 
-Resolving records that what the comment asked for has been done. It is a verb
-an agent can call on a comment a person wrote, which is the point of asking it
+Resolving records that what the comment asked for has been done. It is a
+command an agent can run on a comment a person wrote, which is the point of asking it
 to address one, though nothing on the comment records that an agent was the one
 that closed it.
 

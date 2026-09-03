@@ -3,7 +3,7 @@ title: The MCP server
 description: Registering obelisk-mcp.
 ---
 
-`obelisk-mcp` gives an agent the same four verbs as the CLI, as tools.
+`obelisk-mcp` gives an agent the CLI's four commands as tools.
 
 | Tool | What it does |
 |---|---|
