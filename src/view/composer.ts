@@ -30,9 +30,6 @@ export interface ComposerOptions {
 	onEscape?: () => void;
 }
 
-/** Past this the box scrolls rather than pushing the buttons off-screen. */
-const MAX_ROWS = 20;
-
 /** Lets a caller re-focus a composer it has already put on screen. */
 const composers = new WeakMap<HTMLElement, Composer>();
 
@@ -277,10 +274,7 @@ class TextareaField implements Field {
 		this.el = host.createEl("textarea", { cls: "obelisk-compose-body" });
 		this.el.placeholder = opts.placeholder;
 		this.el.value = opts.value;
-		this.el.addEventListener("input", () => {
-			this.refresh();
-			opts.onChange(this.value);
-		});
+		this.el.addEventListener("input", () => opts.onChange(this.value));
 		this.el.addEventListener("keydown", (evt) => {
 			if (evt.key === "Enter" && (evt.metaKey || evt.ctrlKey)) {
 				evt.preventDefault();
@@ -290,7 +284,6 @@ class TextareaField implements Field {
 			}
 		});
 		this.onChange = opts.onChange;
-		this.refresh();
 	}
 
 	get value(): string {
@@ -308,7 +301,6 @@ class TextareaField implements Field {
 	replace(from: number, to: number, text: string): void {
 		const value = this.el.value;
 		this.el.value = value.slice(0, from) + text + value.slice(to);
-		this.refresh();
 		this.onChange(this.value);
 	}
 
@@ -316,21 +308,8 @@ class TextareaField implements Field {
 		this.el.setSelectionRange(from, to);
 	}
 
-	/**
-	 * Grow the box to its content, so an edit or a prefilled suggestion opens
-	 * showing the whole thing rather than a two-line slot you have to drag.
-	 * CSS caps it, past which the textarea scrolls; the height has to be reset
-	 * first or scrollHeight only ever reports the taller of the two.
-	 */
 	refresh(): void {
-		if (!this.el.isShown()) {
-			// Nothing to measure while detached or on the Preview tab — count
-			// lines instead, and re-measure when Write comes back.
-			this.el.rows = Math.min(MAX_ROWS, this.el.value.split("\n").length);
-			return;
-		}
-		this.el.style.height = "auto";
-		this.el.style.height = `${this.el.scrollHeight}px`;
+		// The box grows with `field-sizing`, so there is nothing to measure.
 	}
 
 	destroy(): void {
