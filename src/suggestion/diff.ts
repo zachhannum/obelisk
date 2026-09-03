@@ -104,7 +104,7 @@ function collapse(ops: DiffOp[]): DiffOp[] {
 }
 
 /**
- * Render into two rows — what the text says now and what it would say — with
+ * Render into two rows — the text now and the text as proposed — with
  * the changed words picked out inside each. Rows with no changes at all are
  * omitted, so a pure insertion shows only the "after" row.
  */

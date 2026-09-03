@@ -101,8 +101,8 @@ export class CommentModal extends Modal {
 	}
 
 	/**
-	 * A comment with neither something to say nor an actual change proposed is
-	 * not worth writing to the file.
+	 * An empty comment with no change proposed is not worth writing to the
+	 * file.
 	 */
 	private canSubmit(): boolean {
 		if (!this.body.trim()) return false;

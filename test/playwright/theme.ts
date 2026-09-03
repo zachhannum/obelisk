@@ -75,7 +75,7 @@ function fontFaces(): string {
 	}).join("\n\n");
 }
 
-/** The plugin's washes are built with `rgba()`, so it wants channels, not hex. */
+/** The plugin's washes are built with `rgba()`, so it takes channels, not hex. */
 function channels(hex: string): string {
 	const m = /^#([0-9a-f]{6})$/i.exec(hex.trim());
 	if (!m) {

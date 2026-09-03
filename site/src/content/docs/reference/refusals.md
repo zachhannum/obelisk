@@ -22,10 +22,9 @@ to be read by whoever asked.
 The search is strict. A looser one, with straightened punctuation and
 collapsed whitespace, runs only after the strict search fails, and only to
 *report*: if it finds exactly one match, the refusal quotes the note's own
-wording back and says to copy it.
+wording back, to be copied.
 
-Nothing is stored that did not come out of the note. A writer more permissive
-than the resolver would create comments the plugin then cannot find.
+Nothing is stored that did not come out of the note.
 
 ## On an ambiguous quote
 

@@ -1,10 +1,9 @@
 ---
 title: The MCP server
-description: Registering obelisk-mcp, and what to check when it does not connect.
+description: Registering obelisk-mcp.
 ---
 
-`obelisk-mcp` is a thin wrapper over the same core as the CLI: one tool per
-verb, no logic of its own.
+`obelisk-mcp` gives an agent the CLI's four commands as tools.
 
 | Tool | What it does |
 |---|---|
@@ -13,57 +12,12 @@ verb, no logic of its own.
 | `obelisk_reply` | Reply to a comment. |
 | `obelisk_resolve` | Resolve or reopen a comment. |
 
-The tool descriptions carry the anchor rules, and every refusal comes back as a
-tool error with the message that fixes the call. Between them, that is how an
-agent learns what a usable quote looks like.
-
 ## Register it
 
 ```bash
-claude mcp add obelisk --scope user -- \
-  npx -y obelisk-mcp --vault /path/to/your/vault
+claude mcp add obelisk --scope user -- npx -y obelisk-mcp
 ```
 
-`-y` because the agent gives npx no terminal to ask in, so the first run has to
-install the package rather than stop to ask whether it may.
-
-:::caution[The one that bites silently]
-`claude mcp add` defaults to `--scope local`, which files the server under the
-directory you happened to run it in, rarely the vault. `--scope user`
-registers it everywhere; `--scope project` writes a `.mcp.json` in the vault
-instead.
-:::
-
-The vault path has to be absolute and has to exist. The server is spawned
-without a shell, so a `~` in a config file stays a literal tilde, and the
-process inherits the agent's working directory rather than the vault's.
-
-## There is nothing to start
-
-It speaks MCP over stdio. The agent spawns a process when a session opens and
-kills it when the session ends, so `obelisk-mcp` is never run by hand: no port,
-no daemon.
-
-One process per session is also what gives a session's comments a single run
-chip in the sidebar. A session keeps the process it spawned, so a new version
-of the package arrives at the next one. Reconnect from `/mcp` to take it
-sooner.
-
-## When it will not connect
-
-A vault path that does not exist makes the server exit before it says anything,
-which reaches the agent as `CONNECTION_CLOSED` and names nothing. The path in
-`claude mcp get obelisk` is the first thing to check.
-
-To test the server with no agent in the way:
-
-```bash
-printf '%s\n' \
-  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"smoke","version":"0"}}}' \
-  '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
-  '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
-  | npx -y obelisk-mcp --vault /abs/path/to/vault
-```
-
-That prints the handshake and then the four tools. If it fails here, the fault
-is on this side, and there is no point looking at the agent's end of it.
+One registration covers every vault: the tools work on whichever vault the
+agent is running in. To reach a note in a vault the agent is not running in,
+pass an absolute path.

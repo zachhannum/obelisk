@@ -4,8 +4,8 @@ Inline comments and GitHub-style suggested edits for [Obsidian](https://obsidian
 
 Select a passage, leave a comment on it, and optionally propose a replacement
 that can be applied with one click. Comments are stored in the note's own
-frontmatter, so they travel with the file through sync, git, export and rename.
-There is no sidecar database to fall out of step with the vault.
+frontmatter, so they travel with the file through sync, git, export and
+rename.
 
 > An *obelus* (†) was the mark ancient editors drew in the margin of a
 > manuscript to say: this passage is disputed.
@@ -30,7 +30,7 @@ and none of it has been exercised against a large vault.
   underlying text has changed since. It also resolves the comment, and *Reopen*
   is there if the comment asked something the edit did not answer.
 - **Sidebar.** All of a note's comments in document order, or newest first from
-  the sort toggle; click one to scroll the editor to it. Chips filter to open
+  the sort toggle. Click one to scroll the editor to it. Chips filter to open
   comments, to comments carrying a suggestion, or to one agent's review pass.
   Resolved comments stay in the list, greyed rather than hidden, since they are
   still highlighted in the note.
@@ -52,7 +52,7 @@ and none of it has been exercised against a large vault.
   the way down.
 - **Editable.** Rewrite a comment or a reply in the same composer that wrote
   it, suggestion button and all, from the card's *Edit* button or by
-  right-clicking the passage. Edited bodies are marked as such; the anchor is
+  right-clicking the passage. Edited bodies are marked as such. The anchor is
   left alone, so changing what you said never changes what you said it about.
 - **Deletable.** A whole comment from the card's *Delete*, or a single reply
   from the trash icon in its header, so striking one remark out of a thread
@@ -102,7 +102,7 @@ person wrote it, so nothing already in a vault needs migrating.
 ## Agents
 
 The same comments, from outside Obsidian. A model reviews a note and its
-remarks appear in the sidebar of the note you already have open; or you leave
+remarks appear in the sidebar of the note you already have open. Or you leave
 comments asking for things and a model reads them, makes the edits, and
 resolves them.
 
@@ -117,35 +117,18 @@ obelisk comment note.md --quote "The horse, which had been standing there, bolte
 For an agent that speaks MCP, register the server with it:
 
 ```bash
-claude mcp add obelisk --scope user -- \
-  npx -y obelisk-mcp --vault /path/to/your/vault
+claude mcp add obelisk --scope user -- npx -y obelisk-mcp
 ```
 
-`-y` because the agent gives npx no terminal to ask in, so the first run has to
-install the package rather than stop to ask whether it may.
-
-Two things bite here, both of them silent:
-
-- **Scope.** `claude mcp add` defaults to `local`, which files the server under
-  the directory you happened to run it in, rarely the vault. `--scope user`
-  registers it everywhere; `--scope project` writes a `.mcp.json` in the vault
-  instead, if the vault is a repo and everyone working in it should get the
-  server.
-- **The vault path.** A path that does not exist makes the server exit before
-  it says anything, which reaches the agent as `CONNECTION_CLOSED` and names
-  nothing; if you see that, the path in `claude mcp get obelisk` is the first
-  thing to check.
-
-The vault path has to be absolute. The server is spawned without a shell, so a
-`~` in a config file stays a literal tilde, and the process inherits the
-agent's working directory rather than the vault's.
+One registration covers every vault: the tools work on whichever vault the
+agent is running in, and an absolute path reaches a note in one it is not.
 
 **There is nothing to start.** It speaks MCP over stdio: the agent spawns a
 process when a session opens and kills it when the session ends, so
 `obelisk-mcp` is never run by hand and there is no port and no daemon. One
 process per session is also what makes a session's comments share one run chip
 in the sidebar. A session keeps the process it spawned, so a new version of the
-package arrives at the next one; to take it sooner, reconnect from `/mcp`.
+package arrives at the next one. To take it sooner, reconnect from `/mcp`.
 
 To check the registration, `claude mcp list`, or `/mcp` inside a session. To
 check the server itself with no agent in the way:
@@ -155,7 +138,7 @@ printf '%s\n' \
   '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"smoke","version":"0"}}}' \
   '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
   '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
-  | npx -y obelisk-mcp --vault /abs/path/to/vault
+  | npx -y obelisk-mcp
 ```
 
 That should print the handshake and then the four tools. A server that fails
@@ -172,11 +155,11 @@ plausible wrong number attaches a comment to the wrong paragraph without ever
 looking like an error, so `--near-line` only picks between identical quotes and
 takes a number copied out of `obelisk list`. `--quote` has to appear in the
 note character for character, and if it does not, or appears twice, nothing is
-written and the tool says so. `obelisk list` prints the body line-numbered so
+written and the reason is printed. `obelisk list` prints the body numbered so
 the exact text is there to copy.
 
 Writes are frontmatter-only and leave the body byte-identical, so they are safe
-while the note is open in Obsidian; a write also re-reads the file first and
+while the note is open in Obsidian. A write also re-reads the file first and
 refuses if it changed underneath.
 
 ## Development

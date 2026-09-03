@@ -10,7 +10,7 @@ composer opens with the selected text quoted at the top.
 
 The composer is Obsidian's own markdown editor, so `Cmd+B`, list continuation,
 `[[` autocompletion and live preview behave the way they do in a note. Write
-the comment as markdown; there is no plain-text mode, because the sidebar
+the comment as markdown. There is no plain-text mode, because the sidebar
 renders it as markdown too.
 
 Submit, and three things happen: the comment appears in the right sidebar, the
@@ -37,7 +37,7 @@ exactly the quoted range and resolves the comment.
 ## Answer one
 
 Click a card to scroll the editor to its passage. **Reply** opens the same
-composer under the comment; a reply can carry a suggestion block of its own, so
+composer under the comment. A reply can carry a suggestion block of its own, so
 a counter-proposal is an ordinary reply.
 
 **Resolve** greys the card out and drops the comment from the open count. It

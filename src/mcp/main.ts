@@ -1,10 +1,10 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { basename, isAbsolute, join, resolve as resolvePath } from "node:path";
-import { parseArgs } from "node:util";
+import { basename } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { version } from "../../package.json";
+import { notePath } from "../bin/vault";
 import { newCommentId } from "../core/id";
 import * as ops from "../core/ops";
 import { Outcome } from "../core/ops";
@@ -14,28 +14,19 @@ import { ResolvedComment } from "../core/types";
  * The same four verbs, over MCP.
  *
  * A thin wrapper with no logic of its own: every rule is in `core/ops.ts`, and
- * the only thing this file decides is what to say to a model. That matters
+ * all that is left here is the wording a model reads. That matters
  * more here than in the CLI, because a refusal is the main channel through
  * which an agent learns the anchor contract, so the descriptions carry the
  * verbatim-quote rule, and the failure messages come straight back as text the
  * caller can act on.
  *
- *   claude mcp add obelisk --scope user -- \
- *     npx -y obelisk-mcp --vault /path/to/your/vault
+ *   claude mcp add obelisk --scope user -- npx -y obelisk-mcp
  *
  * Stdio: the agent spawns one process per session and kills it at the end, so
  * there is nothing to start by hand, and RUN below is per session as a result.
- * The vault path is absolute because the process gets no shell and inherits
- * the agent's cwd, not the vault's. See the Agents section of README.md.
+ * There is nothing to configure either: the vault is found by walking up from
+ * the working directory the agent spawned this in.
  */
-
-const { values } = parseArgs({
-	args: process.argv.slice(2),
-	options: { vault: { type: "string" } },
-	allowPositionals: false,
-});
-
-const VAULT = values.vault ?? process.env.OBELISK_VAULT ?? process.cwd();
 
 /**
  * One run id for the life of the server process, so a review pass leaves one
@@ -49,7 +40,11 @@ const server = new McpServer({ name: "obelisk", version });
 
 const noteArg = z
 	.string()
-	.describe("Path to the note, relative to the vault root. `.md` optional.");
+	.describe(
+		"Path to the note, relative to the vault root or to the working " +
+			"directory. Absolute paths reach a note in another vault. `.md` " +
+			"optional.",
+	);
 
 server.registerTool(
 	"obelisk_list",
@@ -217,8 +212,9 @@ server.registerTool(
 			"drops it from the open count.\n\n" +
 			"This is what closes the loop on a comment a person left for you: " +
 			"read it, make the edit in the note yourself, then resolve it. " +
-			"Resolving a comment you did not write is allowed, but it says the " +
-			"thing it asked for has been done, so only say that when it has.",
+			"Resolving a comment you did not write is allowed, but it records " +
+			"that what the comment asked for has been done, so resolve only " +
+			"once it has.",
 		inputSchema: {
 			note: noteArg,
 			id: z.string().describe("The comment's id, from obelisk_list."),
@@ -266,13 +262,6 @@ async function write<T>(
 
 	await writeFile(path, result.value.text, "utf8");
 	return result;
-}
-
-function notePath(note: string): string {
-	const path = isAbsolute(note)
-		? resolvePath(note)
-		: resolvePath(join(VAULT, note));
-	return path.endsWith(".md") ? path : `${path}.md`;
 }
 
 function summarize(comment: ResolvedComment, listing: ops.Listing) {

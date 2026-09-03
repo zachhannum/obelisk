@@ -30,8 +30,8 @@ away.
 ## Highlighting
 
 A commented passage carries a hairline underline and a † at the end of it that
-opens the comment. Resolved comments underline with a dotted rule; a comment
-carrying an unapplied suggestion underlines in green.
+opens the comment. Resolved comments underline with a dotted rule, and a
+comment carrying an unapplied suggestion underlines in green.
 
 Overlapping comments nest: each layer thickens the underline, and comments
 sharing an end position collapse into one marker with a count. It is legible to

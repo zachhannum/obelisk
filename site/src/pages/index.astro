@@ -42,8 +42,7 @@ $ obelisk comment chapter-3.md \\
 
 comment cq7fk2m9x written to chapter-3.md`;
 
-const mcp = `$ claude mcp add obelisk --scope user -- \\
-    npx -y obelisk-mcp --vault /path/to/vault
+const mcp = `$ claude mcp add obelisk --scope user -- npx -y obelisk-mcp
 
 obelisk_list      obelisk_comment
 obelisk_reply     obelisk_resolve`;
@@ -66,8 +65,7 @@ obelisk_reply     obelisk_resolve`;
 				Select a passage, leave a comment on it, and propose a replacement that
 				applies in one click. Comments are stored in the note's own
 					frontmatter, so they travel with the file through sync, git, export
-					and rename. There is no sidecar database to fall out of step with the
-					vault.
+					and rename.
 			</p>
 			<div class="cta">
 				<a class="btn btn-primary" href={`${base}/start/install/`}>Install it</a>
@@ -125,7 +123,7 @@ obelisk_reply     obelisk_resolve`;
 					<span class="tag">Command line</span>
 					<h3>obelisk</h3>
 					<p>
-						Four verbs (list, comment, reply, resolve) over the same core. A
+						Four commands: list, comment, reply, resolve. A
 						write touches only the frontmatter, so a comment can land on a note
 						you have open in Obsidian without disturbing what you are typing.
 					</p>
@@ -135,7 +133,7 @@ obelisk_reply     obelisk_resolve`;
 					<span class="tag">Model Context Protocol</span>
 					<h3>obelisk-mcp</h3>
 					<p>
-						The same four verbs as MCP tools. Ask the agent you already have
+						The same four as MCP tools. Ask the agent you already have
 						open to review a note, and its remarks appear in the sidebar of the
 						note you are already reading.
 					</p>
@@ -230,7 +228,7 @@ obelisk_reply     obelisk_resolve`;
 					</p>
 					<p style="margin-block-start:1rem">
 						Applying refuses if the underlying text has changed since the
-						proposal was written. That condition is the same one that decides
+						proposal was written. That condition is the same one behind
 						whether the comment is attached at all, so a splice always lands on
 						exactly the characters the commenter read.
 					</p>
@@ -265,8 +263,8 @@ obelisk_reply     obelisk_resolve`;
 			plausible wrong number, and a plausible wrong number attaches a comment
 			to the wrong paragraph without ever looking like an error, so a line is
 			only ever a tiebreak between two identical quotes. The quote itself has
-			to appear in the note character for character; if it does not, nothing
-			is written and the tool says why.
+			to appear in the note character for character. If it does not, nothing
+			is written, and the reason is printed.
 			</p>
 		</div>
 	</section>

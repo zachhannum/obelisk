@@ -18,7 +18,7 @@ Happy to be talked out of it.
 ````
 
 Because the proposal is part of the body, a comment can hold prose, a link and
-a rewrite at once; two alternatives can sit side by side; and a reply can carry
+a rewrite at once. Two alternatives can sit side by side, and a reply can carry
 a counter-proposal without any new field.
 
 ## How it renders

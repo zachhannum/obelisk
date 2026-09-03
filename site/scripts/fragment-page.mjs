@@ -26,8 +26,8 @@ It documents the CLI rather than the YAML on purpose. An agent told to write
 frontmatter directly will get the anchor wrong in exactly the way the anchor
 contract exists to prevent.
 
-It assumes \`obelisk\` is on the reader's PATH: \`npm run build\` and \`npm link\`
-in the repo, until the package is published.
+It assumes \`obelisk\` is on the reader's PATH, which is what
+\`npm install -g obelisk-mcp\` does.
 
 `;
 

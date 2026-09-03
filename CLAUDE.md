@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Working agreements for implementing Obelisk. These are policies, not
-suggestions; when something here conflicts with a quick fix, the policy
+suggestions. When something here conflicts with a quick fix, the policy
 wins and the quick fix waits for its own commit.
 
 ## Project shape
@@ -10,15 +10,16 @@ wins and the quick fix waits for its own commit.
   that does not import Obsidian: the model, the anchor arithmetic, the
   YAML, and the four verbs. `src/main.ts` and everything under
   `src/view/`, `src/editor/`, `src/store/`, `src/suggestion/` is the
-  plugin; `src/cli/` is `obelisk`; `src/mcp/` is `obelisk-mcp`. The two
-  bins are esbuild bundles in `dist/`, one file each, built only by a
-  production build.
+  plugin; `src/cli/` is `obelisk`; `src/mcp/` is `obelisk-mcp`, and
+  `src/bin/` is what those two share and the plugin cannot have,
+  because it reaches for `node:fs`. The two bins are esbuild bundles in
+  `dist/`, one file each, built only by a production build.
 - `site/` is the documentation site: Astro and Starlight, its own
   `package.json`, its own `node_modules`, built by its own workflow. Nothing
   in it is imported by `src/`, and `npm run build` at the root does not touch
   it. Its *Agents without MCP* page is generated from
   `docs/agents-fragment.md` before every site build, so the fragment a reader
-  pastes into a vault has one source; the generated page is gitignored.
+  pastes into a vault has one source. The generated page is gitignored.
 - `test/` is the capture harness: Playwright driving a real Obsidian,
   whose only output is the six PNGs under `site/src/assets/shots/`. It is
   the one thing outside `site/` that reads `site/`, for the design tokens
@@ -29,10 +30,16 @@ wins and the quick fix waits for its own commit.
   without breaking the plugin build, so it is the one import worth
   checking by eye.
 - **The quote is the anchor.** `anchor.quote` is what a comment attaches
-  by; the line/column range is a hint used for sidebar order and for
+  by. The line/column range is a hint used for sidebar order and for
   breaking ties when a quote appears twice, and is never rewritten.
   Nothing fuzzy-matches, re-finds, or scores a near miss. A quote that
-  is not found detaches the comment and says so.
+  is not found detaches the comment, with a reason.
+- **The vault is found, not configured.** Both bins walk up from their
+  working directory to the `.obsidian/` that marks a vault root. A note
+  argument resolves from the working directory first and the vault root
+  second, so a bare name works from anywhere under the vault. There is
+  no flag and no environment variable for it: a path in a config file
+  is a second copy of where the vault is, and it goes stale silently.
 - Detachment is derived on every resolve, never stored. Nothing about
   where a comment sits is written back to disk.
 - Storage is one frontmatter key, `obelisk`, plus `obelisk_schema`.
@@ -40,8 +47,8 @@ wins and the quick fix waits for its own commit.
   read-time fold in `core/schema.ts`, never a sweep, so a vault that is
   only read is never dirtied.
 - A suggested edit is a fenced ` ```suggestion ` block inside an
-  ordinary markdown body, not a field beside it. Anything that wants to
-  live next to a proposal is written as markdown.
+  ordinary markdown body, not a field beside it. Anything that belongs
+  next to a proposal is written as markdown.
 - `normalize()` is the only place YAML becomes `Comment[]`, and it is
   the trust boundary: a malformed entry is dropped with a console
   warning, never thrown, or one bad comment takes the sidebar down for
@@ -54,7 +61,7 @@ wins and the quick fix waits for its own commit.
   official channels, the Obsidian directory and npm; `obsidian` and
   `mcp` mark which of them an issue serves. An issue's acceptance
   checkboxes are its definition of done. An issue with none is a note
-  rather than a task, and wants breaking down before it is picked up.
+  rather than a task, and needs breaking down before it is picked up.
 
 ## Testing
 
@@ -62,7 +69,7 @@ Verification today is five things, and a change is not done until the
 ones it touches pass:
 
 - `npm run build` runs `tsc --noEmit` over `src/**` and the harness,
-  then the bundles. Strict mode is on; a change that only typechecks
+  then the bundles. Strict mode is on. A change that only typechecks
   with a cast has not been thought through yet.
 - `npm run shots` builds, then launches Obsidian under Playwright,
   opens the vault in `test/vaults/`, and rewrites the landing page's
@@ -75,11 +82,11 @@ ones it touches pass:
   saving*. Anchoring, decoration and the composer have no other proof.
 - The CLI, against a scratch note: `obelisk list`, then a `comment`
   that lands and one whose `--quote` is off by a character, which must
-  write nothing and say why.
+  write nothing and print why.
 - The MCP handshake, with no agent in the way: the README's smoke test,
   piped into `node dist/mcp.mjs` rather than the `npx` the README
   prints, so it answers for the build in front of you. A server that
-  fails it fails the same way for an agent, which sees only
+  fails it fails the same way for an agent, which gets only
   `CONNECTION_CLOSED` and no cause.
 
 `core/` has no runner. The anchor arithmetic, the fence scanner, the
@@ -102,12 +109,12 @@ be.
   as a line break, so prose wrapped to the width used for code comes
   out as a ragged column.
 - Before pushing, run `npm run build` and make it green. CI runs the
-  same command and nothing else, so a red push is a wasted cycle that
-  tells you what you already could have known.
+  same command and nothing else, so a red push is a wasted cycle for a
+  result you already could have had.
 - After opening the PR, watch it to green (`gh run watch`) before
   handing it to review.
 - **Claude does not merge.** CI green is the floor, not the finish
-  line; a human reviews and merges every PR, including Claude's.
+  line. A human reviews and merges every PR, including Claude's.
 - Never force-push `main`. History rewrites on feature branches are
   fine while the PR is open.
 - No Co-Authored-By trailers on commits.
@@ -119,7 +126,7 @@ be.
   `version-bump.mjs`, which rewrites `manifest.json`, `versions.json`
   and `server.json` and stages them; the MCP server reads its version
   off `package.json`. The MCP registry and the Obsidian directory both
-  reject a version that disagrees with itself rather than warning.
+  reject a version that does not match itself rather than warning.
 
 ## CI scaffolding
 
@@ -145,7 +152,7 @@ merges nothing.
 
 `.github/workflows/release.yml` runs on a version tag: it builds,
 attaches `main.js`, `manifest.json` and `styles.css` to the release,
-and publishes to npm. It refuses a tag that disagrees with
+and publishes to npm. It refuses a tag that does not match
 `manifest.json` or `package.json`. The tag carries no `v`, which is
 what `.npmrc` is for.
 
@@ -176,10 +183,17 @@ docs/) and external (README).
 **DO NOT**
 
 - Document what the code or doc already says.
+- Use a semicolon. Two sentences, or a comma.
+- Personify. A file, a tool or a refusal does not say, know, want or
+  announce anything.
+- Put an implementation detail in front of a reader outside the repo
+  unless they asked for it. What a command does and what comes back is
+  theirs. How it is done is not.
 - Document deletions.
-- Document changes over time; history lives in git.
+- Document changes over time. History lives in git.
 - Include links (code references, PRs, issues, error URLs).
-- Explain why a rejected or unchosen alternative wasn't taken.
+- Explain why a rejected or unchosen alternative wasn't taken, or
+  define anything by what it is not.
 
 Run it against its own rules. Nothing in this repo is a writing sample
 to match, so nothing overrides them, the em dash rule included.

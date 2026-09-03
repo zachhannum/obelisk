@@ -28,7 +28,7 @@ export type ApplyResult =
  * text is still character-for-character what the commenter quoted. That is the
  * same condition as being attached at all, so there is nothing extra to check
  * here — if `resolve` found the quote, the splice lands on exactly the text
- * the commenter saw; if it did not, we refuse and say so rather than
+ * the commenter saw; if it did not, we refuse with a reason rather than
  * overwriting text that has since changed.
  *
  * When the quote occurs more than once, we splice the occurrence `resolve`

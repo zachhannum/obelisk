@@ -5,8 +5,7 @@ vault, for agents that do not speak MCP. Agents that do should use the MCP
 server instead, which carries the same rules in its tool descriptions:
 
 ```
-claude mcp add obelisk --scope user -- \
-  npx -y obelisk-mcp --vault /path/to/your/vault
+claude mcp add obelisk --scope user -- npx -y obelisk-mcp
 ```
 
 See the *Agents* section of [`../README.md`](../README.md) for what each flag
@@ -45,7 +44,7 @@ pass to `comment` is copied out of that body, and the line numbers are what
 `--near-line` refers to.
 
 **The quote is the anchor.** `--quote` must appear in the note character for
-character: same punctuation, same capitalisation, same spacing. Copy it; do
+character: same punctuation, same capitalisation, same spacing. Copy it. Do
 not retype it, tidy it, or straighten its quotation marks. If the quote is not
 found, or is found more than once, nothing is written and you are told which.
 
@@ -72,7 +71,7 @@ EOF
 
 **One id per pass.** Pass the same `--run` id for every comment in one review,
 so the reader can filter or dismiss the whole pass with one click. Make one up
-per review; it only has to be distinct from the last one.
+per review. It only has to be distinct from the last one.
 
 **Answering a comment someone left you.** `obelisk list --open` gives you the
 open comments with the passage each one is about. Make the edit in the note
