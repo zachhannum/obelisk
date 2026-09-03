@@ -18,7 +18,7 @@ place a `suggestion` block renders as the diff the reader will get.
 
 :::note
 If the embedded editor is unavailable, the composer falls back to a plain text
-box. Tabs, the suggestion button and submit all still work; the editor
+box. Tabs, the suggestion button and submit all still work. The editor
 shortcuts do not.
 :::
 
@@ -41,7 +41,7 @@ passage.
 
 ## Deleting
 
-**Delete** removes a whole comment; the trash icon in a reply's header removes
+**Delete** removes a whole comment. The trash icon in a reply's header removes
 that one reply. Both offer an undo notice rather than a confirmation dialog, so
 striking one remark out of a thread does not cost a click and does not take the
 conversation with it.

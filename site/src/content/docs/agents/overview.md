@@ -11,8 +11,8 @@ them.
 
 ## The anchor contract
 
-**An agent never supplies a line or a column.** It supplies the quote; the tool
-does the arithmetic.
+**An agent never supplies a line or a column.** It supplies the quote, and the
+tool does the arithmetic.
 
 Models cannot count lines, and will produce a plausible number under any prompt
 that asks for one. A wrong number is not a visible error. It writes a
@@ -52,7 +52,7 @@ dismiss it by, with an undo behind it.
 ## Writing while Obsidian is open
 
 An external write re-reads the file and proceeds only if it is byte-for-byte
-what it was; otherwise it refuses, and the write has to be run again.
+what it was. Otherwise it refuses, and the write has to be run again.
 
 The write itself splices a new frontmatter block in front of *unchanged* body
 text, so a note Obsidian has open keeps its editor state and every one of its

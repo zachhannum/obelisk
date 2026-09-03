@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Working agreements for implementing Obelisk. These are policies, not
-suggestions; when something here conflicts with a quick fix, the policy
+suggestions. When something here conflicts with a quick fix, the policy
 wins and the quick fix waits for its own commit.
 
 ## Project shape
@@ -19,7 +19,7 @@ wins and the quick fix waits for its own commit.
   in it is imported by `src/`, and `npm run build` at the root does not touch
   it. Its *Agents without MCP* page is generated from
   `docs/agents-fragment.md` before every site build, so the fragment a reader
-  pastes into a vault has one source; the generated page is gitignored.
+  pastes into a vault has one source. The generated page is gitignored.
 - `test/` is the capture harness: Playwright driving a real Obsidian,
   whose only output is the six PNGs under `site/src/assets/shots/`. It is
   the one thing outside `site/` that reads `site/`, for the design tokens
@@ -30,7 +30,7 @@ wins and the quick fix waits for its own commit.
   without breaking the plugin build, so it is the one import worth
   checking by eye.
 - **The quote is the anchor.** `anchor.quote` is what a comment attaches
-  by; the line/column range is a hint used for sidebar order and for
+  by. The line/column range is a hint used for sidebar order and for
   breaking ties when a quote appears twice, and is never rewritten.
   Nothing fuzzy-matches, re-finds, or scores a near miss. A quote that
   is not found detaches the comment, with a reason.
@@ -69,7 +69,7 @@ Verification today is five things, and a change is not done until the
 ones it touches pass:
 
 - `npm run build` runs `tsc --noEmit` over `src/**` and the harness,
-  then the bundles. Strict mode is on; a change that only typechecks
+  then the bundles. Strict mode is on. A change that only typechecks
   with a cast has not been thought through yet.
 - `npm run shots` builds, then launches Obsidian under Playwright,
   opens the vault in `test/vaults/`, and rewrites the landing page's
@@ -114,7 +114,7 @@ be.
 - After opening the PR, watch it to green (`gh run watch`) before
   handing it to review.
 - **Claude does not merge.** CI green is the floor, not the finish
-  line; a human reviews and merges every PR, including Claude's.
+  line. A human reviews and merges every PR, including Claude's.
 - Never force-push `main`. History rewrites on feature branches are
   fine while the PR is open.
 - No Co-Authored-By trailers on commits.
@@ -183,15 +183,17 @@ docs/) and external (README).
 **DO NOT**
 
 - Document what the code or doc already says.
+- Use a semicolon. Two sentences, or a comma.
 - Personify. A file, a tool or a refusal does not say, know, want or
   announce anything.
 - Put an implementation detail in front of a reader outside the repo
   unless they asked for it. What a command does and what comes back is
-  theirs; how it is done is not.
+  theirs. How it is done is not.
 - Document deletions.
-- Document changes over time; history lives in git.
+- Document changes over time. History lives in git.
 - Include links (code references, PRs, issues, error URLs).
-- Explain why a rejected or unchosen alternative wasn't taken.
+- Explain why a rejected or unchosen alternative wasn't taken, or
+  define anything by what it is not.
 
 Run it against its own rules. Nothing in this repo is a writing sample
 to match, so nothing overrides them, the em dash rule included.

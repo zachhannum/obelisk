@@ -6,8 +6,7 @@ description: Inline comments and GitHub-style suggested edits for Obsidian, stor
 <p class="ob-lede">Select a passage in a note, leave a comment on it, and optionally propose a replacement that can be applied with one click.</p>
 
 Comments are stored in the note's own frontmatter, so they travel with the file
-through sync, git, export and rename. There is no sidecar database and nothing
-to keep in step with the vault.
+through sync, git, export and rename.
 
 ## Three front ends over one format
 
@@ -29,20 +28,14 @@ comment the plugin will render.
 - **Threaded replies**, markdown all the way down.
 - **A sidebar** listing a note's comments in document order.
 - **Highlighting in the text**, with a † that opens the comment.
-- **A CLI and an MCP server** over the same comments.
-
-## What it is not
-
-There is no model client in the plugin: no API key in settings, no *Review this
-note* button. The plugin's job is to be a good place for a comment to land, and
-the agent is one the reader already has open in another window.
-
-There is no sidecar store for machine comments either. An agent's comment is
-the same object as a person's, in the same file, under the same anchoring
-rules.
+- **A CLI and an MCP server** over the same comments, where an agent's
+  comment is the same object as a person's, under the same anchoring rules.
 
 Comments go on markdown notes. Canvas, PDF and other file types are out of
 scope, because a comment is stored in the note's own frontmatter.
+
+Agents reach comments through the CLI and the MCP server, using whichever
+agent the reader already has open. The plugin holds no API key.
 
 ## Status
 

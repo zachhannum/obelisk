@@ -87,7 +87,7 @@ it belongs to its comment, and no `origin`.
 stripped by an older one.
 
 **An older schema is understood on read, never swept.** Schema 1 kept a
-suggestion in its own key beside the body; that shape is read as a fence, and
+suggestion in its own key beside the body. That shape is read as a fence, and
 the note on disk is left alone until something writes to it anyway. A vault that is only ever read is never dirtied, and there is no
 upgrade pass that can half-finish.
 

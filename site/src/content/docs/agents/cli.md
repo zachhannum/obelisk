@@ -15,7 +15,7 @@ you are in, or an absolute path to a note in another vault. The `.md` is
 optional.
 
 There is no command for applying a suggestion. An agent that wants the edit made
-can make it; Apply exists in the plugin because a *reader* needs one click to
+can make it. Apply exists in the plugin because a *reader* needs one click to
 take a proposal they did not write.
 
 ## Options
