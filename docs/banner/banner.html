@@ -1,0 +1,421 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+/* The GitHub social preview, uploaded by hand in the repository settings.
+   render.mjs supplies --mark from site/src/assets/obelus.svg.
+   Every .obelisk-* rule below is copied from styles.css, and the colours match
+   what test/playwright/theme.ts sets on Obsidian, so the panel looks like the
+   plugin in a vault. */
+@font-face { font-family: "Bricolage"; src: url("../../site/node_modules/@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2") format("woff2"); font-weight: 200 800; }
+@font-face { font-family: "Space Grotesk"; src: url("../../site/node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2") format("woff2"); font-weight: 300 700; }
+@font-face { font-family: "JetBrains Mono"; src: url("../../site/node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2") format("woff2"); font-weight: 100 800; }
+
+:root {
+  /* site tokens */
+  --ink: #0d0b08;
+  --ink-2: #14110c;
+  --raise: #272119;
+  --raise-2: #322b22;
+  --line: #423a2e;
+  --line-soft: #2f2a21;
+  --text: #ece0c6;
+  --text-2: #b8a98d;
+  --text-3: #968a77;
+  --accent: #e0a33f;
+  --ember: #d97a2b;
+  --dot: rgba(236, 224, 198, 0.07);
+  --sweep: linear-gradient(96deg, var(--accent), var(--ember));
+
+  /* what theme.ts hands Obsidian, and what styles.css composes with */
+  --ob-accent: 224, 163, 63;
+  --ob-add: 163, 181, 95;
+  --ob-del: 221, 106, 86;
+  --red: #dd6a56;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  width: 1280px;
+  height: 640px;
+  background: var(--ink);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  color: var(--text);
+  overflow: hidden;
+}
+
+.card {
+  position: relative;
+  width: 1280px;
+  height: 640px;
+  isolation: isolate;
+  overflow: hidden;
+  background-image: linear-gradient(165deg, var(--ink-2), var(--ink) 62%);
+}
+
+.matrix {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(var(--dot) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(70% 76% at 24% 44%, transparent 8%, #000 78%);
+  z-index: 0;
+}
+
+.bloom {
+  position: absolute;
+  width: 760px; height: 760px;
+  left: -200px; top: -220px;
+  background: radial-gradient(circle, rgba(224,163,63,0.15), transparent 62%);
+  z-index: 0;
+}
+
+.grain {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.4;
+  z-index: 5;
+}
+
+.wrap {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 556px 1fr;
+  align-items: center;
+  gap: 44px;
+  padding: 56px 64px;
+}
+
+/* ── Left: the wordmark ───────────────────────────────────────────────── */
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background-color: rgba(39, 33, 25, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text-2);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  padding: 6px 15px 6px 12px;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+}
+.eyebrow::before {
+  content: "";
+  width: 8px; height: 8px;
+  border-radius: 999px;
+  background-image: linear-gradient(140deg, var(--accent), var(--ember));
+}
+
+.brand { display: flex; align-items: center; gap: 24px; margin-bottom: 26px; }
+
+.mark {
+  background-color: var(--accent);
+  width: 62px; height: 90px;
+  -webkit-mask: var(--mark) center / contain no-repeat;
+}
+
+.name {
+  font-family: "Bricolage", sans-serif;
+  font-weight: 800;
+  font-size: 90px;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+
+.tagline {
+  font-family: "Bricolage", sans-serif;
+  font-weight: 600;
+  font-size: 33px;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  max-width: 540px;
+}
+.chroma {
+  background-image: var(--sweep);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* ── Right: the plugin, as it ships ───────────────────────────────────── */
+
+.stage { display: flex; align-items: center; height: 100%; }
+
+.window {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--raise);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.5), 0 34px 70px -30px rgba(224,163,63,0.26);
+  font-size: 15px;
+}
+
+/* the note pane: --background-primary */
+.pane-note { background: var(--raise); padding: 18px 22px 20px; }
+
+.inline-title {
+  font-family: "Bricolage", sans-serif;
+  font-weight: 700;
+  font-size: 21px;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+.pane-note p {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+/* .obelisk-highlight */
+.obelisk-highlight {
+  background-color: transparent;
+  border-bottom: 1px solid rgba(var(--ob-accent), 0.45);
+  border-radius: 2px;
+}
+
+/* .obelisk-marker */
+.obelisk-marker {
+  color: var(--accent);
+  font-size: 0.85em;
+  margin-inline-start: 2px;
+  vertical-align: super;
+}
+
+/* the sidebar pane: --background-secondary */
+.pane-side { background: var(--raise-2); border-top: 1px solid var(--line); }
+
+.obelisk-sidebar-header {
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px;
+}
+.obelisk-header-row { align-items: center; display: flex; justify-content: space-between; }
+.obelisk-count { color: var(--text-2); font-size: 13px; }
+.obelisk-icon-button { color: var(--text-2); display: flex; padding: 4px; }
+.obelisk-icon-button svg { width: 17px; height: 17px; }
+
+.obelisk-chips { display: flex; gap: 4px; }
+.obelisk-chip {
+  background-color: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text-2);
+  font-size: 13px;
+  padding: 1px 8px;
+}
+.obelisk-chip.is-active {
+  background-color: var(--raise-2);
+  border-color: var(--accent);
+  color: var(--text);
+}
+.obelisk-chip.is-run { align-items: center; display: inline-flex; gap: 4px; padding-inline-end: 4px; }
+.obelisk-chip-dismiss { color: var(--text-3); display: inline-flex; }
+.obelisk-chip-dismiss svg { width: 13px; height: 13px; }
+
+.obelisk-list { padding: 8px; }
+
+/* .obelisk-card */
+.obelisk-card {
+  background-color: var(--raise-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.obelisk-card-header {
+  align-items: center;
+  color: var(--text-2);
+  display: flex;
+  font-size: 13px;
+  gap: 4px;
+}
+.obelisk-author { color: var(--text); font-weight: 600; }
+.obelisk-date { margin-inline-start: auto; white-space: nowrap; }
+
+.obelisk-badge {
+  background-color: var(--line);
+  border-radius: 4px;
+  color: var(--text-2);
+  font-size: 13px;
+  padding: 0 4px;
+}
+.obelisk-badge.is-agent {
+  background-color: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-3);
+}
+
+.obelisk-quote {
+  border-inline-start: 2px solid var(--accent);
+  color: var(--text-2);
+  font-size: 13px;
+  margin: 8px 0;
+  padding-inline-start: 8px;
+}
+
+.obelisk-body { font-size: 15px; line-height: 1.4; }
+.obelisk-body p { margin: 0; }
+
+/* .obelisk-suggestion */
+.obelisk-suggestion {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  margin: 8px 0;
+  overflow: hidden;
+}
+.obelisk-suggestion-header {
+  align-items: center;
+  background-color: var(--raise-2);
+  border-block-end: 1px solid var(--line);
+  color: var(--text-2);
+  display: flex;
+  font-size: 13px;
+  gap: 4px;
+  padding: 4px 8px;
+}
+.obelisk-suggestion-icon { display: flex; }
+.obelisk-suggestion-icon svg { width: 15px; height: 15px; }
+.obelisk-suggestion-title { font-weight: 600; color: var(--text); }
+.obelisk-apply {
+  background-color: var(--accent);
+  border-radius: 4px;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  margin-inline-start: auto;
+  padding: 2px 8px;
+}
+
+.obelisk-diff {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.obelisk-diff-del,
+.obelisk-diff-add { white-space: pre-wrap; }
+
+.obelisk-diff-del {
+  background-color: rgba(var(--ob-del), 0.15);
+  border-inline-start: 2px solid rgba(var(--ob-del), 0.7);
+  padding: 2px 8px;
+}
+.obelisk-diff-add {
+  background-color: rgba(var(--ob-add), 0.15);
+  border-inline-start: 2px solid rgba(var(--ob-add), 0.7);
+  padding: 2px 8px;
+}
+.obelisk-diff-word-del { background-color: rgba(var(--ob-del), 0.3); text-decoration: line-through; }
+.obelisk-diff-word-add { background-color: rgba(var(--ob-add), 0.3); }
+.obelisk-diff-equal { color: var(--text-2); }
+
+.obelisk-actions { display: flex; gap: 4px; margin-block-start: 8px; }
+.obelisk-actions button {
+  background-color: var(--raise);
+  border: none;
+  border-radius: 4px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 4px 8px;
+}
+.obelisk-actions button.mod-warning {
+  background-color: rgba(var(--ob-del), 0.16);
+  color: var(--red);
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="bloom"></div>
+  <div class="matrix"></div>
+
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Obsidian plugin · CLI · MCP server</div>
+      <div class="brand">
+        <div class="mark"></div>
+        <div class="name">Obelisk</div>
+      </div>
+      <div class="tagline">
+        Inline comments and suggested edits, kept
+        <span class="chroma">inside the note.</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="window">
+        <div class="pane-note">
+          <div class="inline-title">Chapter 3</div>
+          <p><span class="obelisk-highlight">The horse, which had been standing there, bolted.</span><span class="obelisk-marker">†</span> She did not run after it.</p>
+        </div>
+
+        <div class="pane-side">
+          <div class="obelisk-sidebar-header">
+            <div class="obelisk-header-row">
+              <div class="obelisk-count">2 open · 3 total</div>
+              <div class="obelisk-icon-button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 12h10M11 19h10"/><path d="M4 5h1v4"/><path d="M4 14h2a1 1 0 0 1 .7 1.7L4 19h3"/></svg>
+              </div>
+            </div>
+            <div class="obelisk-chips">
+              <div class="obelisk-chip is-active">All</div>
+              <div class="obelisk-chip">Open</div>
+              <div class="obelisk-chip">Suggestions</div>
+              <div class="obelisk-chip is-run">claude-opus-5
+                <span class="obelisk-chip-dismiss"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="obelisk-list">
+            <div class="obelisk-card">
+              <div class="obelisk-card-header">
+                <span class="obelisk-author">claude</span>
+                <span class="obelisk-badge is-agent">Agent</span>
+                <span class="obelisk-badge">Suggestion</span>
+                <span class="obelisk-date">2d ago</span>
+              </div>
+              <div class="obelisk-quote">The horse, which had been standing there, bolted.</div>
+              <div class="obelisk-body"><p>The relative clause is doing no work here.</p></div>
+              <div class="obelisk-suggestion">
+                <div class="obelisk-suggestion-header">
+                  <span class="obelisk-suggestion-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M21 3l-7.5 7.5"/><path d="M3 21h5v-5"/><path d="M3 21l7.5-7.5"/></svg></span>
+                  <span class="obelisk-suggestion-title">Suggested change</span>
+                  <span class="obelisk-apply">Apply</span>
+                </div>
+                <div class="obelisk-diff"><div class="obelisk-diff-del"><span class="obelisk-diff-equal">The </span><span class="obelisk-diff-word-del">horse, which had been standing there,</span><span class="obelisk-diff-equal"> bolted.</span></div><div class="obelisk-diff-add"><span class="obelisk-diff-equal">The </span><span class="obelisk-diff-word-add">horse</span><span class="obelisk-diff-equal"> bolted.</span></div></div>
+              </div>
+              <div class="obelisk-actions">
+                <button>Reply</button>
+                <button>Edit</button>
+                <button>Resolve</button>
+                <button class="mod-warning">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grain"></div>
+</div>
+</body>
+</html>
