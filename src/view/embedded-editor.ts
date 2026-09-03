@@ -34,13 +34,18 @@ export interface EmbeddedEditor {
  * suggester, live preview, vim mode if they use it. Reimplementing that on a
  * textarea would be a keymap that is always a little wrong.
  *
- * The catch is that none of it is public API. `embedRegistry` is not in
- * obsidian.d.ts, and the class we want is only reachable by building a
- * throwaway editor and walking up its prototype chain — the approach the
- * community settled on, and the one Obsidian could break in any release. So
- * every entry point here is guarded and the composer keeps its textarea to
- * fall back to; a version that moved the furniture costs shortcuts, not the
- * ability to leave a comment.
+ * This file is the plugin's only use of private API. `embedRegistry` is not in
+ * obsidian.d.ts, and the class extended below is reachable only by building a
+ * throwaway editor and walking up its prototype chain. Obsidian offers no
+ * supported equivalent, and either could move in any release.
+ *
+ * When one does, `resolveBase` returns null rather than throwing, `unavailable`
+ * latches so the probe costs one attempt per session, and the composer builds a
+ * plain textarea instead. Writing, editing, replying and inserting a suggestion
+ * all still work there, without the shortcuts.
+ *
+ * Nothing here reads or writes a note, so a release that moves either one costs
+ * shortcuts and cannot lose a comment or damage a file.
  */
 export function createEmbeddedEditor(
 	app: App,
