@@ -634,6 +634,18 @@ a {
 	max-width: 40ch;
 }
 
+.foot-note a,
+.closer p a {
+	color: var(--ob-accent);
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+}
+
+.foot-note a:hover,
+.closer p a:hover {
+	color: var(--ob-accent-dim);
+}
+
 .foot-links {
 	display: flex;
 	flex-wrap: wrap;
