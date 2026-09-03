@@ -49,11 +49,7 @@ server. Check the install against a note:
 obelisk list /path/to/vault/some-note.md
 ```
 
-That prints the note's comments, then its body with line numbers. An empty note
-prints no comments, then its body.
-
-From a clone, `npm link` puts the same two commands on PATH pointing at the
-built files in the repo, so a rebuild is picked up without reinstalling.
+That prints the note's comments, then its body with line numbers.
 
 ## The MCP server
 
