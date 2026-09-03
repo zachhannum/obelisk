@@ -131,9 +131,8 @@ Two things bite here, both of them silent:
   vault. `--scope user` registers it in every project on the machine, all of
   them pointed at the one vault `--vault` names, which buys you nothing unless
   you comment on that vault from sessions that start elsewhere. `--scope
-  project` writes a
-  `.mcp.json` in the vault, if the vault is a repo and everyone working in it
-  should get the server.
+  project` writes a `.mcp.json` in the vault, if the vault is a repo and
+  everyone working in it should get the server.
 - **The vault path.** A path that does not exist makes the server exit before
   it says anything, which reaches the agent as `CONNECTION_CLOSED` and names
   nothing; if you see that, the path in `claude mcp get obelisk` is the first
