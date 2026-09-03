@@ -5,11 +5,11 @@ import { dirname, isAbsolute, join, resolve as resolvePath } from "node:path";
  * The vault is found, never configured.
  *
  * Both bins are spawned with a working directory they did not choose: an
- * agent's session directory, or wherever a person's shell happened to be. A
- * vault announces itself with an `.obsidian/` directory at its root, so
- * walking up from the working directory finds it, from a subdirectory of the
- * note tree as well as from the root. Nothing to pass, and no path in a config
- * file to fall out of step when the vault moves.
+ * agent's session directory, or wherever a person's shell happened to be. An
+ * `.obsidian/` directory marks a vault root, so walking up from the working
+ * directory finds the vault from a subdirectory of the note tree as well as
+ * from the root. Nothing to pass, and no path in a config file to fall out of
+ * step when the vault moves.
  *
  * Node only, which is why this sits beside the bins rather than in `core/`:
  * the plugin bundles `core/` and cannot import `node:fs`.
@@ -32,7 +32,7 @@ export function findVault(from: string = process.cwd()): string | undefined {
  * An absolute path is taken as given. A relative one is tried against the
  * working directory and then against the vault root, so `three.md` from inside
  * `chapters/` and `chapters/three.md` from the vault root reach the same file.
- * Neither hitting leaves the path the caller typed, so the refusal names what
+ * Neither hitting leaves the path the caller typed, so a refusal prints what
  * they wrote rather than something they have never seen.
  *
  * `.md` is added when it was left off: an agent told a note's title should not

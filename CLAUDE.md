@@ -183,6 +183,11 @@ docs/) and external (README).
 **DO NOT**
 
 - Document what the code or doc already says.
+- Personify. A file, a tool or a refusal does not say, know, want or
+  announce anything.
+- Put an implementation detail in front of a reader outside the repo
+  unless they asked for it. What a command does and what comes back is
+  theirs; how it is done is not.
 - Document deletions.
 - Document changes over time; history lives in git.
 - Include links (code references, PRs, issues, error URLs).

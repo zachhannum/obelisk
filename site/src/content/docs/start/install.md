@@ -3,8 +3,9 @@ title: Install
 description: The plugin, the CLI, and the MCP server.
 ---
 
-Obelisk is three pieces that install separately. The plugin is the one a reader
-needs; the CLI and the MCP server are how an agent reaches the same comments.
+Obelisk comes in three pieces that install separately. Most people want only
+the plugin. The CLI and the MCP server are what an agent uses to reach the same
+comments.
 
 ## The plugin
 
@@ -56,18 +57,9 @@ built files in the repo, so a rebuild is picked up without reinstalling.
 
 ## The MCP server
 
-There is nothing to install, nothing to start, and nothing to configure. The
-agent spawns a process per session over stdio, and the server finds the vault
-by walking up from the directory the agent spawned it in, so one registration
-covers every vault on the machine:
-
 ```bash
 claude mcp add obelisk --scope user -- npx -y obelisk-mcp
 ```
 
-`-y` because the agent gives npx no terminal to ask in, so the first run has to
-install the package rather than stop to ask whether it may.
-
-A session started anywhere under a vault gets that vault, subdirectories
-included. A session started outside one can still reach a note by absolute
-path. To check the registration, `claude mcp list`, or `/mcp` inside a session.
+One registration covers every vault: the tools work on whichever vault the
+agent is running in.

@@ -120,14 +120,8 @@ For an agent that speaks MCP, register the server with it:
 claude mcp add obelisk --scope user -- npx -y obelisk-mcp
 ```
 
-`-y` because the agent gives npx no terminal to ask in, so the first run has to
-install the package rather than stop to ask whether it may.
-
-There is no vault to name. The server walks up from the directory the agent
-spawned it in until it finds the `.obsidian/` that marks a vault root, so one
-registration serves every vault on the machine, a session started deep in the
-note tree resolves a vault-relative path the same as one started at the root,
-and a session outside any vault can still reach a note by absolute path.
+One registration covers every vault: the tools work on whichever vault the
+agent is running in, and an absolute path reaches a note in one it is not.
 
 **There is nothing to start.** It speaks MCP over stdio: the agent spawns a
 process when a session opens and kills it when the session ends, so
