@@ -16,6 +16,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "lib": ["DOM", "ES2020"],
+    "types": ["node"],
     "paths": {
       "src/*": ["src/*"]
     }
