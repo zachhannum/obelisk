@@ -16,6 +16,9 @@ on:
 
 permissions:
   contents: write
+  # A signed asset can be traced back to the commit and the run that
+  # built it.
+  attestations: write
   # npm and the MCP registry both authenticate the workflow over OIDC, so
   # neither needs a token in the repository's secrets.
   id-token: write
@@ -86,6 +89,10 @@ jobs:
           fi
 
       - run: npm run build
+
+      - uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: "main.js, manifest.json, styles.css"
 
       - name: Attach the plugin to the release
         env:
