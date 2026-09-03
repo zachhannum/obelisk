@@ -18,12 +18,11 @@ title: Agents without MCP
 description: A block to paste into a vault's AGENTS.md or CLAUDE.md.
 ---
 
-An agent that does not speak MCP can use the CLI, given the rules. The repo
-ships this block as \`docs/agents-fragment.md\` and this page is generated from
-it; paste it into the \`AGENTS.md\` or \`CLAUDE.md\` at the root of the vault.
+An agent that does not speak MCP can use the CLI, given the rules. Paste the
+block below into the \`AGENTS.md\` or \`CLAUDE.md\` at the root of the vault.
 
-It documents the CLI rather than the YAML on purpose. An agent told to write
-frontmatter directly will get the anchor wrong in exactly the way the anchor
+The block documents the CLI rather than the YAML. An agent told to write
+frontmatter directly gets the anchor wrong in exactly the way the anchor
 contract exists to prevent.
 
 It assumes \`obelisk\` is on the reader's PATH, which is what

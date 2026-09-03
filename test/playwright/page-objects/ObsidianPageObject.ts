@@ -40,7 +40,7 @@ declare global {
 	}
 }
 
-/** Obsidian's own colour schemes, by the names its settings use. */
+/** Obsidian's own color schemes, by the names its settings use. */
 export type ColourScheme = "dark" | "light";
 
 /**

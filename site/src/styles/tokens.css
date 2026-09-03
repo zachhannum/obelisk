@@ -82,8 +82,8 @@
 
 /* The ground a section stands on: flat ink under one tile of fractal noise,
    which is what keeps a panel this size from reading as plastic. The grain
-   blends against the colour beneath it, so over a transparent backdrop it
-   leaves flat grey noise rather than a tint. */
+   blends against the color beneath it, so over a transparent backdrop it
+   leaves flat gray noise rather than a tint. */
 .ob-ground {
 	background-color: var(--ob-ink);
 	isolation: isolate;

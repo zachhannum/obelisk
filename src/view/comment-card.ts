@@ -22,7 +22,7 @@ export interface CardContext {
  * How to start editing a given card's body, keyed by the card itself.
  *
  * The card is the handle the sidebar (and through it the context menu) already
- * has; this saves it from having to reach into the DOM and synthesise a click
+ * has; this saves it from having to reach into the DOM and synthesize a click
  * on a button whose markup is this file's business. Weak, so a card that has
  * been re-rendered away takes its entry with it.
  */
@@ -346,7 +346,7 @@ interface EditTarget {
  *
  * Saving writes through the plugin, which refreshes the sidebar and rebuilds
  * this card from the store; nothing here has to put the rendered body back.
- * Cancelling does, since no write happened.
+ * Canceling does, since no write happened.
  */
 function openEditor(
 	host: HTMLElement,

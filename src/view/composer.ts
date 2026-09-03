@@ -114,7 +114,7 @@ export class Composer extends Component {
 
 	/**
 	 * Tear the editor down. Callers that remove the box from the DOM
-	 * themselves — a cancelled reply, a saved edit — should call this first;
+	 * themselves — a canceled reply, a saved edit — should call this first;
 	 * otherwise the owning component takes care of it on unload.
 	 */
 	destroy(): void {

@@ -5,20 +5,18 @@ description: How a model leaves a comment on a note, and reads the ones already 
 
 <p class="ob-lede">The same comments, from outside Obsidian. A model reviews a note and its remarks appear in the sidebar of the note you already have open.</p>
 
-Or the other direction, which is the one that will get more use: you leave
-comments asking for things, a model reads them, makes the edits, and resolves
-them.
+The other direction works too: you leave comments asking for things, a model
+reads them, makes the edits, and resolves them.
 
 ## The anchor contract
 
 **An agent never supplies a line or a column.** It supplies the quote, and the
 tool does the arithmetic.
 
-Models cannot count lines, and will produce a plausible number under any prompt
-that asks for one. A wrong number is not a visible error. It writes a
-structurally valid anchor whose hint points somewhere else, which costs nothing
-until the quote turns out to be ambiguous and the comment silently attaches to
-the wrong twin.
+Models cannot count lines, and produce a plausible number under any prompt that
+asks for one. A wrong number writes a valid anchor whose hint points somewhere
+else, and the comment attaches to the wrong twin as soon as the quote is
+ambiguous.
 
 What a write does with the quote:
 
@@ -27,27 +25,22 @@ What a write does with the quote:
   the nearest occurrence.
 - **not found** → refuse, with the rule that the quote must be verbatim.
 
-The third case fires constantly, because a model asked to quote a passage will
-paraphrase it, normalize its whitespace, or straighten its quotation marks.
-Refusing there is what keeps a bad anchor out of the note. Accepting a near
-miss would write a comment that is born detached, which reads to the reader as
-the plugin losing their comment.
+The third case is the common one: a model asked to quote a passage paraphrases
+it, normalizes its whitespace, or straightens its quotation marks. The refusal
+keeps a bad anchor out of the note.
 
-Matching is strict. A looser search runs only *after* a failure: if
-straightening the punctuation and collapsing the whitespace finds exactly one
-match, the refusal quotes the note's own wording back, to be copied. The
-loose match is never what gets stored: only text taken from the note ever
-anchors a comment.
+Matching is strict. A looser search runs only *after* a failure, and only to
+report: it quotes the note's own wording back, to be copied. See
+[Refusals](../../reference/refusals/).
 
 ## Attribution
 
 An agent's comment carries an `origin` with the model that wrote it and a run
 id shared by every comment in that pass.
 
-The run id is what makes a pass usable. A review pass is twenty comments
-arriving at once, and the reader wants to be able to act on all twenty
-together: a shared id gives them one chip to filter the pass with and one × to
-dismiss it by, with an undo behind it.
+A review pass arrives all at once, and the shared run id is what makes it one
+thing to act on: one chip to filter by, and one × to dismiss it with, with an
+undo behind it.
 
 ## Writing while Obsidian is open
 

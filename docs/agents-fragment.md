@@ -28,8 +28,8 @@ frontmatter, and the reader sees them in a sidebar in Obsidian,
 anchored to the passage they are about.
 
 Use the `obelisk` command. **Do not write the `obelisk:` frontmatter key by
-hand.** The anchor arithmetic is the tool's job, and a hand-written anchor is
-the one way to leave a comment that the reader's sidebar cannot place.
+hand.** A hand-written anchor puts a comment where the sidebar cannot place
+it.
 
 ```
 obelisk list <note> [--open]
@@ -44,7 +44,7 @@ pass to `comment` is copied out of that body, and the line numbers are what
 `--near-line` refers to.
 
 **The quote is the anchor.** `--quote` must appear in the note character for
-character: same punctuation, same capitalisation, same spacing. Copy it. Do
+character: same punctuation, same capitalization, same spacing. Copy it. Do
 not retype it, tidy it, or straighten its quotation marks. If the quote is not
 found, or is found more than once, nothing is written and you are told which.
 

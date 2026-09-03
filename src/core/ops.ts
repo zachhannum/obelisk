@@ -291,7 +291,7 @@ function notFound(frame: DocFrame, quote: string): Failure {
 		"quote-not-found",
 		"That text is not in the note. The quote has to be verbatim — copy it " +
 			"straight out of the listed note body, including its punctuation, " +
-			"capitalisation and spacing." +
+			"capitalization and spacing." +
 			hint,
 	);
 }

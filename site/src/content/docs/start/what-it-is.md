@@ -16,8 +16,7 @@ through sync, git, export and rename.
 | **`obelisk`** | Four commands: list, comment, reply, resolve | A shell |
 | **`obelisk-mcp`** | The same four, as MCP tools | An agent |
 
-The storage format is the interface. Anything that can edit a file can leave a
-comment the plugin will render.
+Anything that can edit a file can leave a comment the plugin renders.
 
 ## What it does
 
@@ -31,15 +30,15 @@ comment the plugin will render.
 - **A CLI and an MCP server** over the same comments, where an agent's
   comment is the same object as a person's, under the same anchoring rules.
 
-Comments go on markdown notes. Canvas, PDF and other file types are out of
-scope, because a comment is stored in the note's own frontmatter.
+Comments go on markdown notes. Canvas and PDF files hold no frontmatter, so
+they are out of scope.
 
-Agents reach comments through the CLI and the MCP server, using whichever
-agent the reader already has open. The plugin holds no API key.
+Agents reach comments through the CLI and the MCP server, so a model works
+from whichever client is already open. The plugin holds no API key.
 
 ## Status
 
 Pre-release. Anchoring, decoration, the sidebar, suggested edits and the agent
 integration are implemented. The CLI and the MCP server are on npm as
-`obelisk-mcp`. The plugin has not been submitted to the Obsidian community
-plugin directory, and none of it has been exercised against a large vault.
+`obelisk-mcp`. The plugin installs through BRAT, and none of it has been
+exercised against a large vault.
