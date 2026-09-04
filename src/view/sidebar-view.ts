@@ -263,7 +263,9 @@ export class ObeliskSidebarView extends ItemView {
 					: `${open} open · ${total} total`,
 		});
 
-		const sortBtn = top.createEl("button", { cls: "obelisk-icon-button" });
+		const sortBtn = top.createEl("button", {
+			cls: "obelisk-icon-button clickable-icon",
+		});
 		setIcon(
 			sortBtn,
 			this.sort === "document" ? "list-ordered" : "clock",

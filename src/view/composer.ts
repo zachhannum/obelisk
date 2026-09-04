@@ -37,8 +37,8 @@ const composers = new WeakMap<HTMLElement, Composer>();
  * The box you write a comment in.
  *
  * One component for the compose dialog and for replies, because they are the
- * same thing: a markdown editor with a Write/Preview pair and a button that
- * drops in a ```suggestion block prefilled with the passage under discussion.
+ * same thing: a markdown editor with a preview toggle and a button that drops
+ * in a ```suggestion block prefilled with the passage under discussion.
  * Proposing an edit is an act of writing here, not a separate mode with its
  * own field — which is what makes a counter-proposal in a reply work for free.
  *
@@ -46,17 +46,17 @@ const composers = new WeakMap<HTMLElement, Composer>();
  * with the shortcuts, autocompletion and live preview the note itself has
  * (see `embedded-editor.ts`). That editor is internal API; when it cannot be
  * had, the box falls back to a plain textarea and everything else here — the
- * tabs, the suggestion button, submit — works unchanged.
+ * toggle, the suggestion button, submit — works unchanged.
  *
- * The Preview tab survives live preview, because it is the only place a
+ * The preview survives live preview, because it is the only place a
  * ```suggestion block renders as the diff a reader will see.
  */
 export class Composer extends Component {
 	readonly el: HTMLElement;
 	private readonly field: Field;
 	private readonly previewEl: HTMLElement;
-	private readonly writeTab: HTMLButtonElement;
-	private readonly previewTab: HTMLButtonElement;
+	private readonly toggle: HTMLButtonElement;
+	private previewing = false;
 
 	constructor(
 		container: HTMLElement,
@@ -67,18 +67,19 @@ export class Composer extends Component {
 		composers.set(this.el, this);
 
 		const bar = this.el.createDiv({ cls: "obelisk-composer-bar" });
-		this.writeTab = tab(bar, "Write");
-		this.previewTab = tab(bar, "Preview");
-		this.writeTab.addEventListener("click", () => this.show("write"));
-		this.previewTab.addEventListener("click", () => this.show("preview"));
-
-		const tools = bar.createDiv({ cls: "obelisk-composer-tools" });
-		const suggest = tools.createEl("button", {
-			cls: "obelisk-icon-button",
+		const suggest = bar.createEl("button", {
+			cls: "obelisk-icon-button clickable-icon",
 		});
 		setIcon(suggest, "replace");
 		setTooltip(suggest, "Suggest a change to the quoted text");
 		suggest.addEventListener("click", () => this.insertSuggestion());
+
+		this.toggle = bar.createEl("button", {
+			cls: "obelisk-icon-button clickable-icon",
+		});
+		this.toggle.addEventListener("click", () =>
+			this.show(this.previewing ? "write" : "preview"),
+		);
 
 		this.field = this.createField();
 
@@ -176,8 +177,11 @@ export class Composer extends Component {
 
 	private show(which: "write" | "preview"): void {
 		const previewing = which === "preview";
-		this.writeTab.toggleClass("is-active", !previewing);
-		this.previewTab.toggleClass("is-active", previewing);
+		this.previewing = previewing;
+		// The icon names where the click goes, the way Obsidian's own view
+		// toggle does.
+		setIcon(this.toggle, previewing ? "pencil" : "book-open");
+		setTooltip(this.toggle, previewing ? "Edit" : "Preview");
 		this.field.el.toggle(!previewing);
 		this.previewEl.toggle(previewing);
 		if (!previewing) {
@@ -209,7 +213,7 @@ export class Composer extends Component {
  * document offsets, so the suggestion-block arithmetic above is written once.
  */
 interface Field {
-	/** The element the Write tab shows and the Preview tab hides. */
+	/** The element the preview toggle shows and hides. */
 	readonly el: HTMLElement;
 	readonly value: string;
 	focus(): void;
@@ -321,8 +325,4 @@ class TextareaField implements Field {
 function noteFor(app: App, path: string): TFile | null {
 	const file = app.vault.getAbstractFileByPath(path);
 	return file instanceof TFile ? file : null;
-}
-
-function tab(bar: HTMLElement, label: string): HTMLButtonElement {
-	return bar.createEl("button", { cls: "obelisk-tab", text: label });
 }

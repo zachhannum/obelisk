@@ -124,13 +124,10 @@
 	font-size: var(--font-ui-smaller);
 }
 
+/* Paired with Obsidian's own `clickable-icon`, which is what makes these
+   square and quiet until the pointer is on them. */
 .obelisk-icon-button {
-	background: transparent;
-	box-shadow: none;
 	color: var(--text-muted);
-	cursor: pointer;
-	display: flex;
-	padding: var(--size-4-1);
 }
 
 .obelisk-icon-button:hover {
@@ -488,32 +485,9 @@
 
 .obelisk-composer-bar {
 	align-items: center;
-	border-block-end: 1px solid var(--background-modifier-border);
 	display: flex;
 	gap: var(--size-4-1);
-}
-
-.obelisk-tab {
-	background: transparent;
-	border-block-end: 2px solid transparent;
-	border-radius: 0;
-	box-shadow: none;
-	color: var(--text-muted);
-	cursor: pointer;
-	font-size: var(--font-ui-smaller);
-	margin-block-end: -1px;
-	padding: var(--size-4-1) var(--size-4-2);
-}
-
-.obelisk-tab.is-active {
-	border-block-end-color: var(--text-accent);
-	color: var(--text-normal);
-}
-
-.obelisk-composer-tools {
-	display: flex;
-	gap: var(--size-4-1);
-	margin-inline-start: auto;
+	justify-content: flex-end;
 }
 
 /* The embedded editor brings its own chrome from the note it is borrowed
