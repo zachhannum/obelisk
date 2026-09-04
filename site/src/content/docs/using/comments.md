@@ -8,6 +8,9 @@ the body, a proposed rewrite included.
 
 ## Writing
 
+*Add comment* opens an empty card at the top of the sidebar, next to the
+note's other comments.
+
 The composer has a Write/Preview pair and a button that inserts a suggestion
 block. It is Obsidian's embedded markdown editor, the same one Canvas cards and
 property fields use, so everything you know from writing a note applies.
