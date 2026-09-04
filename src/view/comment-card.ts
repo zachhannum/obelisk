@@ -211,7 +211,9 @@ function renderReplies(
 			suggestion: suggestionOptions(comment, ctx),
 		});
 
-		const edit = head.createEl("button", { cls: "obelisk-icon-button" });
+		const edit = head.createEl("button", {
+			cls: "obelisk-icon-button clickable-icon",
+		});
 		setIcon(edit, "pencil");
 		setTooltip(edit, "Edit this reply");
 		edit.addEventListener("click", () =>
@@ -231,7 +233,7 @@ function renderReplies(
 		// takes the whole comment with it, which is not what someone striking
 		// out one remark in the middle of a conversation is asking for.
 		const remove = head.createEl("button", {
-			cls: "obelisk-icon-button is-destructive",
+			cls: "obelisk-icon-button clickable-icon is-destructive",
 		});
 		setIcon(remove, "trash-2");
 		setTooltip(remove, "Delete this reply");
