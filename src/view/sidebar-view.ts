@@ -11,6 +11,7 @@ import type ObeliskPlugin from "../main";
 import { hasSuggestion } from "../core/suggestion";
 import { ResolvedComment, VIEW_TYPE_OBELISK } from "../types";
 import { beginEditing, renderCommentCard } from "./comment-card";
+import { Draft, DraftRequest, renderDraftCard } from "./draft-card";
 
 /** A `run:` filter narrows to one agent pass; the rest are the fixed three. */
 type Filter = "all" | "unresolved" | "suggestions" | `run:${string}`;
@@ -44,7 +45,12 @@ export class ObeliskSidebarView extends ItemView {
 	private filter: Filter = "all";
 	private sort: Sort = "document";
 	private headerEl!: HTMLElement;
+	private draftEl!: HTMLElement;
 	private listEl!: HTMLElement;
+	/** The comment being written, if one is. */
+	private draft: Draft | null = null;
+	/** Owns the draft's composer, which outlives any number of renders. */
+	private draftScope: Component | null = null;
 	/** Owns the render's markdown children; replaced wholesale each render. */
 	private renderScope: Component | null = null;
 	/** What the list was last drawn from; see `setComments`. */
@@ -76,6 +82,7 @@ export class ObeliskSidebarView extends ItemView {
 		this.headerEl = this.contentEl.createDiv({
 			cls: "obelisk-sidebar-header",
 		});
+		this.draftEl = this.contentEl.createDiv({ cls: "obelisk-draft" });
 		this.listEl = this.contentEl.createDiv({ cls: "obelisk-list" });
 
 		// Obsidian can restore or un-defer this view long after the plugin's
@@ -88,11 +95,15 @@ export class ObeliskSidebarView extends ItemView {
 	}
 
 	async onClose(): Promise<void> {
+		this.cancelDraft();
 		this.clearScope();
 	}
 
 	/** Called by the plugin whenever the active file or its comments change. */
 	setComments(file: TFile | null, comments: ResolvedComment[]): void {
+		// A draft belongs to the passage it quotes, and that passage is in the
+		// note that just went away.
+		if (file?.path !== this.file?.path) this.cancelDraft();
 		this.file = file;
 		this.comments = comments;
 		// Pushed before `onOpen` built the DOM: the fields above are enough,
@@ -124,6 +135,35 @@ export class ObeliskSidebarView extends ItemView {
 		if (!card) return;
 		card.addClass("is-active");
 		if (scrollIntoView) card.scrollIntoView({ block: "nearest" });
+	}
+
+	/**
+	 * Open an empty comment at the top of the list. Replaces whatever was
+	 * being drafted, since one selection is being commented on at a time.
+	 */
+	beginDraft(req: Omit<DraftRequest, "onCancel">): void {
+		this.cancelDraft();
+		const scope = new Component();
+		this.addChild(scope);
+		this.draftScope = scope;
+		this.draft = renderDraftCard(this.draftEl, scope, {
+			...req,
+			onSubmit: (body) => {
+				this.cancelDraft();
+				req.onSubmit(body);
+			},
+			onCancel: () => this.cancelDraft(),
+		});
+		this.draft.focus();
+	}
+
+	/** Throw away the draft, if there is one. */
+	cancelDraft(): void {
+		this.draft?.destroy();
+		this.draft = null;
+		if (!this.draftScope) return;
+		this.removeChild(this.draftScope);
+		this.draftScope = null;
 	}
 
 	/** Start editing a comment's body from outside the sidebar. */

@@ -5,7 +5,6 @@
 .obelisk-sidebar,
 .obelisk-highlight,
 .obelisk-marker,
-.obelisk-modal,
 .obelisk-composer {
 	--obelisk-accent: var(--color-yellow-rgb, 224, 185, 68);
 	--obelisk-add: var(--color-green-rgb, 68, 179, 115);
@@ -239,6 +238,21 @@
 	border-style: dashed;
 }
 
+/* The comment being written sits above the list rather than in it, so the
+   note's existing comments stay where they were while it is open. */
+.obelisk-draft:not(:empty) {
+	padding: var(--size-4-2) var(--size-4-2) 0;
+}
+
+.obelisk-card.is-draft {
+	border-color: var(--text-accent);
+	cursor: default;
+}
+
+.obelisk-card.is-draft .obelisk-quote {
+	margin-block-start: var(--size-4-1);
+}
+
 .obelisk-card-header {
 	align-items: center;
 	color: var(--text-muted);
@@ -465,10 +479,6 @@
 
 /* ── Composer ─────────────────────────────────────────────────────────────── */
 
-.obelisk-modal .obelisk-quote {
-	margin-block-start: 0;
-}
-
 .obelisk-composer {
 	display: flex;
 	flex-direction: column;
@@ -576,7 +586,7 @@
 	display: flex;
 	gap: var(--size-4-2);
 	justify-content: flex-end;
-	margin-block-start: var(--size-4-3);
+	margin-block-start: var(--size-4-2);
 }
 
 .obelisk-compose-hint {

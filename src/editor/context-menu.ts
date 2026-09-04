@@ -32,7 +32,7 @@ export function registerContextMenu(plugin: ObeliskPlugin): void {
 							.setIcon("message-square")
 							.setSection("selection")
 							.onClick(() =>
-								plugin.startComment(editor, view, {
+								void plugin.startComment(editor, view, {
 									withSuggestion: false,
 								}),
 							),
@@ -43,7 +43,7 @@ export function registerContextMenu(plugin: ObeliskPlugin): void {
 							.setIcon("replace")
 							.setSection("selection")
 							.onClick(() =>
-								plugin.startComment(editor, view, {
+								void plugin.startComment(editor, view, {
 									withSuggestion: true,
 								}),
 							),

@@ -34,7 +34,6 @@ import {
 	ResolvedComment,
 	VIEW_TYPE_OBELISK,
 } from "./types";
-import { CommentDraft, CommentModal } from "./view/comment-modal";
 import { ObeliskSidebarView } from "./view/sidebar-view";
 import { newCommentId } from "./core/id";
 
@@ -121,7 +120,9 @@ export default class ObeliskPlugin extends Plugin {
 			name: "Add comment on selection",
 			editorCallback: (editor, view) => {
 				if (view instanceof MarkdownView) {
-					this.startComment(editor, view, { withSuggestion: false });
+					void this.startComment(editor, view, {
+						withSuggestion: false,
+					});
 				}
 			},
 		});
@@ -131,7 +132,9 @@ export default class ObeliskPlugin extends Plugin {
 			name: "Suggest an edit for selection",
 			editorCallback: (editor, view) => {
 				if (view instanceof MarkdownView) {
-					this.startComment(editor, view, { withSuggestion: true });
+					void this.startComment(editor, view, {
+						withSuggestion: true,
+					});
 				}
 			},
 		});
@@ -251,11 +254,11 @@ export default class ObeliskPlugin extends Plugin {
 	// ── Actions ──────────────────────────────────────────────────────────────
 
 	/** Requirement 6 lands here, from either the context menu or a command. */
-	startComment(
+	async startComment(
 		editor: Editor,
 		view: MarkdownView,
 		opts: { withSuggestion: boolean },
-	): void {
+	): Promise<void> {
 		const file = view.file;
 		if (!file) return;
 
@@ -265,26 +268,27 @@ export default class ObeliskPlugin extends Plugin {
 			return;
 		}
 
-		// Capture the selection now: the modal takes focus, and by the time it
-		// closes `getSelection()` may report something else entirely.
+		// Capture the selection now: the composer takes focus, and by the time
+		// it is submitted `getSelection()` may report something else entirely.
 		const from = editor.posToOffset(editor.getCursor("from"));
 		const to = editor.posToOffset(editor.getCursor("to"));
 
-		new CommentModal(
-			this.app,
+		await this.openSidebar();
+		this.sidebar()?.beginDraft({
+			app: this.app,
 			quote,
-			opts.withSuggestion,
-			file.path,
-			(draft) =>
-				void this.createComment(file, view, { from, to, quote }, draft),
-		).open();
+			withSuggestion: opts.withSuggestion,
+			sourcePath: file.path,
+			onSubmit: (body) =>
+				void this.createComment(file, view, { from, to, quote }, body),
+		});
 	}
 
 	private async createComment(
 		file: TFile,
 		view: MarkdownView,
 		selection: { from: number; to: number; quote: string },
-		draft: CommentDraft,
+		body: string,
 	): Promise<void> {
 		const text = this.documentText(file, view);
 		if (text === null) return;
@@ -307,7 +311,7 @@ export default class ObeliskPlugin extends Plugin {
 			id: newCommentId(existing),
 			author: this.settings.authorName || undefined,
 			created: new Date().toISOString(),
-			body: draft.body,
+			body,
 			anchor,
 		};
 
