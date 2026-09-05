@@ -421,9 +421,28 @@
 	margin-inline-start: auto;
 }
 
+/* Quiet enough to sit beside the header's label rather than pull the eye off
+   the diff, which is the thing worth reading before the click. */
 .obelisk-suggestion-header .obelisk-apply {
+	background-color: transparent;
+	border: 1px solid var(--background-modifier-border);
+	box-shadow: none;
+	color: var(--text-accent);
 	font-size: var(--font-ui-smaller);
+	height: auto;
 	padding: 2px var(--size-4-2);
+}
+
+.obelisk-suggestion-header .obelisk-apply:hover:not(:disabled) {
+	background-color: var(--background-modifier-hover);
+	border-color: var(--text-accent);
+	color: var(--text-accent-hover);
+}
+
+.obelisk-suggestion-header .obelisk-apply:disabled {
+	background-color: transparent;
+	border-color: var(--background-modifier-border);
+	color: var(--text-faint);
 }
 
 .obelisk-diff {
