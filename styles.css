@@ -551,6 +551,27 @@
 	padding: 0;
 }
 
+/* With the caret outside a code block its fence lines go blank and Obsidian
+   floats the language over the first of them, at a size meant for a note's
+   width. Here the code wraps all the way to the edge, so the label is trimmed
+   to fit the blank line and the two fence lines carry the inset it sits in.
+   The long selectors are there to outweigh the source-view rules they
+   override. */
+.obelisk-compose-editor .cm-editor .cm-line.HyperMD-codeblock-begin {
+	padding-block-start: var(--size-2-2);
+}
+
+.obelisk-compose-editor .cm-editor .cm-line.HyperMD-codeblock-end {
+	padding-block-end: var(--size-2-2);
+}
+
+.obelisk-compose-editor .cm-editor .cm-line .code-block-flair {
+	line-height: var(--line-height-tight);
+	padding: 0 var(--size-2-1);
+	right: var(--size-2-3);
+	top: var(--size-2-2);
+}
+
 .obelisk-compose-body {
 	field-sizing: content;
 	font-family: inherit;
