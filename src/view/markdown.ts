@@ -130,7 +130,7 @@ function suggestionBlock(
 		setTooltip(badge, "This thread's suggestion is already in the note.");
 	} else if (opts.onApply) {
 		const apply = header.createEl("button", {
-			cls: "obelisk-apply mod-cta",
+			cls: "obelisk-apply",
 			text: "Apply",
 		});
 		const unchanged = replacement === opts.quote;
