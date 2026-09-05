@@ -1,7 +1,7 @@
 {
   "id": "obelisk",
   "name": "Obelisk",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "minAppVersion": "1.8.7",
   "description": "Comment on any passage in a note and propose GitHub-style suggested edits. Comments live in the note's frontmatter, so they travel with the file.",
   "author": "Zachary Hannum",
