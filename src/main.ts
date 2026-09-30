@@ -82,7 +82,6 @@ export default class ObeliskPlugin extends Plugin {
 	 */
 	private lastMarkdownView: MarkdownView | null = null;
 	private scheduleResolve!: Debouncer<[], void>;
-
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.store = new CommentStore(this.app);
@@ -108,6 +107,7 @@ export default class ObeliskPlugin extends Plugin {
 		if (Platform.isMobile) {
 			this.registerEditorExtension(
 				selectionBar(
+					() => this.settings.selectionBar,
 					(view, opts) => void this.startComment(view.editor, view, opts),
 				),
 			);

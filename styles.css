@@ -99,17 +99,20 @@
 	padding: 0 3px;
 }
 
-/* Mobile only. Bottom-center, clear of the system selection menu. */
+/* Mobile only. Bottom-center, clear of the system selection menu. The outer
+   radius is the buttons' plus the padding, so the corners stay concentric. */
 .obelisk-selection-bar {
+	--obelisk-bar-inset: var(--size-4-1);
+	--obelisk-bar-radius: var(--radius-m);
 	background-color: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
-	border-radius: var(--radius-l);
+	border-radius: calc(var(--obelisk-bar-radius) + var(--obelisk-bar-inset));
 	bottom: var(--size-4-4);
 	box-shadow: var(--shadow-s);
 	display: flex;
-	gap: var(--size-4-1);
+	gap: var(--obelisk-bar-inset);
 	left: 50%;
-	padding: var(--size-4-1);
+	padding: var(--obelisk-bar-inset);
 	position: absolute;
 	transform: translateX(-50%);
 	z-index: var(--layer-popover);
@@ -121,6 +124,7 @@
 
 .obelisk-selection-bar-button {
 	align-items: center;
+	border-radius: var(--obelisk-bar-radius);
 	box-shadow: none;
 	display: flex;
 	gap: var(--size-4-1);

@@ -17,9 +17,13 @@ export type SelectionAction = (
  * selection handles already are.
  *
  * Tapping a button hides the bar until the selection changes, so it does not
- * linger over the composer.
+ * linger over the composer. `enabled` is read on every selection change, so
+ * the setting applies without a reload.
  */
-export function selectionBar(onAction: SelectionAction): Extension {
+export function selectionBar(
+	enabled: () => boolean,
+	onAction: SelectionAction,
+): Extension {
 	return ViewPlugin.fromClass(
 		class {
 			private bar: HTMLElement;
@@ -69,6 +73,7 @@ export function selectionBar(onAction: SelectionAction): Extension {
 				const { from, to, empty } = this.view.state.selection.main;
 				const hidden =
 					empty ||
+					!enabled() ||
 					(this.dismissed?.from === from && this.dismissed.to === to);
 				this.bar.toggleClass("is-hidden", hidden);
 			}

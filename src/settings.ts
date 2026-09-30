@@ -1,5 +1,6 @@
 import {
 	App,
+	Platform,
 	PluginSettingTab,
 	Setting,
 	SettingDefinitionControl,
@@ -36,9 +37,14 @@ export class ObeliskSettingTab extends PluginSettingTab {
 				name: "Remove comment after applying its suggestion",
 				control: { type: "toggle", key: "removeCommentOnApply" },
 			},
+			{
+				name: "Show comment buttons on a selection",
+				desc: "The commands can also be added to the mobile toolbar instead.",
+				control: { type: "toggle", key: "selectionBar" },
+				visible: Platform.isMobile,
+			},
 		];
 	}
-
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
@@ -74,6 +80,19 @@ export class ObeliskSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.removeCommentOnApply)
 					.onChange(async (value) => {
 						this.plugin.settings.removeCommentOnApply = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		if (!Platform.isMobile) return;
+		new Setting(containerEl)
+			.setName("Show comment buttons on a selection")
+			.setDesc("The commands can also be added to the mobile toolbar instead.")
+			.addToggle((t) =>
+				t
+					.setValue(this.plugin.settings.selectionBar)
+					.onChange(async (value) => {
+						this.plugin.settings.selectionBar = value;
 						await this.plugin.saveSettings();
 					}),
 			);

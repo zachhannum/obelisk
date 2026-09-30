@@ -14,12 +14,15 @@ export interface ObeliskSettings {
 	autoOpenSidebar: boolean;
 	/** Delete a comment's frontmatter entry when its suggestion is applied. */
 	removeCommentOnApply: boolean;
+	/** Show Comment and Suggest buttons over a selection. Mobile only. */
+	selectionBar: boolean;
 }
 
 export const DEFAULT_SETTINGS: ObeliskSettings = {
 	authorName: "",
 	autoOpenSidebar: false,
 	removeCommentOnApply: false,
+	selectionBar: true,
 };
 
 export const VIEW_TYPE_OBELISK = "obelisk-sidebar";
