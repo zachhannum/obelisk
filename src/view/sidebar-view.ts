@@ -2,6 +2,7 @@ import {
 	Component,
 	ItemView,
 	Notice,
+	Platform,
 	TFile,
 	WorkspaceLeaf,
 	setIcon,
@@ -205,7 +206,9 @@ export class ObeliskSidebarView extends ItemView {
 		if (visible.length === 0) {
 			this.empty(
 				this.comments.length === 0
-					? "No comments yet. Select some text and right-click to add one."
+					? Platform.isMobile
+						? "No comments yet. Select some text to add one."
+						: "No comments yet. Select some text and right-click to add one."
 					: "No comments match this filter.",
 			);
 			return;
