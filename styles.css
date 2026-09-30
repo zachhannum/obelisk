@@ -99,6 +99,34 @@
 	padding: 0 3px;
 }
 
+/* Mobile only. Bottom-center, clear of the system selection menu. */
+.obelisk-selection-bar {
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-l);
+	bottom: var(--size-4-4);
+	box-shadow: var(--shadow-s);
+	display: flex;
+	gap: var(--size-4-1);
+	left: 50%;
+	padding: var(--size-4-1);
+	position: absolute;
+	transform: translateX(-50%);
+	z-index: var(--layer-popover);
+}
+
+.obelisk-selection-bar.is-hidden {
+	display: none;
+}
+
+.obelisk-selection-bar-button {
+	align-items: center;
+	box-shadow: none;
+	display: flex;
+	gap: var(--size-4-1);
+	white-space: nowrap;
+}
+
 /* ── Sidebar (requirement 3) ──────────────────────────────────────────────── */
 
 .obelisk-sidebar {

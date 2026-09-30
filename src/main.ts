@@ -4,12 +4,14 @@ import {
 	Editor,
 	MarkdownView,
 	Notice,
+	Platform,
 	Plugin,
 	TFile,
 	WorkspaceLeaf,
 	debounce,
 } from "obsidian";
 import { registerContextMenu } from "./editor/context-menu";
+import { selectionBar } from "./editor/selection-bar";
 import {
 	commentAt,
 	flashComment,
@@ -103,6 +105,13 @@ export default class ObeliskPlugin extends Plugin {
 		);
 
 		registerContextMenu(this);
+		if (Platform.isMobile) {
+			this.registerEditorExtension(
+				selectionBar(
+					(view, opts) => void this.startComment(view.editor, view, opts),
+				),
+			);
+		}
 		this.addSettingTab(new ObeliskSettingTab(this.app, this));
 
 		this.addRibbonIcon("message-square", "Open comments", () =>
@@ -118,6 +127,7 @@ export default class ObeliskPlugin extends Plugin {
 		this.addCommand({
 			id: "add-comment",
 			name: "Add comment on selection",
+			icon: "message-square",
 			editorCallback: (editor, view) => {
 				if (view instanceof MarkdownView) {
 					void this.startComment(editor, view, {
@@ -130,6 +140,7 @@ export default class ObeliskPlugin extends Plugin {
 		this.addCommand({
 			id: "suggest-edit",
 			name: "Suggest an edit for selection",
+			icon: "replace",
 			editorCallback: (editor, view) => {
 				if (view instanceof MarkdownView) {
 					void this.startComment(editor, view, {
