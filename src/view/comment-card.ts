@@ -1,4 +1,11 @@
-import { Component, Notice, TFile, setIcon, setTooltip } from "obsidian";
+import {
+	Component,
+	Notice,
+	Platform,
+	TFile,
+	setIcon,
+	setTooltip,
+} from "obsidian";
 import type ObeliskPlugin from "../main";
 import { hasSuggestion } from "../core/suggestion";
 import { Origin, ResolvedComment } from "../types";
@@ -72,7 +79,12 @@ export function renderCommentCard(
 	const quote = card.createDiv({ cls: "obelisk-quote", text: comment.anchor.quote });
 	// Long quotes are clamped; clicking one opens it out rather than pushing
 	// every other comment off the screen.
-	quote.addEventListener("click", () => quote.toggleClass("is-expanded", !quote.hasClass("is-expanded")));
+	// On mobile a tap on the card closes the sidebar, so a tap on the quote
+	// stops here or it could never be read in full.
+	quote.addEventListener("click", (evt) => {
+		if (Platform.isMobile) evt.stopPropagation();
+		quote.toggleClass("is-expanded", !quote.hasClass("is-expanded"));
+	});
 
 	const body = card.createDiv({ cls: "obelisk-body" });
 	if (comment.body) {

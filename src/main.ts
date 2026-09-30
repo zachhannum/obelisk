@@ -570,7 +570,13 @@ export default class ObeliskPlugin extends Plugin {
 
 	// ── Navigation ───────────────────────────────────────────────────────────
 
-	/** Requirement 4: sidebar card → editor. */
+	/**
+	 * Requirement 4: sidebar card → editor.
+	 *
+	 * On mobile the sidebar is a drawer over the note, so it closes to show
+	 * the passage, and the passage is not selected, because focusing the
+	 * editor raises the keyboard over the half of the screen that is left.
+	 */
 	scrollToComment(id: string): void {
 		this.sidebar()?.setActive(id);
 
@@ -579,15 +585,18 @@ export default class ObeliskPlugin extends Plugin {
 		const range = trackedRange(cm, id);
 		if (!range || range.to <= range.from) return;
 
+		if (Platform.isMobile) this.app.workspace.rightSplit.collapse();
 		cm.dispatch({
-			selection: { anchor: range.from, head: range.to },
+			selection: Platform.isMobile
+				? undefined
+				: { anchor: range.from, head: range.to },
 			effects: [
 				EditorView.scrollIntoView(range.from, { y: "center" }),
 				setActiveComment.of(id),
 				flashComment.of(id),
 			],
 		});
-		cm.focus();
+		if (!Platform.isMobile) cm.focus();
 
 		window.setTimeout(() => {
 			if (!cm.dom.isConnected) return;
