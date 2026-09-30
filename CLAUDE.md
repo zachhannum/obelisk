@@ -144,6 +144,10 @@ both bins. That is the whole gate. Anything that should block a merge
 has to be reachable from one of those two commands or it blocks
 nothing.
 
+The same job uploads `main.js`, `manifest.json` and `styles.css` as an
+artifact named `plugin`, so Local Linker can install the build of a PR
+or of main into a vault, a phone's included.
+
 `.github/workflows/docs.yml` builds `site/` on any change under it, and
 deploys to GitHub Pages on push to main. It needs Pages enabled for the
 repo with GitHub Actions as the source, or the deploy step has nowhere
