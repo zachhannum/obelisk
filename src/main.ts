@@ -82,6 +82,8 @@ export default class ObeliskPlugin extends Plugin {
 	 */
 	private lastMarkdownView: MarkdownView | null = null;
 	private scheduleResolve!: Debouncer<[], void>;
+	/** Path of the note the auto-open setting last ran for. */
+	private autoOpenedFor: string | null = null;
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.store = new CommentStore(this.app);
@@ -633,6 +635,13 @@ export default class ObeliskPlugin extends Plugin {
 	private async onActiveViewChanged(): Promise<void> {
 		const view = this.activeMarkdownView();
 		this.refresh();
+
+		// Leaf changes inside the sidebar, and the drawer closing on mobile,
+		// arrive here with the note unchanged. Revealing on those would pull
+		// the reader back to this view from whichever one they just chose.
+		const path = view?.file?.path ?? null;
+		if (path === this.autoOpenedFor) return;
+		this.autoOpenedFor = path;
 
 		if (this.settings.autoOpenSidebar && view?.file) {
 			if (this.store.read(view.file).length > 0) await this.openSidebar();
