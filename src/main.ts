@@ -4,12 +4,14 @@ import {
 	Editor,
 	MarkdownView,
 	Notice,
+	Platform,
 	Plugin,
 	TFile,
 	WorkspaceLeaf,
 	debounce,
 } from "obsidian";
 import { registerContextMenu } from "./editor/context-menu";
+import { selectionBar } from "./editor/selection-bar";
 import {
 	commentAt,
 	flashComment,
@@ -80,7 +82,8 @@ export default class ObeliskPlugin extends Plugin {
 	 */
 	private lastMarkdownView: MarkdownView | null = null;
 	private scheduleResolve!: Debouncer<[], void>;
-
+	/** Path of the note the auto-open setting last ran for. */
+	private autoOpenedFor: string | null = null;
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.store = new CommentStore(this.app);
@@ -103,6 +106,14 @@ export default class ObeliskPlugin extends Plugin {
 		);
 
 		registerContextMenu(this);
+		if (Platform.isMobile) {
+			this.registerEditorExtension(
+				selectionBar(
+					() => this.settings.selectionBar,
+					(view, opts) => void this.startComment(view.editor, view, opts),
+				),
+			);
+		}
 		this.addSettingTab(new ObeliskSettingTab(this.app, this));
 
 		this.addRibbonIcon("message-square", "Open comments", () =>
@@ -118,6 +129,7 @@ export default class ObeliskPlugin extends Plugin {
 		this.addCommand({
 			id: "add-comment",
 			name: "Add comment on selection",
+			icon: "message-square",
 			editorCallback: (editor, view) => {
 				if (view instanceof MarkdownView) {
 					void this.startComment(editor, view, {
@@ -130,6 +142,7 @@ export default class ObeliskPlugin extends Plugin {
 		this.addCommand({
 			id: "suggest-edit",
 			name: "Suggest an edit for selection",
+			icon: "replace",
 			editorCallback: (editor, view) => {
 				if (view instanceof MarkdownView) {
 					void this.startComment(editor, view, {
@@ -559,7 +572,13 @@ export default class ObeliskPlugin extends Plugin {
 
 	// ── Navigation ───────────────────────────────────────────────────────────
 
-	/** Requirement 4: sidebar card → editor. */
+	/**
+	 * Requirement 4: sidebar card → editor.
+	 *
+	 * On mobile the sidebar is a drawer over the note, so it closes to show
+	 * the passage, and the passage is not selected, because focusing the
+	 * editor raises the keyboard over the half of the screen that is left.
+	 */
 	scrollToComment(id: string): void {
 		this.sidebar()?.setActive(id);
 
@@ -568,15 +587,18 @@ export default class ObeliskPlugin extends Plugin {
 		const range = trackedRange(cm, id);
 		if (!range || range.to <= range.from) return;
 
+		if (Platform.isMobile) this.app.workspace.rightSplit.collapse();
 		cm.dispatch({
-			selection: { anchor: range.from, head: range.to },
+			selection: Platform.isMobile
+				? undefined
+				: { anchor: range.from, head: range.to },
 			effects: [
 				EditorView.scrollIntoView(range.from, { y: "center" }),
 				setActiveComment.of(id),
 				flashComment.of(id),
 			],
 		});
-		cm.focus();
+		if (!Platform.isMobile) cm.focus();
 
 		window.setTimeout(() => {
 			if (!cm.dom.isConnected) return;
@@ -613,6 +635,13 @@ export default class ObeliskPlugin extends Plugin {
 	private async onActiveViewChanged(): Promise<void> {
 		const view = this.activeMarkdownView();
 		this.refresh();
+
+		// Leaf changes inside the sidebar, and the drawer closing on mobile,
+		// arrive here with the note unchanged. Revealing on those would pull
+		// the reader back to this view from whichever one they just chose.
+		const path = view?.file?.path ?? null;
+		if (path === this.autoOpenedFor) return;
+		this.autoOpenedFor = path;
 
 		if (this.settings.autoOpenSidebar && view?.file) {
 			if (this.store.read(view.file).length > 0) await this.openSidebar();

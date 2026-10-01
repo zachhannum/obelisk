@@ -99,6 +99,38 @@
 	padding: 0 3px;
 }
 
+/* Mobile only. Bottom-center, clear of the system selection menu. The outer
+   radius is the buttons' plus the padding, so the corners stay concentric. */
+.obelisk-selection-bar {
+	--obelisk-bar-inset: var(--size-4-1);
+	--obelisk-bar-radius: var(--radius-m);
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: calc(var(--obelisk-bar-radius) + var(--obelisk-bar-inset));
+	bottom: var(--size-4-4);
+	box-shadow: var(--shadow-s);
+	display: flex;
+	gap: var(--obelisk-bar-inset);
+	left: 50%;
+	padding: var(--obelisk-bar-inset);
+	position: absolute;
+	transform: translateX(-50%);
+	z-index: var(--layer-popover);
+}
+
+.obelisk-selection-bar.is-hidden {
+	display: none;
+}
+
+.obelisk-selection-bar-button {
+	align-items: center;
+	border-radius: var(--obelisk-bar-radius);
+	box-shadow: none;
+	display: flex;
+	gap: var(--size-4-1);
+	white-space: nowrap;
+}
+
 /* ── Sidebar (requirement 3) ──────────────────────────────────────────────── */
 
 .obelisk-sidebar {
@@ -633,4 +665,60 @@
 .obelisk-reply:hover .obelisk-icon-button,
 .obelisk-reply .obelisk-icon-button:focus-visible {
 	opacity: 1;
+}
+
+/* ── Mobile ───────────────────────────────────────────────────────────────── */
+
+/* Nothing on a touch screen hovers, so the reply controls stay up, and every
+   control grows to a size a thumb can hit. Desktop sizing is left alone. */
+.is-mobile .obelisk-reply .obelisk-icon-button {
+	opacity: 1;
+	padding: var(--size-4-1);
+}
+
+/* Badges and a full date do not fit on one line at drawer width. */
+.is-mobile .obelisk-card > .obelisk-card-header {
+	flex-wrap: wrap;
+}
+
+.is-mobile .obelisk-chips {
+	flex-wrap: wrap;
+}
+
+.is-mobile .obelisk-chip {
+	font-size: var(--font-ui-small);
+	min-height: 36px;
+	padding: var(--size-4-1) var(--size-4-3);
+}
+
+.is-mobile .obelisk-chip-dismiss {
+	padding: var(--size-4-1);
+}
+
+.is-mobile .obelisk-chip-dismiss .svg-icon {
+	height: var(--icon-s);
+	width: var(--icon-s);
+}
+
+/* One row of equal buttons across the card, however narrow the drawer. */
+.is-mobile .obelisk-actions {
+	flex-wrap: nowrap;
+}
+
+.is-mobile .obelisk-actions button {
+	flex: 1 1 0;
+	font-size: var(--font-ui-small);
+	min-height: 44px;
+	min-width: 0;
+	padding-inline: var(--size-4-1);
+}
+
+.is-mobile .obelisk-suggestion-header .obelisk-apply {
+	font-size: var(--font-ui-small);
+	min-height: 36px;
+	padding: var(--size-4-1) var(--size-4-3);
+}
+
+.is-mobile .obelisk-compose-actions button {
+	min-height: 44px;
 }

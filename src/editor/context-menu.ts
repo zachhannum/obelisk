@@ -6,9 +6,9 @@ import { threadSuggestions } from "../core/suggestion";
  * Requirement 6: right-clicking a selection offers "Add comment" and
  * "Suggest an edit".
  *
- * Registered against the `editor-menu` workspace event, which fires for both
- * the context menu and the mobile selection toolbar, so this covers both
- * platforms with one code path.
+ * Registered against the `editor-menu` workspace event, which fires for the
+ * desktop context menu only. Mobile gets the same two actions from
+ * `selection-bar.ts`.
  */
 export function registerContextMenu(plugin: ObeliskPlugin): void {
 	plugin.registerEvent(

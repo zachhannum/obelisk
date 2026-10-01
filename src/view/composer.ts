@@ -88,7 +88,9 @@ export class Composer extends Component {
 
 		this.el.createDiv({
 			cls: "obelisk-compose-hint",
-			text: `Markdown supported · ${Platform.isMacOS ? "Cmd" : "Ctrl"}+Enter to submit`,
+			text: Platform.isMobile
+				? "Markdown supported"
+				: `Markdown supported · ${Platform.isMacOS ? "Cmd" : "Ctrl"}+Enter to submit`,
 		});
 
 		this.show("write");
